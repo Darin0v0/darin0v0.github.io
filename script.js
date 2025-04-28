@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+\document.addEventListener('DOMContentLoaded', function() {
     const apiBtn = document.getElementById('apiBtn');
     const apiResult = document.getElementById('apiResult');
     const repoPath = document.getElementById('repoPath');
@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 apiResult.innerHTML = `Znaleziono ${folders.length} folderów w ${path}:<br><br>`;
                 folders.forEach(folder => {
                     const folderName = folder.name;
+                    // Upewnij się, że tutaj używamy tylko "https://darin0v0.github.io/projects/"
                     const indexUrl = `https://darin0v0.github.io/projects/${folderName}/index.html`;  // Poprawiony adres URL
 
                     const button = document.createElement('button');
