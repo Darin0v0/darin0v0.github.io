@@ -168,3 +168,80 @@ footer {
     width: 100%;
   }
 }
+/* Dodatkowe style dla JavaScript */
+.spinner {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading, .no-projects, .error {
+    padding: 15px;
+    border-radius: 5px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.loading {
+    background-color: #f0f8ff;
+    color: #3498db;
+}
+
+.no-projects {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.project-item {
+    transition: transform 0.3s ease;
+}
+
+.project-item:hover {
+    transform: translateY(-3px);
+}
+
+.openButton {
+    width: 100%;
+    padding: 12px;
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.openButton:hover {
+    background-color: #27ae60;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.button-icon {
+    font-size: 1rem;
+}
