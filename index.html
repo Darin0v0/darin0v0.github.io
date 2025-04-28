@@ -105,7 +105,7 @@
       width: 120px;
       height: 120px;
       margin: 0 auto 1rem;
-      background: url('https://occ-0-8407-90.1.nflxso.net/dnm/api/v6/LmEnxtiAuzezXBjYXPuDgfZ4zZQ/AAAABQpjhIuNRPFtDWjSDUzQxjWx-ZCZdjOdUKy4Fur9fINdJLg1h-xgo6xMWHaNnN1L-Bb_IrGtuJew90DmnPj13r4c_4T3rbAMWE-DkXom-j2H.png') no-repeat center center;
+      background: url('https://i.imgur.com/9X9X9X9.png') no-repeat center center;
       background-size: contain;
       position: relative;
       z-index: 2;
@@ -533,105 +533,95 @@
 
   <audio id="bgMusic" src="https://www.myinstants.com/media/sounds/ghost-in-the-shell-innocence-cyberbrain-conversation.mp3" loop></audio>
   
-   <script>
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Konfiguracja API
-      const GITHUB_API_TOKEN = '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';
-      const GITHUB_USER = 'Darin0v0';
-      const GITHUB_REPO = 'Darin0v0.github.io';
-      
-      // Elementy DOM
+      // API Query functionality
       const apiBtn = document.getElementById('apiBtn');
       const terminalOutput = document.getElementById('terminalOutput');
       const repoPath = document.getElementById('repoPath');
+      
+      // Audio functionality
       const playMusicBtn = document.getElementById('playMusicBtn');
       const bgMusic = document.getElementById('bgMusic');
       const volumeControl = document.getElementById('volumeControl');
-      
       let isPlaying = false;
 
-      // Funkcja zabezpieczająca przed XSS
+      // Escape HTML to prevent XSS
       function escapeHtml(unsafe) {
-        const div = document.createElement('div');
-        div.textContent = unsafe;
-        return div.innerHTML;
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
       }
 
-      // Funkcja logująca do terminala
-      function logToTerminal(message) {
-        terminalOutput.innerHTML += `<br>> ${escapeHtml(message)}`;
-        terminalOutput.scrollTop = terminalOutput.scrollHeight;
-      }
-
-      // Funkcja ładowania
+      // Loading effect
       function setLoading(isLoading) {
         apiBtn.disabled = isLoading;
-        apiBtn.innerHTML = isLoading 
-          ? '<span class="spinner">⌛</span> EXECUTING_QUERY...' 
-          : 'EXECUTE_QUERY';
+        if (isLoading) {
+          apiBtn.innerHTML = '<span class="spinner">⌛</span> EXECUTING_QUERY...';
+          terminalOutput.innerHTML += '<br>> SCANNING_REPOSITORY...';
+        } else {
+          apiBtn.innerHTML = 'EXECUTE_QUERY';
+        }
       }
-
-      // Funkcja tworząca przyciski projektów
+      
+      // Create project button
       function createProjectButton(folderName) {
         const button = document.createElement('button');
         button.className = 'cyber-project-btn';
-        const indexUrl = `https://${GITHUB_USER}.github.io/projects/${folderName}/index.html`;
+        
+        const indexUrl = `https://darin0v0.github.io/projects/${folderName}/index.html`;
         
         button.innerHTML = `
           <span class="cyber-project-icon">⎔</span>
           <span class="cyber-project-name">${escapeHtml(folderName)}</span>
         `;
         
-        button.onclick = () => {
-          logToTerminal(`OPENING_PROJECT: ${folderName}...`);
+        button.onclick = function() {
+          terminalOutput.innerHTML += `<br>> OPENING_PROJECT: ${escapeHtml(folderName)}...`;
+          terminalOutput.scrollTop = terminalOutput.scrollHeight;
           window.open(indexUrl, '_blank');
         };
         
         button.addEventListener('mouseenter', () => {
-          logToTerminal(`HIGHLIGHTED: ${folderName}`);
+          terminalOutput.innerHTML += `<br>> HIGHLIGHTED: ${escapeHtml(folderName)}`;
+          terminalOutput.scrollTop = terminalOutput.scrollHeight;
         });
         
         return button;
       }
-
-      // Funkcja pobierająca zawartość z GitHub API
-      async function fetchGitHubContents(path) {
-        const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${path}`;
-        
-        const response = await fetch(url, {
-          headers: {
-            'Authorization': `token ${GITHUB_API_TOKEN}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          let errorMessage = `ERROR_ACCESSING_PATH: ${path}`;
-          
-          if (errorData?.message) {
-            errorMessage += ` | GITHUB_API: ${errorData.message}`;
-          }
-          
-          throw new Error(errorMessage);
-        }
-        
-        return await response.json();
-      }
-
-      // Obsługa zapytania API
+      
+      // Handle API query
       apiBtn.addEventListener('click', async function() {
         const path = repoPath.value.trim() || 'projects';
         setLoading(true);
-        logToTerminal(`INITIATING_GITHUB_API_REQUEST: ${path}`);
         
         try {
-          const contents = await fetchGitHubContents(path);
+          terminalOutput.innerHTML += '<br>> INITIATING_GITHUB_API_REQUEST...';
+          terminalOutput.scrollTop = terminalOutput.scrollHeight;
+          
+          const response = await fetch(`https://api.github.com/repos/Darin0v0/Darin0v0.github.io/contents/${path}`);
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            let errorMessage = `ERROR_ACCESSING_PATH: ${escapeHtml(path)}`;
+            
+            if (errorData?.message) {
+              errorMessage += `<br>> GITHUB_API: ${escapeHtml(errorData.message)}`;
+            }
+            
+            throw new Error(errorMessage);
+          }
+          
+          const contents = await response.json();
           const folders = contents.filter(item => item.type === 'dir');
           
-          logToTerminal(`SCAN_COMPLETE. FOUND: ${folders.length} ITEMS`);
+          terminalOutput.innerHTML += '<br>> SCAN_COMPLETE. ANALYZING_RESULTS...';
+          terminalOutput.scrollTop = terminalOutput.scrollHeight;
           
-          // Aktualizacja interfejsu
+          // Create projects container
           let projectsContainer = document.querySelector('.cyber-projects-container');
           if (!projectsContainer) {
             projectsContainer = document.createElement('div');
@@ -639,42 +629,59 @@
             document.querySelector('main').appendChild(projectsContainer);
           }
           
+          // Create projects grid
           const projectsGrid = document.createElement('div');
           projectsGrid.className = 'cyber-projects-grid';
           
           if (folders.length === 0) {
+            terminalOutput.innerHTML += `<br><br>> NO_PROJECTS_FOUND_IN: ${escapeHtml(path)}`;
             projectsGrid.innerHTML = '<div class="cyber-project-btn" style="grid-column:1/-1">NO PROJECTS FOUND</div>';
           } else {
+            terminalOutput.innerHTML += `<br><br>> PROJECTS_DETECTED: ${folders.length}`;
+            
             folders.forEach(folder => {
               projectsGrid.appendChild(createProjectButton(folder.name));
-              logToTerminal(`LOADED: ${folder.name}`);
+              terminalOutput.innerHTML += `<br>> LOADED: ${escapeHtml(folder.name)}`;
             });
           }
           
+          // Update container
           projectsContainer.innerHTML = '';
           projectsContainer.appendChild(projectsGrid);
-          logToTerminal('READY_FOR_NEXT_QUERY');
+          
+          terminalOutput.innerHTML += '<br><br>> READY_FOR_NEXT_QUERY';
+          terminalOutput.scrollTop = terminalOutput.scrollHeight;
           
         } catch (error) {
-          logToTerminal(`SYSTEM_ERROR: ${error.message}`);
+          terminalOutput.innerHTML += `
+            <br><br>> SYSTEM_ERROR:
+            <br>> ${escapeHtml(error.message).replace('\n', '<br>> ')}
+            <br><br>> WARNING: UNAUTHENTICATED_REQUESTS_LIMITED
+          `;
           console.error('GitHub API error:', error);
+          terminalOutput.scrollTop = terminalOutput.scrollHeight;
         } finally {
           setLoading(false);
         }
       });
       
-      // Obsługa klawisza Enter
+      // Handle Enter key
       repoPath.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') apiBtn.click();
+        if (e.key === 'Enter') {
+          apiBtn.click();
+        }
       });
       
-      // Kontrola audio
+      // Audio controls
       playMusicBtn.addEventListener('click', function() {
+        if (isPlaying) {
+          bgMusic.pause();
+          playMusicBtn.textContent = 'ACTIVATE_AUDIO_STREAM';
+        } else {
+          bgMusic.play();
+          playMusicBtn.textContent = 'TERMINATE_AUDIO_STREAM';
+        }
         isPlaying = !isPlaying;
-        isPlaying ? bgMusic.play() : bgMusic.pause();
-        playMusicBtn.textContent = isPlaying 
-          ? 'TERMINATE_AUDIO_STREAM' 
-          : 'ACTIVATE_AUDIO_STREAM';
       });
 
       volumeControl.addEventListener('input', function() {
