@@ -11,7 +11,23 @@
 </head>
 <body>
   <div class="container">
-    <!-- ... (pozostała część headera i pierwsza karta pozostają bez zmian) ... -->
+    <div class="container">
+    <header>
+      <h1>Moje Projekty</h1>
+  
+    </header>
+
+    <main>
+      <section class="card">
+        <div class="method">
+          <h2>Sprawdź Projekty</h2>
+          <div class="input-group">
+            <input type="text" id="repoPath" placeholder="Wprowadź ścieżkę do podfolderu">
+            <button id="apiBtn" class="btn-primary">Sprawdz Projekty</button>
+          </div>
+          <div id="apiResult" class="result"></div>
+        </div>
+      </section>
 
     <section class="card">
       <h2>Muzyka w tle</h2>
