@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 apiResult.innerHTML = `Znaleziono ${folders.length} folderów w ${path}:<br><br>`;
                 folders.forEach(folder => {
                     const folderName = folder.name;
-                    const indexUrl = `https://darino0v0.github.io/Site/${path}/${folderName}/index.html`;
+                    const indexUrl = `https://darin0v0.github.io/projects/${folderName}/index.html`;  // Zmieniony adres URL
 
                     const button = document.createElement('button');
                     button.textContent = `Otwórz ${folderName}`;
