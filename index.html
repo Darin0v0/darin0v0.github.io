@@ -10,6 +10,15 @@
   <div class="container">
     <h1>Licznik folderów w podfolderze</h1>
 
+    <!-- Przycisk do nawigacji (poprawiona wersja) -->
+    <div class="method">
+      <h2>Przejdź do innej strony</h2>
+      <a href="inny_folder/strona.html" class="nav-button">
+        <button>Przejdź</button>
+      </a>
+      <p class="hint">Upewnij się, że plik "strona.html" istnieje w folderze "inny_folder"</p>
+    </div>
+
     <div class="method">
       <h2>Metoda statyczna (symulacja)</h2>
       <button id="simulateBtn">Zlicz foldery</button>
@@ -24,7 +33,7 @@
     </div>
 
     <h2>Muzyka w tle</h2>
-    <button id="playMusicBtn">▶️ Włącz muzykę</button>
+    <button id="playMusicBtn" aria-label="Odtwórz muzykę">▶️ Włącz muzykę</button>
 
     <audio id="bgMusic" src="audio/twojpodklad.mp3" loop></audio>
 
@@ -41,33 +50,29 @@
     const playMusicBtn = document.getElementById('playMusicBtn');
     const volumeControl = document.getElementById('volumeControl');
 
-    bgMusic.volume = 0.5; // Domyślna głośność
+    // Ustaw domyślną głośność
+    bgMusic.volume = volumeControl.value;
 
-    // Kliknięcie przycisku włącza muzykę
+    // Obsługa przycisku muzyki
     playMusicBtn.addEventListener('click', function() {
-      bgMusic.play().then(() => {
-        console.log('Muzyka gra');
-      }).catch((error) => {
-        console.error('Problem z odtworzeniem:', error);
-      });
-
-      // Zmień napis na przycisku na "Pauza"
-      playMusicBtn.textContent = '⏸️ Pauza muzyki';
-
-      // Zmień funkcję kliknięcia na zatrzymywanie
-      playMusicBtn.removeEventListener('click', arguments.callee);
-      playMusicBtn.addEventListener('click', function() {
-        if (bgMusic.paused) {
-          bgMusic.play();
-          playMusicBtn.textContent = '⏸️ Pauza muzyki';
-        } else {
-          bgMusic.pause();
-          playMusicBtn.textContent = '▶️ Włącz muzykę';
-        }
-      });
+      if (bgMusic.paused) {
+        bgMusic.play()
+          .then(() => {
+            playMusicBtn.innerHTML = '⏸️ Pauza muzyki';
+            playMusicBtn.setAttribute('aria-label', 'Zatrzymaj muzykę');
+          })
+          .catch(error => {
+            console.error('Błąd odtwarzania:', error);
+            alert('Muzyka nie może zostać odtworzona. Sprawdź konsolę.');
+          });
+      } else {
+        bgMusic.pause();
+        playMusicBtn.innerHTML = '▶️ Włącz muzykę';
+        playMusicBtn.setAttribute('aria-label', 'Odtwórz muzykę');
+      }
     });
 
-    // Suwak zmienia głośność
+    // Obsługa suwaka głośności
     volumeControl.addEventListener('input', function() {
       bgMusic.volume = this.value;
     });
