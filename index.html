@@ -3,67 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projekty i Muzyka</title>
+  <title>Cyber-Projekty</title>
   <link rel="stylesheet" href="styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
+    <div class="scanlines"></div>
+    <div class="noise"></div>
+    
     <header>
-      <h1>Moje Projekty</h1>
-  
+      <h1 data-text="CYBER-PROJEKTY">CYBER-PROJEKTY</h1>
+      <div class="glow"></div>
     </header>
 
     <main>
       <section class="card">
         <div class="method">
-          <h2>Sprawdź Projekty</h2>
+          <h2><span class="hex">#</span> SYSTEM_ACCESS</h2>
           <div class="input-group">
-            <input type="text" id="repoPath" placeholder="Wprowadź ścieżkę do podfolderu">
-            <button id="apiBtn" class="btn-primary">Sprawdz Projekty</button>
+            <input type="text" id="repoPath" placeholder="ŚCIEŻKA_DOSTĘPU::" class="cyber-input">
+            <button id="apiBtn" class="btn-primary cyber-btn">
+              <span class="btn-text">WYKONAJ_QUERY</span>
+              <span class="btn-border"></span>
+            </button>
           </div>
-          <div id="apiResult" class="result"></div>
+          <div id="apiResult" class="result cyber-terminal">
+            <div class="terminal-header">
+              <span class="terminal-btn red"></span>
+              <span class="terminal-btn yellow"></span>
+              <span class="terminal-btn green"></span>
+              <span class="terminal-title">OUTPUT_STREAM</span>
+            </div>
+            <div class="terminal-content" id="terminalOutput">
+              > System gotowy na zapytanie...
+            </div>
+          </div>
         </div>
       </section>
 
       <section class="card">
-        <h2>Muzyka w tle</h2>
+        <h2><span class="hex">#</span> AUDIO_INTERFACE</h2>
         <div class="music-controls">
-          <button id="playMusicBtn" class="btn-music" aria-label="Odtwórz muzykę">
-            <span class="icon">▶️</span> Włącz muzykę
+          <button id="playMusicBtn" class="btn-music cyber-btn">
+            <span class="btn-text">▶️ INIT_AUDIO_STREAM</span>
+            <span class="btn-border"></span>
           </button>
           
           <div class="volume-control">
-            <label for="volumeControl">Głośność: </label>
-            <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="0.5">
+            <label for="volumeControl">VOLUME_LEVEL:: </label>
+            <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="0.5" class="cyber-slider">
           </div>
         </div>
       </section>
     </main>
 
     <footer>
-      <p>© 2025 Moja Aplikacja | Wersja 1.0</p>
+      <p>SYSTEM_v1.0.7_©_2025_NEURAL_NETWORKS</p>
     </footer>
   </div>
 
   <audio id="bgMusic" src="back.mp3" loop></audio>
   <script src="script.js"></script>
   <style>
-    /* Modern & Elegant CSS Styles */
+    /* Ghost in the Shell / Cyberpunk Theme */
 :root {
-  --primary: #4361ee;
-  --primary-dark: #3a0ca3;
-  --primary-light: #4895ef;
-  --secondary: #f72585;
-  --success: #4cc9f0;
-  --light: #f8f9fa;
-  --dark: #212529;
-  --gray: #6c757d;
-  --light-gray: #e9ecef;
-  --white: #ffffff;
-  --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  --border-radius: 12px;
+  --neon-green: #00ff9d;
+  --neon-pink: #ff00aa;
+  --neon-blue: #00e1ff;
+  --neon-purple: #bd00ff;
+  --dark-bg: #0a0a12;
+  --darker-bg: #050508;
+  --terminal-bg: rgba(10, 10, 18, 0.8);
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --glow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
+  --thin-glow: 0 0 5px var(--neon-blue);
+  --pink-glow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
+  --green-glow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
+  --scanline: linear-gradient(
+    to bottom,
+    transparent 95%,
+    rgba(0, 225, 255, 0.05) 96%,
+    transparent 97%
+  );
 }
 
 /* Base Styles */
@@ -74,93 +97,131 @@
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  color: var(--dark);
+  font-family: 'Rajdhani', sans-serif;
+  background-color: var(--dark-bg);
+  color: var(--text-primary);
   line-height: 1.6;
   min-height: 100vh;
   padding: 2rem;
+  overflow-x: hidden;
+  position: relative;
 }
 
 .container {
   max-width: 800px;
   margin: 0 auto;
-  background: var(--white);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  overflow: hidden;
+  background: var(--terminal-bg);
+  border: 1px solid var(--neon-blue);
+  box-shadow: var(--glow);
   position: relative;
+  z-index: 10;
+  backdrop-filter: blur(2px);
+}
+
+/* Scanlines and Noise Effects */
+.scanlines {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--scanline);
+  background-size: 100% 0.5rem;
+  pointer-events: none;
+  z-index: 5;
+  animation: scan 2s linear infinite;
+}
+
+.noise {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABGSURBVGhD7cExAQAwDMCg+zfd2VAk4A8k1q1bt27dunXr1q1bt27dunXr1q1bt27dunXr1q1bt27dunXr1q1bt27dunXr1g1pA8kZ6k1UAAAAAElFTkSuQmCC');
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes scan {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 0.5rem; }
 }
 
 /* Header Styles */
 header {
   text-align: center;
   padding: 2.5rem 2rem;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: var(--white);
   position: relative;
   overflow: hidden;
-}
-
-header::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 75% 30%, rgba(255,255,255,0.1) 0%, transparent 50%);
+  border-bottom: 1px solid var(--neon-blue);
+  box-shadow: var(--thin-glow);
 }
 
 header h1 {
-  font-size: 2.5rem;
-  font-weight: 600;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 2.8rem;
+  font-weight: normal;
   margin-bottom: 0.5rem;
   position: relative;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  color: var(--neon-green);
+  text-shadow: var(--green-glow);
+  letter-spacing: 0.2rem;
+  text-transform: uppercase;
 }
 
-.subtitle {
-  font-size: 1.1rem;
-  font-weight: 300;
-  opacity: 0.9;
-  position: relative;
+header h1::before {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  color: var(--neon-blue);
+  text-shadow: var(--glow);
+  clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+  overflow: hidden;
+}
+
+.glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30rem;
+  height: 30rem;
+  background: radial-gradient(circle, var(--neon-blue) 0%, transparent 70%);
+  opacity: 0.1;
+  z-index: -1;
 }
 
 /* Card Styles */
 .card {
-  background: var(--white);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
+  background: rgba(15, 15, 25, 0.7);
+  border: 1px solid var(--neon-blue);
+  box-shadow: var(--thin-glow);
   padding: 2rem;
   margin: 1.5rem;
-  transition: var(--transition);
-  border: 1px solid rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+  position: relative;
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-blue);
 }
 
 .card h2 {
-  color: var(--primary-dark);
+  color: var(--neon-pink);
   margin-bottom: 1.5rem;
   font-size: 1.5rem;
   font-weight: 600;
-  position: relative;
-  display: inline-block;
+  font-family: 'Share Tech Mono', monospace;
+  text-shadow: var(--pink-glow);
+  letter-spacing: 0.1rem;
 }
 
-.card h2::after {
-  content: "";
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 50px;
-  height: 3px;
-  background: var(--primary-light);
-  border-radius: 3px;
+.hex {
+  color: var(--neon-green);
 }
 
 /* Form Elements */
@@ -170,66 +231,125 @@ header h1 {
   margin-bottom: 1.5rem;
 }
 
-input[type="text"] {
+.cyber-input {
   flex: 1;
   padding: 1rem;
-  border: 2px solid var(--light-gray);
-  border-radius: var(--border-radius);
+  background: rgba(10, 10, 20, 0.8);
+  border: 1px solid var(--neon-purple);
+  color: var(--neon-green);
+  font-family: 'Share Tech Mono', monospace;
   font-size: 1rem;
-  transition: var(--transition);
-  background-color: var(--light);
-  font-family: 'Poppins', sans-serif;
+  box-shadow: 0 0 5px var(--neon-purple);
+  transition: all 0.3s ease;
 }
 
-input[type="text"]:focus {
-  border-color: var(--primary-light);
+.cyber-input::placeholder {
+  color: var(--neon-purple);
+  opacity: 0.7;
+}
+
+.cyber-input:focus {
   outline: none;
-  background-color: var(--white);
-  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+  border-color: var(--neon-blue);
+  box-shadow: 0 0 10px var(--neon-blue);
+  background: rgba(15, 15, 30, 0.8);
 }
 
 /* Button Styles */
-.btn {
+.cyber-btn {
+  position: relative;
   border: none;
   padding: 1rem 1.5rem;
-  border-radius: var(--border-radius);
-  cursor: pointer;
+  background: var(--darker-bg);
+  color: var(--neon-green);
+  font-family: 'Share Tech Mono', monospace;
   font-size: 1rem;
-  font-weight: 500;
-  transition: var(--transition);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 5px var(--neon-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+}
+
+.cyber-btn:hover {
+  background: rgba(0, 255, 157, 0.1);
+  box-shadow: 0 0 15px var(--neon-green);
+  color: var(--neon-green);
+}
+
+.btn-border {
+  position: absolute;
+  display: block;
+}
+
+.btn-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  border-top: 2px solid var(--neon-green);
+  border-left: 2px solid var(--neon-green);
+  transition: all 0.3s ease;
+}
+
+.btn-border::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-bottom: 2px solid var(--neon-green);
+  border-right: 2px solid var(--neon-green);
+  transition: all 0.3s ease;
+}
+
+.cyber-btn:hover .btn-border::before,
+.cyber-btn:hover .btn-border::after {
+  width: 100%;
+  height: 100%;
+  box-shadow: var(--green-glow);
 }
 
 .btn-primary {
-  background: var(--primary);
-  color: var(--white);
-  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.2);
+  color: var(--neon-blue);
 }
 
 .btn-primary:hover {
-  background: var(--primary-dark);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(67, 97, 238, 0.3);
+  background: rgba(0, 225, 255, 0.1);
+  box-shadow: 0 0 15px var(--neon-blue);
+}
+
+.btn-primary .btn-border::before,
+.btn-primary .btn-border::after {
+  border-color: var(--neon-blue);
+}
+
+.btn-primary:hover .btn-border::before,
+.btn-primary:hover .btn-border::after {
+  box-shadow: var(--glow);
 }
 
 .btn-music {
-  background: var(--success);
-  color: var(--white);
-  box-shadow: 0 4px 12px rgba(76, 201, 240, 0.2);
+  color: var(--neon-pink);
 }
 
 .btn-music:hover {
-  background: #3a86ff;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(58, 134, 255, 0.3);
+  background: rgba(255, 0, 170, 0.1);
+  box-shadow: 0 0 15px var(--neon-pink);
 }
 
-.icon {
-  font-size: 1.1rem;
+.btn-music .btn-border::before,
+.btn-music .btn-border::after {
+  border-color: var(--neon-pink);
+}
+
+.btn-music:hover .btn-border::before,
+.btn-music:hover .btn-border::after {
+  box-shadow: var(--pink-glow);
 }
 
 /* Music Controls */
@@ -243,84 +363,118 @@ input[type="text"]:focus {
   display: flex;
   align-items: center;
   gap: 1rem;
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--neon-purple);
 }
 
-input[type="range"] {
+.cyber-slider {
   flex: 1;
   height: 6px;
   -webkit-appearance: none;
-  background: var(--light-gray);
-  border-radius: 10px;
+  background: var(--darker-bg);
+  border: 1px solid var(--neon-purple);
+  border-radius: 3px;
   outline: none;
-  transition: var(--transition);
+  box-shadow: 0 0 5px var(--neon-purple);
 }
 
-input[type="range"]:hover {
-  background: #dee2e6;
-}
-
-input[type="range"]::-webkit-slider-thumb {
+.cyber-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 18px;
   height: 18px;
-  background: var(--primary);
+  background: var(--neon-purple);
   border-radius: 50%;
   cursor: pointer;
-  transition: var(--transition);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 0 5px var(--neon-purple);
+  transition: all 0.3s ease;
 }
 
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
-  background: var(--primary-dark);
+.cyber-slider::-webkit-slider-thumb:hover {
+  background: var(--neon-blue);
+  box-shadow: 0 0 10px var(--neon-blue);
 }
 
-/* Results Section */
-.result {
-  padding: 1.5rem;
-  background: var(--light);
-  border-radius: var(--border-radius);
-  border-left: 4px solid var(--primary);
-  margin-top: 1.5rem;
+/* Terminal Styles */
+.cyber-terminal {
+  background: var(--darker-bg);
+  border: 1px solid var(--neon-green);
+  box-shadow: var(--thin-glow);
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--neon-green);
+  padding: 0;
+  overflow: hidden;
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 255, 157, 0.1);
+  border-bottom: 1px solid var(--neon-green);
+}
+
+.terminal-btn {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.terminal-btn.red {
+  background: #ff5f56;
+}
+
+.terminal-btn.yellow {
+  background: #ffbd2e;
+}
+
+.terminal-btn.green {
+  background: #27c93f;
+}
+
+.terminal-title {
+  margin-left: 1rem;
+  color: var(--neon-green);
+  font-size: 0.9rem;
+}
+
+.terminal-content {
+  padding: 1rem;
+  min-height: 100px;
+  max-height: 300px;
+  overflow-y: auto;
+  line-height: 1.5;
 }
 
 /* Footer Styles */
 footer {
   text-align: center;
   padding: 1.5rem;
-  color: var(--gray);
-  font-size: 0.9rem;
-  border-top: 1px solid var(--light-gray);
+  color: var(--neon-purple);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  border-top: 1px solid var(--neon-purple);
+  box-shadow: 0 0 5px var(--neon-purple);
+  letter-spacing: 0.1rem;
 }
 
 /* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    opacity: 1;
+  }
+  20%, 22%, 24%, 55% {
+    opacity: 0.5;
+  }
 }
 
 .card {
-  animation: fadeIn 0.6s ease-out forwards;
+  animation: flicker 5s infinite;
 }
 
 .card:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-/* Loading Spinner */
-.spinner {
-  display: inline-block;
-  width: 1.2rem;
-  height: 1.2rem;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: var(--white);
-  animation: spin 1s ease-in-out infinite;
-  margin-right: 0.5rem;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  animation-delay: 0.5s;
 }
 
 /* Responsive Design */
@@ -329,15 +483,15 @@ footer {
     padding: 1rem;
   }
   
-  .container {
-    border-radius: 0;
+  header h1 {
+    font-size: 2rem;
   }
   
   .input-group {
     flex-direction: column;
   }
   
-  .btn {
+  .cyber-btn {
     width: 100%;
   }
 }
@@ -348,14 +502,79 @@ footer {
   }
   
   header h1 {
-    font-size: 2rem;
+    font-size: 1.5rem;
   }
   
   .card {
     margin: 1rem;
     padding: 1.5rem;
   }
+  
+  .cyber-btn .btn-text {
+    font-size: 0.8rem;
+  }
 }
   </style>
+  <script>
+    // Basic functionality for the cyberpunk theme
+    document.addEventListener('DOMContentLoaded', function() {
+      // Music player functionality
+      const musicBtn = document.getElementById('playMusicBtn');
+      const bgMusic = document.getElementById('bgMusic');
+      const volumeControl = document.getElementById('volumeControl');
+      
+      let isPlaying = false;
+      
+      musicBtn.addEventListener('click', function() {
+        if (isPlaying) {
+          bgMusic.pause();
+          musicBtn.querySelector('.btn-text').textContent = '▶️ INIT_AUDIO_STREAM';
+        } else {
+          bgMusic.play();
+          musicBtn.querySelector('.btn-text').textContent = '⏸️ PAUSE_STREAM';
+        }
+        isPlaying = !isPlaying;
+      });
+      
+      volumeControl.addEventListener('input', function() {
+        bgMusic.volume = this.value;
+      });
+      
+      // API button simulation
+      const apiBtn = document.getElementById('apiBtn');
+      const apiResult = document.getElementById('terminalOutput');
+      
+      apiBtn.addEventListener('click', function() {
+        const repoPath = document.getElementById('repoPath').value;
+        
+        if (!repoPath) {
+          apiResult.innerHTML = '> ERROR: NO_INPUT_PATH_PROVIDED<br>> SYSTEM: ENTER_VALID_QUERY';
+          return;
+        }
+        
+        apiResult.innerHTML = '> QUERYING_REMOTE_SYSTEM...<br>> ACCESSING_REPOSITORY...';
+        
+        // Simulate loading
+        setTimeout(() => {
+          apiResult.innerHTML += '<br>> CONNECTING_TO_SERVER...';
+          
+          setTimeout(() => {
+            apiResult.innerHTML += `<br><br>> REPOSITORY_PATH: ${repoPath}<br>> STATUS: ACCESS_GRANTED<br>> FILES_FOUND: ${Math.floor(Math.random() * 15) + 5}<br>> LAST_MODIFIED: ${new Date().toLocaleString()}<br><br>> QUERY_COMPLETE`;
+            
+            // Add blinking cursor
+            apiResult.innerHTML += '<span class="cursor">_</span>';
+          }, 800);
+        }, 800);
+      });
+      
+      // Add cursor blink effect
+      setInterval(() => {
+        const cursor = document.querySelector('.cursor');
+        if (cursor) {
+          cursor.style.visibility = cursor.style.visibility === 'hidden' ? 'visible' : 'hidden';
+        }
+      }, 500);
+    });
+  </script>
 </body>
-</html> 
+</html>
