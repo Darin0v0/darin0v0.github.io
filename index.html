@@ -143,6 +143,7 @@
       margin: 1.5rem;
       position: relative;
       overflow: hidden;
+      will-change: transform, box-shadow;
     }
     
     .card::before {
@@ -227,6 +228,7 @@
       text-transform: uppercase;
       letter-spacing: 0.1rem;
       z-index: 1;
+      will-change: transform, box-shadow;
     }
     
     .cyber-btn::before {
@@ -250,6 +252,48 @@
       background: rgba(0, 255, 157, 0.1);
       box-shadow: 0 0 15px var(--neon-green);
       color: var(--neon-green);
+    }
+    
+    /* SLIDER STYLES */
+    .cyber-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 5px;
+      background: rgba(5, 5, 15, 0.8);
+      outline: none;
+      margin-top: 0.5rem;
+    }
+    
+    .cyber-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 15px;
+      height: 15px;
+      background: var(--neon-green);
+      cursor: pointer;
+      box-shadow: var(--green-glow);
+    }
+    
+    .cyber-slider::-moz-range-thumb {
+      width: 15px;
+      height: 15px;
+      background: var(--neon-green);
+      cursor: pointer;
+      box-shadow: var(--green-glow);
+    }
+    
+    /* MUSIC CONTROLS */
+    .music-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .volume-control {
+      display: flex;
+      flex-direction: column;
+      color: var(--neon-blue);
+      margin-top: 1rem;
     }
     
     /* TERMINAL STYLES */
@@ -297,114 +341,8 @@
       line-height: 1.5;
     }
     
-    /* FOOTER STYLES */
-    footer {
-      text-align: center;
-      padding: 1.5rem;
-      color: var(--neon-purple);
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.8rem;
-      border-top: 1px solid var(--neon-purple);
-      box-shadow: 0 0 5px var(--neon-purple);
-      letter-spacing: 0.1rem;
-    }
-    
-    /* ANIMATIONS */
-    @keyframes scan { 
-      0% { background-position: 0 0; }
-      100% { background-position: 0 0.5rem; } 
-    }
-    
-    @keyframes flicker {
-      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
-      20%, 22%, 24%, 55% { opacity: 0.7; }
-    }
-    
-    .card { animation: flicker 8s infinite; }
-    .card:nth-child(2) { animation-delay: 0.5s; }
-    
-    /* RESPONSIVE DESIGN */
-    @media (max-width: 768px) {
-      body { padding: 1rem; }
-      header h1 { font-size: 2rem; }
-      .input-group { flex-direction: column; }
-      .cyber-btn { width: 100%; }
-    }
-    
-    @media (max-width: 480px) {
-      header { padding: 1.5rem 1rem; }
-      header h1 { font-size: 1.5rem; }
-      .card { margin: 1rem; padding: 1.5rem; }
-
-         .cyber-projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 1rem;
-      margin-top: 2rem;
-      padding: 1rem;
-      background: rgba(5, 5, 15, 0.7);
-      border: 1px solid var(--neon-purple);
-      box-shadow: var(--thin-glow);
-    }
-    
-    .cyber-project-btn {
-      position: relative;
-      width: 100%;
-      padding: 1rem;
-      background: rgba(10, 10, 20, 0.8);
-      border: none;
-      color: var(--neon-blue);
-      font-family: 'Share Tech Mono', monospace;
-      text-align: left;
-      cursor: pointer;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      z-index: 1;
-    }
-    
-    .cyber-project-btn:hover {
-      color: var(--neon-green);
-      box-shadow: 0 0 10px var(--neon-blue);
-    }
-    
-    .cyber-icon {
-      margin-right: 0.5rem;
-      font-size: 1.2rem;
-    }
-    
-    .cyber-project-btn::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(0, 225, 255, 0.1),
-        transparent
-      );
-      transition: all 0.5s ease;
-      z-index: -1;
-    }
-    
-    .cyber-project-btn:hover::before {
-      left: 100%;
-    }
-    
-    .spinner {
-      display: inline-block;
-      animation: spin 1s linear infinite;
-      margin-right: 0.5rem;
-    }
-    
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    }
-     .cyber-projects-container {
+    /* PROJECTS GRID */
+    .cyber-projects-container {
       margin-top: 2rem;
       padding: 1rem;
       background: rgba(5, 5, 15, 0.7);
@@ -434,6 +372,7 @@
       box-shadow: 0 0 5px var(--neon-blue);
       text-transform: uppercase;
       letter-spacing: 1px;
+      will-change: transform, box-shadow;
     }
     
     .cyber-project-btn:hover {
@@ -475,15 +414,62 @@
       font-size: 0.9rem;
     }
     
+    /* FOOTER STYLES */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--neon-purple);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.8rem;
+      border-top: 1px solid var(--neon-purple);
+      box-shadow: 0 0 5px var(--neon-purple);
+      letter-spacing: 0.1rem;
+    }
+    
+    /* ANIMATIONS */
+    @keyframes scan { 
+      0% { background-position: 0 0; }
+      100% { background-position: 0 0.5rem; } 
+    }
+    
+    @keyframes flicker {
+      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+      20%, 22%, 24%, 55% { opacity: 0.7; }
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .card { animation: flicker 8s infinite; }
+    .card:nth-child(2) { animation-delay: 0.5s; }
+    
     .spinner {
       display: inline-block;
       animation: spin 1s linear infinite;
       margin-right: 0.5rem;
     }
     
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+    /* RESPONSIVE DESIGN */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      header h1 { font-size: 2rem; }
+      .input-group { flex-direction: column; }
+      .cyber-btn { width: 100%; }
+    }
+    
+    @media (max-width: 480px) {
+      header { padding: 1.5rem 1rem; }
+      header h1 { font-size: 1.5rem; }
+      .card { margin: 1rem; padding: 1.5rem; }
+      .cyber-projects-grid {
+        grid-template-columns: 1fr;
+      }
+      .cyber-project-btn {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+      }
     }
   </style>
 </head>
@@ -547,14 +533,30 @@
 
   <audio id="bgMusic" src="https://www.myinstants.com/media/sounds/ghost-in-the-shell-innocence-cyberbrain-conversation.mp3" loop></audio>
   
-   <script>
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // API Query functionality
       const apiBtn = document.getElementById('apiBtn');
       const terminalOutput = document.getElementById('terminalOutput');
       const repoPath = document.getElementById('repoPath');
-      const apiResult = document.getElementById('apiResult');
       
-      // Efekt ładowania w stylu cyberpunk
+      // Audio functionality
+      const playMusicBtn = document.getElementById('playMusicBtn');
+      const bgMusic = document.getElementById('bgMusic');
+      const volumeControl = document.getElementById('volumeControl');
+      let isPlaying = false;
+
+      // Escape HTML to prevent XSS
+      function escapeHtml(unsafe) {
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      // Loading effect
       function setLoading(isLoading) {
         apiBtn.disabled = isLoading;
         if (isLoading) {
@@ -565,35 +567,33 @@
         }
       }
       
-      // Funkcja tworząca cyberpunkowe przyciski projektów
+      // Create project button
       function createProjectButton(folderName) {
         const button = document.createElement('button');
         button.className = 'cyber-project-btn';
         
-        // Ikona i nazwa projektu
-        button.innerHTML = `
-          <span class="cyber-project-icon">⎔</span>
-          <span class="cyber-project-name">${folderName}</span>
-        `;
-        
-        // URL do projektu
         const indexUrl = `https://darin0v0.github.io/projects/${folderName}/index.html`;
         
+        button.innerHTML = `
+          <span class="cyber-project-icon">⎔</span>
+          <span class="cyber-project-name">${escapeHtml(folderName)}</span>
+        `;
+        
         button.onclick = function() {
-          terminalOutput.innerHTML += `<br>> OPENING_PROJECT: ${folderName}...`;
+          terminalOutput.innerHTML += `<br>> OPENING_PROJECT: ${escapeHtml(folderName)}...`;
           terminalOutput.scrollTop = terminalOutput.scrollHeight;
           window.open(indexUrl, '_blank');
         };
         
         button.addEventListener('mouseenter', () => {
-          terminalOutput.innerHTML += `<br>> HIGHLIGHTED: ${folderName}`;
+          terminalOutput.innerHTML += `<br>> HIGHLIGHTED: ${escapeHtml(folderName)}`;
           terminalOutput.scrollTop = terminalOutput.scrollHeight;
         });
         
         return button;
       }
       
-      // Główna funkcja obsługująca kliknięcie
+      // Handle API query
       apiBtn.addEventListener('click', async function() {
         const path = repoPath.value.trim() || 'projects';
         setLoading(true);
@@ -606,10 +606,10 @@
           
           if (!response.ok) {
             const errorData = await response.json().catch(() => null);
-            let errorMessage = `ERROR_ACCESSING_PATH: ${path}`;
+            let errorMessage = `ERROR_ACCESSING_PATH: ${escapeHtml(path)}`;
             
             if (errorData?.message) {
-              errorMessage += `<br>> GITHUB_API: ${errorData.message}`;
+              errorMessage += `<br>> GITHUB_API: ${escapeHtml(errorData.message)}`;
             }
             
             throw new Error(errorMessage);
@@ -621,31 +621,31 @@
           terminalOutput.innerHTML += '<br>> SCAN_COMPLETE. ANALYZING_RESULTS...';
           terminalOutput.scrollTop = terminalOutput.scrollHeight;
           
-          // Tworzymy kontener na projekty
+          // Create projects container
           let projectsContainer = document.querySelector('.cyber-projects-container');
           if (!projectsContainer) {
             projectsContainer = document.createElement('div');
             projectsContainer.className = 'cyber-projects-container';
-            document.body.insertBefore(projectsContainer, document.querySelector('footer'));
+            document.querySelector('main').appendChild(projectsContainer);
           }
           
-          // Tworzymy siatkę projektów
+          // Create projects grid
           const projectsGrid = document.createElement('div');
           projectsGrid.className = 'cyber-projects-grid';
           
           if (folders.length === 0) {
-            terminalOutput.innerHTML += `<br><br>> NO_PROJECTS_FOUND_IN: ${path}`;
+            terminalOutput.innerHTML += `<br><br>> NO_PROJECTS_FOUND_IN: ${escapeHtml(path)}`;
             projectsGrid.innerHTML = '<div class="cyber-project-btn" style="grid-column:1/-1">NO PROJECTS FOUND</div>';
           } else {
             terminalOutput.innerHTML += `<br><br>> PROJECTS_DETECTED: ${folders.length}`;
             
             folders.forEach(folder => {
               projectsGrid.appendChild(createProjectButton(folder.name));
-              terminalOutput.innerHTML += `<br>> LOADED: ${folder.name}`;
+              terminalOutput.innerHTML += `<br>> LOADED: ${escapeHtml(folder.name)}`;
             });
           }
           
-          // Aktualizujemy kontener
+          // Update container
           projectsContainer.innerHTML = '';
           projectsContainer.appendChild(projectsGrid);
           
@@ -655,7 +655,7 @@
         } catch (error) {
           terminalOutput.innerHTML += `
             <br><br>> SYSTEM_ERROR:
-            <br>> ${error.message.replace('\n', '<br>> ')}
+            <br>> ${escapeHtml(error.message).replace('\n', '<br>> ')}
             <br><br>> WARNING: UNAUTHENTICATED_REQUESTS_LIMITED
           `;
           console.error('GitHub API error:', error);
@@ -665,11 +665,27 @@
         }
       });
       
-      // Obsługa klawisza Enter
+      // Handle Enter key
       repoPath.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
           apiBtn.click();
         }
+      });
+      
+      // Audio controls
+      playMusicBtn.addEventListener('click', function() {
+        if (isPlaying) {
+          bgMusic.pause();
+          playMusicBtn.textContent = 'ACTIVATE_AUDIO_STREAM';
+        } else {
+          bgMusic.play();
+          playMusicBtn.textContent = 'TERMINATE_AUDIO_STREAM';
+        }
+        isPlaying = !isPlaying;
+      });
+
+      volumeControl.addEventListener('input', function() {
+        bgMusic.volume = this.value;
       });
     });
   </script>
