@@ -3,14 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Licznik folderów</title>
+  <title>Licznik folderów + Muzyka</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="container">
     <h1>Licznik folderów w podfolderze</h1>
-
-    <button id="playMusicBtn">Włącz muzykę</button>
 
     <div class="method">
       <h2>Metoda statyczna (symulacja)</h2>
@@ -24,26 +22,38 @@
       <button id="apiBtn">Zlicz przez API</button>
       <div id="apiResult" class="result"></div>
     </div>
+
+    <h2>Muzyka w tle</h2>
+    <audio id="bgMusic" src="audio/twojpodklad.mp3" autoplay loop></audio>
+
+    <div>
+      <label for="volumeControl">Głośność: </label>
+      <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="0.5">
+    </div>
   </div>
 
   <script src="script.js"></script>
 
-  <div id="musicPlayer" style="display:none;">
-    <iframe 
-      width="0" 
-      height="0" 
-      src="https://www.youtube.com/embed/SJtyejNSYoo?autoplay=1&loop=1&playlist=SJtyejNSYoo" 
-      frameborder="0" 
-      allow="autoplay" 
-      allowfullscreen>
-    </iframe>
-  </div>
-
   <script>
-    document.getElementById('playMusicBtn').addEventListener('click', function() {
-      document.getElementById('musicPlayer').style.display = 'block';
-      this.style.display = 'none'; // Ukryj przycisk po kliknięciu
+    const bgMusic = document.getElementById('bgMusic');
+    const volumeControl = document.getElementById('volumeControl');
+
+    // Ustawienie głośności na start
+    bgMusic.volume = 0.5;
+
+    // Zmiana głośności za pomocą suwaka
+    volumeControl.addEventListener('input', function() {
+      bgMusic.volume = this.value;
     });
+
+    // Próba odtworzenia automatycznie po kliknięciu na stronę
+    document.addEventListener('click', function() {
+      if (bgMusic.paused) {
+        bgMusic.play().catch((error) => {
+          console.error('Autoodtwarzanie zablokowane:', error);
+        });
+      }
+    }, { once: true }); // tylko pierwszy klik
   </script>
 </body>
 </html>
