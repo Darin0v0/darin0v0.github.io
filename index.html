@@ -3,62 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projekty</title>
+  <title>Projekty i Muzyka</title>
   <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <div class="method">
-      <h2>Sprawdz Projekty</h2>
-      <input type="text" id="repoPath" placeholder="ścieżka do podfolderu">
-      <button id="apiBtn">Zlicz przez API</button>
-      <div id="apiResult" class="result"></div>
-    </div>
+    <header>
+      <h1>Moje Projekty</h1>
+      <p class="subtitle">Zarządzanie projektami i relaksująca muzyka</p>
+    </header>
 
-    <h2>Muzyka w tle</h2>
-    <button id="playMusicBtn" aria-label="Odtwórz muzykę">▶️ Włącz muzykę</button>
+    <main>
+      <section class="card">
+        <div class="method">
+          <h2>Sprawdź Projekty</h2>
+          <div class="input-group">
+            <input type="text" id="repoPath" placeholder="Wprowadź ścieżkę do podfolderu">
+            <button id="apiBtn" class="btn-primary">Zlicz przez API</button>
+          </div>
+          <div id="apiResult" class="result"></div>
+        </div>
+      </section>
 
-    <audio id="bgMusic" src="back.mp3" loop></audio>
+      <section class="card">
+        <h2>Muzyka w tle</h2>
+        <div class="music-controls">
+          <button id="playMusicBtn" class="btn-music" aria-label="Odtwórz muzykę">
+            <span class="icon">▶️</span> Włącz muzykę
+          </button>
+          
+          <div class="volume-control">
+            <label for="volumeControl">Głośność: </label>
+            <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="0.5">
+          </div>
+        </div>
+      </section>
+    </main>
 
-    <div style="margin-top: 10px;">
-      <label for="volumeControl">Głośność: </label>
-      <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="0.5">
-    </div>
+    <footer>
+      <p>© 2023 Moja Aplikacja | Wersja 1.0</p>
+    </footer>
   </div>
 
+  <audio id="bgMusic" src="back.mp3" loop></audio>
   <script src="script.js"></script>
-
-  <script>
-    const bgMusic = document.getElementById('bgMusic');
-    const playMusicBtn = document.getElementById('playMusicBtn');
-    const volumeControl = document.getElementById('volumeControl');
-
-    // Ustaw domyślną głośność
-    bgMusic.volume = volumeControl.value;
-
-    // Obsługa przycisku muzyki
-    playMusicBtn.addEventListener('click', function() {
-      if (bgMusic.paused) {
-        bgMusic.play()
-          .then(() => {
-            playMusicBtn.innerHTML = '⏸️ Pauza muzyki';
-            playMusicBtn.setAttribute('aria-label', 'Zatrzymaj muzykę');
-          })
-          .catch(error => {
-            console.error('Błąd odtwarzania:', error);
-            alert('Muzyka nie może zostać odtworzona. Sprawdź konsolę.');
-          });
-      } else {
-        bgMusic.pause();
-        playMusicBtn.innerHTML = '▶️ Włącz muzykę';
-        playMusicBtn.setAttribute('aria-label', 'Odtwórz muzykę');
-      }
-    });
-
-    // Obsługa suwaka głośności
-    volumeControl.addEventListener('input', function() {
-      bgMusic.volume = this.value;
-    });
-  </script>
 </body>
 </html>
