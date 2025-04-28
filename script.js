@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const repoPath = document.getElementById('repoPath');
     
     apiBtn.addEventListener('click', async function() {
-        const path = repoPath.value.trim() || 'projects'; // Domyślnie szuka w folderze 'projects'
+        const path = repoPath.value.trim() || 'projects'; // Domyślna ścieżka
         apiResult.innerHTML = "Ładowanie...";
         
         try {
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     const button = document.createElement('button');
                     button.textContent = `Otwórz ${folderName}`;
-                    button.style.margin = "5px";
+                    button.className = 'openButton'; // Dodaję klasę CSS!
                     button.onclick = function() {
                         window.open(indexUrl, '_blank');
                     };
