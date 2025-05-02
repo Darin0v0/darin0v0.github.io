@@ -717,11 +717,53 @@
       const repoPath = document.getElementById('repoPath');
       
       // Audio functionality
-      const playMusicBtn = document.getElementById('playMusicBtn');
+ const playMusicBtn = document.getElementById('playMusicBtn');
       const bgMusic = document.getElementById('bgMusic');
       const volumeControl = document.getElementById('volumeControl');
       let isPlaying = false;
+      bgMusic.load();
+  function handleFirstPlay() {
+        if (bgMusic.readyState > 0) {
+          togglePlay();
+        } else {
+          bgMusic.load();
+          bgMusic.oncanplay = function() {
+            togglePlay();
+            bgMusic.oncanplay = null;
+          };
+        }
+      }
+        function togglePlay() {
+        if (isPlaying) {
+          bgMusic.pause();
+          playMusicBtn.textContent = 'ACTIVATE_AUDIO_STREAM';
+        } else {
+          bgMusic.play()
+            .then(() => {
+              playMusicBtn.textContent = 'TERMINATE_AUDIO_STREAM';
+            })
+            .catch(error => {
+              console.error("Audio playback error:", error);
+              terminalOutput.innerHTML += '<br>> AUDIO_ERROR: USER_INTERACTION_REQUIRED';
+              terminalOutput.scrollTop = terminalOutput.scrollHeight;
+              playMusicBtn.textContent = 'CLICK_TO_ENABLE_AUDIO';
+            });
+        }
+        isPlaying = !isPlaying;
+      }
 
+      playMusicBtn.addEventListener('click', function() {
+        // Wymagana interakcja użytkownika przed odtworzeniem
+        if (bgMusic.readyState === 0) {
+          terminalOutput.innerHTML += '<br>> AUDIO_INIT: USER_INTERACTION_REQUIRED';
+          terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+        handleFirstPlay();
+      });
+
+      volumeControl.addEventListener('input', function() {
+        bgMusic.volume = this.value;
+      });
       // Escape HTML to prevent XSS
       function escapeHtml(unsafe) {
         return unsafe
