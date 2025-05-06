@@ -15,6 +15,7 @@
       --scanline: rgba(0, 255, 0, 0.05);
       --neon-green: #00ff9d;
       --neon-pink: #ff00aa;
+      --neon-blue: #00e1ff;
     }
 
     /* EFEKT GLITCHA */
@@ -90,36 +91,53 @@
     }
 
     /* PRZYCISKI */
-    button {
-      background: transparent;
-      color: var(--text-color);
-      border: 1px solid var(--text-color);
-      padding: 0.5rem 1rem;
+    .cyber-btn {
+      position: relative;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      background: rgba(0, 255, 157, 0.1);
+      color: var(--neon-green);
       font-family: inherit;
       cursor: pointer;
-      transition: all 0.3s;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
       margin-right: 0.5rem;
       margin-bottom: 0.5rem;
     }
 
-    button:hover {
-      background: var(--text-color);
-      color: var(--main-bg);
+    .cyber-btn:hover {
+      background: rgba(0, 255, 157, 0.2);
+      box-shadow: 0 0 10px var(--neon-green);
       animation: glitch 0.5s infinite;
     }
 
     /* INPUT */
     .cyber-input {
-      background: transparent;
-      border: 1px solid var(--text-color);
-      color: var(--text-color);
-      padding: 0.5rem;
+      background: rgba(5, 5, 10, 0.9);
+      border: 1px solid var(--neon-blue);
+      color: var(--neon-green);
+      padding: 0.8rem;
       font-family: inherit;
       width: 100%;
       margin-bottom: 1rem;
+      box-shadow: 0 0 8px var(--neon-blue);
+    }
+
+    .cyber-input::placeholder {
+      color: var(--neon-blue);
+      opacity: 0.7;
     }
 
     /* PROJEKTY */
+    .cyber-projects-container {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: rgba(5, 5, 15, 0.8);
+      border: 1px solid var(--neon-blue);
+    }
+
     .cyber-projects-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -128,15 +146,23 @@
     }
 
     .cyber-project-btn {
-      background: rgba(0, 255, 0, 0.1);
-      border: 1px solid var(--text-color);
-      padding: 1rem;
+      position: relative;
+      padding: 1.5rem;
+      background: rgba(10, 10, 20, 0.9);
+      border: 1px solid var(--neon-blue);
+      color: var(--neon-blue);
       text-align: center;
       cursor: pointer;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
     .cyber-project-btn:hover {
-      background: rgba(0, 255, 0, 0.2);
+      color: var(--neon-green);
+      border-color: var(--neon-green);
+      box-shadow: 0 0 10px var(--neon-green);
     }
 
     /* STOPKA */
@@ -144,17 +170,30 @@
       margin-top: 2rem;
       text-align: center;
       padding: 1rem;
-      border-top: 1px solid var(--text-color);
+      border-top: 1px solid var(--neon-blue);
     }
 
     footer a {
-      color: var(--accent-2);
+      color: var(--neon-blue);
       margin: 0 0.5rem;
       text-decoration: none;
     }
 
     footer a:hover {
+      color: var(--neon-green);
       text-decoration: underline;
+    }
+
+    /* ANIMACJE */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .spinner {
+      display: inline-block;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
     }
   </style>
 </head>
@@ -168,16 +207,21 @@
     <div class="terminal" id="terminalOutput">
       > SYSTEM INITIALIZED<br>
       > WELCOME TO MY DIGITAL SPACE<br>
-      > TYPE COMMAND BELOW
+      > READY FOR QUERY...
     </div>
 
     <div class="input-group">
       <input type="text" id="repoPath" placeholder="ENTER_QUERY_PATH::" class="cyber-input">
-      <button id="apiBtn">EXECUTE_QUERY</button>
-      <button id="playMusicBtn">TOGGLE_AMBIENT</button>
+      <button id="apiBtn" class="cyber-btn">EXECUTE_QUERY</button>
+      <button id="playMusicBtn" class="cyber-btn">ACTIVATE_AUDIO</button>
     </div>
 
-    <div id="projectsContainer" class="terminal" style="display:none;">
+    <div class="volume-control">
+      <label>VOLUME_LEVEL::</label>
+      <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="0.5" class="cyber-slider">
+    </div>
+
+    <div id="projectsContainer" class="cyber-projects-container" style="display:none;">
       <!-- Projekty będą ładowane dynamicznie -->
     </div>
   </main>
@@ -197,49 +241,26 @@
       const playMusicBtn = document.getElementById('playMusicBtn');
       const repoPath = document.getElementById('repoPath');
       const bgMusic = document.getElementById('bgMusic');
+      const volumeControl = document.getElementById('volumeControl');
       const projectsContainer = document.getElementById('projectsContainer');
       let isPlaying = false;
-
-      // Efekt pisania w terminalu
-      const messages = [
-        "> SYSTEM_SCAN_COMPLETE",
-        "> NO_MALWARE_DETECTED",
-        "> CONNECTION_SECURE"
-      ];
-
-      let i = 0;
-      function typeWriter() {
-        if (i < messages.length) {
-          terminalOutput.innerHTML += `<br>${messages[i]}`;
-          terminalOutput.scrollTop = terminalOutput.scrollHeight;
-          i++;
-          setTimeout(typeWriter, 1000);
-        }
-      }
-      setTimeout(typeWriter, 1500);
-
-      // Efekt glitch na przyciskach
-      document.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('mouseover', () => {
-          btn.style.textShadow = `0 0 5px ${Math.random() > 0.5 ? 'var(--accent-1)' : 'var(--accent-2)'}`;
-        });
-      });
 
       // Funkcje audio
       function togglePlay() {
         if (isPlaying) {
           bgMusic.pause();
-          playMusicBtn.textContent = 'TOGGLE_AMBIENT';
+          playMusicBtn.textContent = 'ACTIVATE_AUDIO';
           terminalOutput.innerHTML += '<br>> AUDIO_STREAM_TERMINATED';
         } else {
           bgMusic.play()
             .then(() => {
-              playMusicBtn.textContent = 'STOP_AMBIENT';
-              terminalOutput.innerHTML += '<br>> AMBIENT_AUDIO_ACTIVATED';
+              playMusicBtn.textContent = 'STOP_AUDIO';
+              terminalOutput.innerHTML += '<br>> AUDIO_STREAM_ACTIVATED';
             })
             .catch(error => {
               console.error("Audio playback error:", error);
               terminalOutput.innerHTML += '<br>> AUDIO_ERROR: USER_INTERACTION_REQUIRED';
+              playMusicBtn.textContent = 'CLICK_TO_ENABLE';
             });
         }
         terminalOutput.scrollTop = terminalOutput.scrollHeight;
@@ -247,6 +268,9 @@
       }
 
       playMusicBtn.addEventListener('click', togglePlay);
+      volumeControl.addEventListener('input', () => {
+        bgMusic.volume = volumeControl.value;
+      });
 
       // Funkcje API GitHub
       function escapeHtml(unsafe) {
@@ -258,12 +282,25 @@
           .replace(/'/g, "&#039;");
       }
 
+      function setLoading(isLoading) {
+        apiBtn.disabled = isLoading;
+        if (isLoading) {
+          apiBtn.innerHTML = '<span class="spinner">⌛</span> EXECUTING...';
+        } else {
+          apiBtn.innerHTML = 'EXECUTE_QUERY';
+        }
+      }
+
       function createProjectButton(folderName) {
-        const button = document.createElement('div');
+        const button = document.createElement('button');
         button.className = 'cyber-project-btn';
-        button.textContent = folderName;
         
         const indexUrl = `https://darin0v0.github.io/projects/${folderName}/index.html`;
+        
+        button.innerHTML = `
+          <span style="color: var(--neon-green)">⎔</span><br>
+          ${escapeHtml(folderName)}
+        `;
         
         button.onclick = function() {
           terminalOutput.innerHTML += `<br>> OPENING_PROJECT: ${escapeHtml(folderName)}...`;
@@ -281,6 +318,7 @@
 
       apiBtn.addEventListener('click', async function() {
         const path = repoPath.value.trim() || 'projects';
+        setLoading(true);
         terminalOutput.innerHTML += `<br>> INITIATING_GITHUB_API_REQUEST: ${escapeHtml(path)}`;
         terminalOutput.scrollTop = terminalOutput.scrollHeight;
         
@@ -302,7 +340,6 @@
           const folders = contents.filter(item => item.type === 'dir');
           
           terminalOutput.innerHTML += `<br>> SCAN_COMPLETE. PROJECTS_DETECTED: ${folders.length}`;
-          terminalOutput.scrollTop = terminalOutput.scrollHeight;
           
           // Tworzenie kontenera projektów
           projectsContainer.style.display = 'block';
@@ -310,7 +347,7 @@
           const projectsGrid = document.getElementById('projectsGrid');
           
           if (folders.length === 0) {
-            projectsGrid.innerHTML = '<div>NO PROJECTS FOUND</div>';
+            projectsGrid.innerHTML = '<div style="grid-column:1/-1">NO PROJECTS FOUND</div>';
           } else {
             folders.forEach(folder => {
               projectsGrid.appendChild(createProjectButton(folder.name));
@@ -319,7 +356,6 @@
           }
           
           terminalOutput.innerHTML += '<br>> READY_FOR_NEXT_QUERY';
-          terminalOutput.scrollTop = terminalOutput.scrollHeight;
           
         } catch (error) {
           terminalOutput.innerHTML += `
@@ -328,6 +364,8 @@
             <br><br>> WARNING: UNAUTHENTICATED_REQUESTS_LIMITED
           `;
           console.error('GitHub API error:', error);
+        } finally {
+          setLoading(false);
           terminalOutput.scrollTop = terminalOutput.scrollHeight;
         }
       });
@@ -336,6 +374,13 @@
         if (e.key === 'Enter') {
           apiBtn.click();
         }
+      });
+
+      // Efekt glitch na przyciskach
+      document.querySelectorAll('.cyber-btn').forEach(btn => {
+        btn.addEventListener('mouseover', () => {
+          btn.style.textShadow = `0 0 5px ${Math.random() > 0.5 ? 'var(--accent-1)' : 'var(--accent-2)'}`;
+        });
       });
     });
   </script>
