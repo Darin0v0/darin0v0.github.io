@@ -93,73 +93,60 @@
 </style>
 </head>
 <body>
-  <div class="scanlines"></div>
-  <div class="noise"></div>
-  
-  <div class="container">
-    <header>
-      <div class="section9-logo float"></div>
-      <h1>SECTION 9</h1>
-      <h2>DATA TERMINAL v3.0.1</h2>
-    </header>
+  <header>
+    <h1>DAWID_MURIAS</h1>
+    <p>CYBERSPACE_TERMINAL_v4.2.1</p>
+  </header>
 
-    <main>
-      <section class="card">
-        <div class="method">
-          <h2>SYSTEM ACCESS</h2>
-          <div class="input-group">
-            <input type="text" id="repoPath" placeholder="ENTER_QUERY_PATH::" class="cyber-input">
-            <button id="apiBtn" class="cyber-btn">
-              EXECUTE_QUERY
-            </button>
-          </div>
-          <div id="apiResult" class="cyber-terminal">
-            <div class="terminal-header">
-              <span class="terminal-btn red"></span>
-              <span class="terminal-btn yellow"></span>
-              <span class="terminal-btn green"></span>
-              <span class="terminal-title">OUTPUT_STREAM</span>
-            </div>
-            <div class="terminal-content" id="terminalOutput">
-              > SYSTEM STATUS: ONLINE<br>
-              > SECURITY LEVEL: 9<br>
-              > WELCOME, MAJOR KUSANAGI<br>
-              > READY FOR QUERY...
-            </div>
-          </div>
-        </div>
-      </section>
+  <main>
+    <div class="terminal">
+      <p>> SYSTEM INITIALIZED</p>
+      <p>> WELCOME TO MY DIGITAL SPACE</p>
+    </div>
 
-      <section class="card">
-        <h2>AUDIO INTERFACE</h2>
-        <div class="music-controls">
-          <button id="playMusicBtn" class="cyber-btn">
-            ACTIVATE_AUDIO_STREAM
-          </button>
-          
-          <div class="volume-control">
-            <label for="volumeControl">VOLUME_LEVEL:: </label>
-            <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="0.5" class="cyber-slider">
-          </div>
-        </div>
-      </section>
+    <button id="projectsBtn">LOAD_PROJECTS</button>
+    <button id="musicBtn">TOGGLE_AMBIENT</button>
 
-      <!-- NEW CONTACT SECTION -->
-      <section class="contact-section">
-        <h2>CONTACT INTERFACE</h2>
-        <p>SECURE COMMUNICATION CHANNEL ESTABLISHED</p>
-        <a href="mailto:dawidmurias907@gmail.com" class="contact-email">dawidmurias907@gmail.com</a>
-      </section>
-    </main>
+    <div id="projectsContainer" class="terminal" style="display:none;">
+      <!-- Projekty będą ładowane dynamicznie -->
+    </div>
+  </main>
 
-    <footer>
-      <p>SECTION_9_INTERNAL_USE_ONLY :: ©_2025_PUBLIC_SECURITY_SECTION_9</p>
-    </footer>
-  </div>
+  <footer>
+    <p>CONNECT:</p>
+    <a href="mailto:dawidmurias907@gmail.com">EMAIL</a>
+    <a href="https://github.com/Darin0v0">GITHUB</a>
+  </footer>
 
-  <audio id="bgMusic" src="https://www.myinstants.com/media/sounds/ghost-in-the-shell-innocence-cyberbrain-conversation.mp3" loop></audio>
-  
   <script>
+// EFEKT TYPING W TERMINALU
+const terminal = document.querySelector('.terminal');
+const messages = [
+  "> SYSTEM_SCAN_COMPLETE",
+  "> NO_MALWARE_DETECTED",
+  "> CONNECTION_SECURE",
+  "> TYPE 'HELP' FOR OPTIONS"
+];
+
+let i = 0;
+function typeWriter() {
+  if (i < messages.length) {
+    terminal.innerHTML += `<p>${messages[i]}</p>`;
+    terminal.scrollTop = terminal.scrollHeight;
+    i++;
+    setTimeout(typeWriter, 1000);
+  }
+}
+
+setTimeout(typeWriter, 500);
+
+// GLITCH EFFECT NA PRZYCISKACH
+document.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('mouseover', () => {
+    btn.style.textShadow = `0 0 5px ${Math.random() > 0.5 ? 'var(--accent-1)' : 'var(--accent-2)'}`;
+  });
+});
+    
     document.addEventListener('DOMContentLoaded', function() {
       // API Query functionality
       const apiBtn = document.getElementById('apiBtn');
