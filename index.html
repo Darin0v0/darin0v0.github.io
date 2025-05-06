@@ -3,94 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SECTION 9 // DATA TERMINAL</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500&display=swap" rel="stylesheet">
-<style>
-  /* NOWA PALETA KOLORÓW */
-  :root {
-    --main-bg: #000;
-    --text-color: #0f0;
-    --accent-1: #ff00ff;
-    --accent-2: #00ffff;
-    --scanline: rgba(0, 255, 0, 0.05);
-  }
+  <title>DAWID_MURIAS // CYBERSPACE_TERMINAL</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    /* NOWA PALETA KOLORÓW */
+    :root {
+      --main-bg: #000;
+      --text-color: #0f0;
+      --accent-1: #ff00ff;
+      --accent-2: #00ffff;
+      --scanline: rgba(0, 255, 0, 0.05);
+      --neon-green: #00ff9d;
+      --neon-pink: #ff00aa;
+    }
 
-  /* EFEKT GLITCHA */
-  @keyframes glitch {
-    0% { text-shadow: 2px 0 var(--accent-1); }
-    20% { text-shadow: -2px 0 var(--accent-2); }
-    40%, 100% { text-shadow: none; }
-  }
+    /* EFEKT GLITCHA */
+    @keyframes glitch {
+      0% { text-shadow: 2px 0 var(--accent-1); }
+      20% { text-shadow: -2px 0 var(--accent-2); }
+      40%, 100% { text-shadow: none; }
+    }
 
-  /* BAZOWY STYL */
-  body {
-    background: var(--main-bg);
-    color: var(--text-color);
-    font-family: 'Courier New', monospace;
-    line-height: 1.4;
-    padding: 1rem;
-    overflow-x: hidden;
-  }
+    /* BAZOWY STYL */
+    body {
+      background: var(--main-bg);
+      color: var(--text-color);
+      font-family: 'Share Tech Mono', monospace;
+      line-height: 1.4;
+      padding: 1rem;
+      overflow-x: hidden;
+      margin: 0;
+    }
 
-  /* EFEKT VHS */
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: 
-      linear-gradient(var(--scanline) 0 0 / 100% 2px,
-      repeating-linear-gradient(
-        0deg,
-        rgba(0, 0, 0, 0.5),
-        rgba(0, 0, 0, 0.5) 1px,
-        transparent 1px,
-        transparent 2px
-      );
-    pointer-events: none;
-    z-index: 1000;
-    mix-blend-mode: overlay;
-  }
+    /* EFEKT VHS */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: 
+        linear-gradient(var(--scanline) 0 0 / 100% 2px,
+        repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.5),
+          rgba(0, 0, 0, 0.5) 1px,
+          transparent 1px,
+          transparent 2px
+        ));
+      pointer-events: none;
+      z-index: 1000;
+      mix-blend-mode: overlay;
+    }
 
-  /* NAGŁÓWEK */
-  header h1 {
-    font-size: 2.5rem;
-    text-transform: uppercase;
-    animation: glitch 3s infinite;
-    margin-bottom: 0.5rem;
-  }
+    /* NAGŁÓWEK */
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
 
-  /* TERMINAL */
-  .terminal {
-    border: 1px solid var(--text-color);
-    padding: 1rem;
-    margin: 1rem 0;
-    position: relative;
-  }
+    header h1 {
+      font-size: 2.5rem;
+      text-transform: uppercase;
+      animation: glitch 3s infinite;
+      margin-bottom: 0.5rem;
+      color: var(--neon-green);
+    }
 
-  .terminal::before {
-    content: ">";
-    position: absolute;
-    left: 0.5rem;
-    top: 0.5rem;
-  }
+    header p {
+      color: var(--neon-pink);
+    }
 
-  /* PRZYCISKI */
-  button {
-    background: transparent;
-    color: var(--text-color);
-    border: 1px solid var(--text-color);
-    padding: 0.5rem 1rem;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
+    /* TERMINAL */
+    .terminal {
+      border: 1px solid var(--text-color);
+      padding: 1rem 1rem 1rem 2rem;
+      margin: 1rem 0;
+      position: relative;
+      background: rgba(0, 0, 0, 0.7);
+    }
 
-  button:hover {
-    background: var(--text-color);
-    color: var(--main-bg);
-    animation: glitch 0.5s infinite;
-  }
-</style>
+    .terminal::before {
+      content: ">";
+      position: absolute;
+      left: 0.5rem;
+      top: 1rem;
+      color: var(--neon-green);
+    }
+
+    /* PRZYCISKI */
+    button {
+      background: transparent;
+      color: var(--text-color);
+      border: 1px solid var(--text-color);
+      padding: 0.5rem 1rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    button:hover {
+      background: var(--text-color);
+      color: var(--main-bg);
+      animation: glitch 0.5s infinite;
+    }
+
+    /* INPUT */
+    .cyber-input {
+      background: transparent;
+      border: 1px solid var(--text-color);
+      color: var(--text-color);
+      padding: 0.5rem;
+      font-family: inherit;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+
+    /* PROJEKTY */
+    .cyber-projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .cyber-project-btn {
+      background: rgba(0, 255, 0, 0.1);
+      border: 1px solid var(--text-color);
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .cyber-project-btn:hover {
+      background: rgba(0, 255, 0, 0.2);
+    }
+
+    /* STOPKA */
+    footer {
+      margin-top: 2rem;
+      text-align: center;
+      padding: 1rem;
+      border-top: 1px solid var(--text-color);
+    }
+
+    footer a {
+      color: var(--accent-2);
+      margin: 0 0.5rem;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -99,13 +165,17 @@
   </header>
 
   <main>
-    <div class="terminal">
-      <p>> SYSTEM INITIALIZED</p>
-      <p>> WELCOME TO MY DIGITAL SPACE</p>
+    <div class="terminal" id="terminalOutput">
+      > SYSTEM INITIALIZED<br>
+      > WELCOME TO MY DIGITAL SPACE<br>
+      > TYPE COMMAND BELOW
     </div>
 
-    <button id="projectsBtn">LOAD_PROJECTS</button>
-    <button id="musicBtn">TOGGLE_AMBIENT</button>
+    <div class="input-group">
+      <input type="text" id="repoPath" placeholder="ENTER_QUERY_PATH::" class="cyber-input">
+      <button id="apiBtn">EXECUTE_QUERY</button>
+      <button id="playMusicBtn">TOGGLE_AMBIENT</button>
+    </div>
 
     <div id="projectsContainer" class="terminal" style="display:none;">
       <!-- Projekty będą ładowane dynamicznie -->
@@ -118,90 +188,67 @@
     <a href="https://github.com/Darin0v0">GITHUB</a>
   </footer>
 
+  <audio id="bgMusic" src="https://www.myinstants.com/media/sounds/ghost-in-the-shell-innocence-cyberbrain-conversation.mp3" loop></audio>
+
   <script>
-// EFEKT TYPING W TERMINALU
-const terminal = document.querySelector('.terminal');
-const messages = [
-  "> SYSTEM_SCAN_COMPLETE",
-  "> NO_MALWARE_DETECTED",
-  "> CONNECTION_SECURE",
-  "> TYPE 'HELP' FOR OPTIONS"
-];
-
-let i = 0;
-function typeWriter() {
-  if (i < messages.length) {
-    terminal.innerHTML += `<p>${messages[i]}</p>`;
-    terminal.scrollTop = terminal.scrollHeight;
-    i++;
-    setTimeout(typeWriter, 1000);
-  }
-}
-
-setTimeout(typeWriter, 500);
-
-// GLITCH EFFECT NA PRZYCISKACH
-document.querySelectorAll('button').forEach(btn => {
-  btn.addEventListener('mouseover', () => {
-    btn.style.textShadow = `0 0 5px ${Math.random() > 0.5 ? 'var(--accent-1)' : 'var(--accent-2)'}`;
-  });
-});
-    
     document.addEventListener('DOMContentLoaded', function() {
-      // API Query functionality
-      const apiBtn = document.getElementById('apiBtn');
       const terminalOutput = document.getElementById('terminalOutput');
+      const apiBtn = document.getElementById('apiBtn');
+      const playMusicBtn = document.getElementById('playMusicBtn');
       const repoPath = document.getElementById('repoPath');
-      
-      // Audio functionality
- const playMusicBtn = document.getElementById('playMusicBtn');
       const bgMusic = document.getElementById('bgMusic');
-      const volumeControl = document.getElementById('volumeControl');
+      const projectsContainer = document.getElementById('projectsContainer');
       let isPlaying = false;
-      bgMusic.load();
-  function handleFirstPlay() {
-        if (bgMusic.readyState > 0) {
-          togglePlay();
-        } else {
-          bgMusic.load();
-          bgMusic.oncanplay = function() {
-            togglePlay();
-            bgMusic.oncanplay = null;
-          };
+
+      // Efekt pisania w terminalu
+      const messages = [
+        "> SYSTEM_SCAN_COMPLETE",
+        "> NO_MALWARE_DETECTED",
+        "> CONNECTION_SECURE"
+      ];
+
+      let i = 0;
+      function typeWriter() {
+        if (i < messages.length) {
+          terminalOutput.innerHTML += `<br>${messages[i]}`;
+          terminalOutput.scrollTop = terminalOutput.scrollHeight;
+          i++;
+          setTimeout(typeWriter, 1000);
         }
       }
-        function togglePlay() {
+      setTimeout(typeWriter, 1500);
+
+      // Efekt glitch na przyciskach
+      document.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('mouseover', () => {
+          btn.style.textShadow = `0 0 5px ${Math.random() > 0.5 ? 'var(--accent-1)' : 'var(--accent-2)'}`;
+        });
+      });
+
+      // Funkcje audio
+      function togglePlay() {
         if (isPlaying) {
           bgMusic.pause();
-          playMusicBtn.textContent = 'ACTIVATE_AUDIO_STREAM';
+          playMusicBtn.textContent = 'TOGGLE_AMBIENT';
+          terminalOutput.innerHTML += '<br>> AUDIO_STREAM_TERMINATED';
         } else {
           bgMusic.play()
             .then(() => {
-              playMusicBtn.textContent = 'TERMINATE_AUDIO_STREAM';
+              playMusicBtn.textContent = 'STOP_AMBIENT';
+              terminalOutput.innerHTML += '<br>> AMBIENT_AUDIO_ACTIVATED';
             })
             .catch(error => {
               console.error("Audio playback error:", error);
               terminalOutput.innerHTML += '<br>> AUDIO_ERROR: USER_INTERACTION_REQUIRED';
-              terminalOutput.scrollTop = terminalOutput.scrollHeight;
-              playMusicBtn.textContent = 'CLICK_TO_ENABLE_AUDIO';
             });
         }
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
         isPlaying = !isPlaying;
       }
 
-      playMusicBtn.addEventListener('click', function() {
-        // Wymagana interakcja użytkownika przed odtworzeniem
-        if (bgMusic.readyState === 0) {
-          terminalOutput.innerHTML += '<br>> AUDIO_INIT: USER_INTERACTION_REQUIRED';
-          terminalOutput.scrollTop = terminalOutput.scrollHeight;
-        }
-        handleFirstPlay();
-      });
+      playMusicBtn.addEventListener('click', togglePlay);
 
-      volumeControl.addEventListener('input', function() {
-        bgMusic.volume = this.value;
-      });
-      // Escape HTML to prevent XSS
+      // Funkcje API GitHub
       function escapeHtml(unsafe) {
         return unsafe
           .replace(/&/g, "&amp;")
@@ -211,28 +258,12 @@ document.querySelectorAll('button').forEach(btn => {
           .replace(/'/g, "&#039;");
       }
 
-      // Loading effect
-      function setLoading(isLoading) {
-        apiBtn.disabled = isLoading;
-        if (isLoading) {
-          apiBtn.innerHTML = '<span class="spinner">⌛</span> EXECUTING_QUERY...';
-          terminalOutput.innerHTML += '<br>> SCANNING_REPOSITORY...';
-        } else {
-          apiBtn.innerHTML = 'EXECUTE_QUERY';
-        }
-      }
-      
-      // Create project button
       function createProjectButton(folderName) {
-        const button = document.createElement('button');
+        const button = document.createElement('div');
         button.className = 'cyber-project-btn';
+        button.textContent = folderName;
         
         const indexUrl = `https://darin0v0.github.io/projects/${folderName}/index.html`;
-        
-        button.innerHTML = `
-          <span class="cyber-project-icon">⎔</span>
-          <span class="cyber-project-name">${escapeHtml(folderName)}</span>
-        `;
         
         button.onclick = function() {
           terminalOutput.innerHTML += `<br>> OPENING_PROJECT: ${escapeHtml(folderName)}...`;
@@ -247,16 +278,13 @@ document.querySelectorAll('button').forEach(btn => {
         
         return button;
       }
-      
-      // Handle API query
+
       apiBtn.addEventListener('click', async function() {
         const path = repoPath.value.trim() || 'projects';
-        setLoading(true);
+        terminalOutput.innerHTML += `<br>> INITIATING_GITHUB_API_REQUEST: ${escapeHtml(path)}`;
+        terminalOutput.scrollTop = terminalOutput.scrollHeight;
         
         try {
-          terminalOutput.innerHTML += '<br>> INITIATING_GITHUB_API_REQUEST...';
-          terminalOutput.scrollTop = terminalOutput.scrollHeight;
-          
           const response = await fetch(`https://api.github.com/repos/Darin0v0/Darin0v0.github.io/contents/${path}`);
           
           if (!response.ok) {
@@ -273,38 +301,24 @@ document.querySelectorAll('button').forEach(btn => {
           const contents = await response.json();
           const folders = contents.filter(item => item.type === 'dir');
           
-          terminalOutput.innerHTML += '<br>> SCAN_COMPLETE. ANALYZING_RESULTS...';
+          terminalOutput.innerHTML += `<br>> SCAN_COMPLETE. PROJECTS_DETECTED: ${folders.length}`;
           terminalOutput.scrollTop = terminalOutput.scrollHeight;
           
-          // Create projects container
-          let projectsContainer = document.querySelector('.cyber-projects-container');
-          if (!projectsContainer) {
-            projectsContainer = document.createElement('div');
-            projectsContainer.className = 'cyber-projects-container';
-            document.querySelector('main').insertBefore(projectsContainer, document.querySelector('.contact-section'));
-          }
-          
-          // Create projects grid
-          const projectsGrid = document.createElement('div');
-          projectsGrid.className = 'cyber-projects-grid';
+          // Tworzenie kontenera projektów
+          projectsContainer.style.display = 'block';
+          projectsContainer.innerHTML = '<div class="cyber-projects-grid" id="projectsGrid"></div>';
+          const projectsGrid = document.getElementById('projectsGrid');
           
           if (folders.length === 0) {
-            terminalOutput.innerHTML += `<br><br>> NO_PROJECTS_FOUND_IN: ${escapeHtml(path)}`;
-            projectsGrid.innerHTML = '<div class="cyber-project-btn" style="grid-column:1/-1">NO PROJECTS FOUND</div>';
+            projectsGrid.innerHTML = '<div>NO PROJECTS FOUND</div>';
           } else {
-            terminalOutput.innerHTML += `<br><br>> PROJECTS_DETECTED: ${folders.length}`;
-            
             folders.forEach(folder => {
               projectsGrid.appendChild(createProjectButton(folder.name));
               terminalOutput.innerHTML += `<br>> LOADED: ${escapeHtml(folder.name)}`;
             });
           }
           
-          // Update container
-          projectsContainer.innerHTML = '';
-          projectsContainer.appendChild(projectsGrid);
-          
-          terminalOutput.innerHTML += '<br><br>> READY_FOR_NEXT_QUERY';
+          terminalOutput.innerHTML += '<br>> READY_FOR_NEXT_QUERY';
           terminalOutput.scrollTop = terminalOutput.scrollHeight;
           
         } catch (error) {
@@ -315,44 +329,14 @@ document.querySelectorAll('button').forEach(btn => {
           `;
           console.error('GitHub API error:', error);
           terminalOutput.scrollTop = terminalOutput.scrollHeight;
-        } finally {
-          setLoading(false);
         }
       });
       
-      // Handle Enter key
       repoPath.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
           apiBtn.click();
         }
       });
-      
-      // Audio controls
-      playMusicBtn.addEventListener('click', function() {
-        if (isPlaying) {
-          bgMusic.pause();
-          playMusicBtn.textContent = 'ACTIVATE_AUDIO_STREAM';
-        } else {
-          bgMusic.play();
-          playMusicBtn.textContent = 'TERMINATE_AUDIO_STREAM';
-        }
-        isPlaying = !isPlaying;
-      });
-
-      volumeControl.addEventListener('input', function() {
-        bgMusic.volume = this.value;
-      });
-
-      // Add some initial terminal effects
-      setTimeout(() => {
-        terminalOutput.innerHTML += '<br>> SYSTEM_SCAN_COMPLETE';
-        terminalOutput.scrollTop = terminalOutput.scrollHeight;
-      }, 1500);
-
-      setTimeout(() => {
-        terminalOutput.innerHTML += '<br>> ALL_SYSTEMS_NOMINAL';
-        terminalOutput.scrollTop = terminalOutput.scrollHeight;
-      }, 3000);
     });
   </script>
 </body>
