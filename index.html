@@ -5,642 +5,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SECTION 9 // DATA TERMINAL</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500&display=swap" rel="stylesheet">
-  <style>
-    /* GHOST IN THE SHELL THEME - ENHANCED */
-    :root {
-      --neon-green: #00ff9d;
-      --neon-pink: #ff00aa;
-      --neon-blue: #00e1ff;
-      --neon-purple: #bd00ff;
-      --dark-bg: #0a0a12;
-      --darker-bg: #050508;
-      --terminal-bg: rgba(10, 10, 18, 0.8);
-      --text-primary: #e0e0e0;
-      --text-secondary: #b0b0b0;
-      --glow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
-      --thin-glow: 0 0 5px var(--neon-blue);
-      --pink-glow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
-      --green-glow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
-      --purple-glow: 0 0 10px var(--neon-purple), 0 0 20px var(--neon-purple);
-    }
+<style>
+  /* NOWA PALETA KOLORÓW */
+  :root {
+    --main-bg: #000;
+    --text-color: #0f0;
+    --accent-1: #ff00ff;
+    --accent-2: #00ffff;
+    --scanline: rgba(0, 255, 0, 0.05);
+  }
 
-    /* BASE STYLES - ENHANCED */
-    * { 
-      margin: 0; 
-      padding: 0; 
-      box-sizing: border-box; 
-    }
-    
-    body {
-      font-family: 'Share Tech Mono', monospace;
-      background: url('https://w.wallhaven.cc/full/zm/wallhaven-zm5gmw.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: var(--text-primary);
-      min-height: 100vh;
-      overflow-x: hidden;
-      position: relative;
-      line-height: 1.6;
-    }
-    
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: radial-gradient(ellipse at center, rgba(5, 5, 15, 0.9) 0%, rgba(5, 5, 30, 0.95) 100%);
-      z-index: 0;
-    }
-    
-    /* SCANLINES EFFECT - IMPROVED */
-    .scanlines {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: 
-        linear-gradient(
-          rgba(0, 225, 255, 0.03) 50%, 
-          transparent 50%),
-        linear-gradient(
-          to bottom,
-          transparent 95%,
-          rgba(0, 225, 255, 0.1) 96%,
-          transparent 97%);
-      background-size: 100% 4px, 100% 0.5rem;
-      pointer-events: none;
-      z-index: 1;
-      animation: scan 2s linear infinite;
-    }
-    
-    /* NOISE EFFECT - ENHANCED */
-    .noise {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAABGSURBVGhD7cExAQAwDMCg+zfd2VAk4A8k1q1bt27dunXr1q1bt27dunXr1q1bt27dunXr1q1bt27dunXr1q1bt27dunXr1g1pA8kZ6k1UAAAAAElFTkSuQmCC');
-      opacity: 0.05;
-      pointer-events: none;
-      z-index: 1;
-      mix-blend-mode: overlay;
-    }
-    
-    /* MAIN CONTAINER - IMPROVED */
-    .container {
-      max-width: 1000px;
-      margin: 3rem auto;
-      background: rgba(15, 15, 25, 0.7);
-      border: 1px solid var(--neon-blue);
-      box-shadow: var(--glow), 0 0 30px rgba(0, 225, 255, 0.3);
-      position: relative;
-      z-index: 10;
-      backdrop-filter: blur(5px);
-      border-radius: 4px;
-      overflow: hidden;
-      transition: all 0.3s ease;
-    }
+  /* EFEKT GLITCHA */
+  @keyframes glitch {
+    0% { text-shadow: 2px 0 var(--accent-1); }
+    20% { text-shadow: -2px 0 var(--accent-2); }
+    40%, 100% { text-shadow: none; }
+  }
 
-    .container:hover {
-      box-shadow: var(--glow), 0 0 40px rgba(0, 225, 255, 0.4);
-    }
-    
-    /* HEADER WITH SECTION 9 LOGO - ENHANCED */
-    header {
-      text-align: center;
-      padding: 3rem 2rem;
-      position: relative;
-      overflow: hidden;
-      border-bottom: 1px solid var(--neon-blue);
-      box-shadow: var(--thin-glow), inset 0 0 20px rgba(0, 225, 255, 0.2);
-      background: url('https://w.wallhaven.cc/full/4l/wallhaven-4lkmm2.jpg') center center/cover;
-    }
-    
-    header::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(135deg, rgba(5, 5, 15, 0.8) 0%, rgba(10, 10, 30, 0.7) 100%);
-    }
-    
-    .section9-logo {
-      width: 140px;
-      height: 140px;
-      margin: 0 auto 1.5rem;
-      background: url('https://occ-0-8407-90.1.nflxso.net/dnm/api/v6/LmEnxtiAuzezXBjYXPuDgfZ4zZQ/AAAABQpjhIuNRPFtDWjSDUzQxjWx-ZCZdjOdUKy4Fur9fINdJLg1h-xgo6xMWHaNnN1L-Bb_IrGtuJew90DmnPj13r4c_4T3rbAMWE-DkXom-j2H.png') no-repeat center center;
-      background-size: contain;
-      position: relative;
-      z-index: 2;
-      filter: drop-shadow(0 0 10px var(--neon-green));
-      animation: pulse 4s infinite alternate;
-    }
-    
-    header h1 {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 3.2rem;
-      font-weight: 500;
-      margin-bottom: 0.5rem;
-      position: relative;
-      color: var(--neon-green);
-      text-shadow: var(--green-glow);
-      letter-spacing: 0.4rem;
-      text-transform: uppercase;
-      z-index: 2;
-      animation: textGlow 3s infinite alternate;
-    }
-    
-    header h2 {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 1.3rem;
-      color: var(--neon-blue);
-      text-shadow: 0 0 8px var(--neon-blue);
-      letter-spacing: 0.3rem;
-      z-index: 2;
-      position: relative;
-    }
-    
-    /* CARD STYLES - IMPROVED */
-    .card {
-      background: rgba(10, 10, 20, 0.7);
-      border: 1px solid var(--neon-blue);
-      box-shadow: var(--thin-glow), inset 0 0 15px rgba(0, 225, 255, 0.1);
-      padding: 2.5rem;
-      margin: 2rem;
-      position: relative;
-      overflow: hidden;
-      will-change: transform, box-shadow;
-      border-radius: 3px;
-      transition: all 0.3s ease;
-    }
-    
-    .card:hover {
-      box-shadow: 0 0 15px var(--neon-blue), inset 0 0 20px rgba(0, 225, 255, 0.15);
-      transform: translateY(-2px);
-    }
-    
-    .card::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: 
-        linear-gradient(135deg, 
-          transparent 0%, 
-          rgba(0, 225, 255, 0.08) 50%, 
-          transparent 100%);
-      pointer-events: none;
-    }
-    
-    .card h2 {
-      color: var(--neon-pink);
-      margin-bottom: 1.8rem;
-      font-size: 1.7rem;
-      font-weight: 500;
-      font-family: 'Orbitron', sans-serif;
-      text-shadow: var(--pink-glow);
-      letter-spacing: 0.15rem;
-      position: relative;
-      padding-bottom: 0.5rem;
-    }
-    
-    .card h2::after {
-      content: "";
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 60px;
-      height: 2px;
-      background: var(--neon-pink);
-      box-shadow: var(--pink-glow);
-      transition: width 0.3s ease;
-    }
+  /* BAZOWY STYL */
+  body {
+    background: var(--main-bg);
+    color: var(--text-color);
+    font-family: 'Courier New', monospace;
+    line-height: 1.4;
+    padding: 1rem;
+    overflow-x: hidden;
+  }
 
-    .card:hover h2::after {
-      width: 100px;
-    }
-    
-    /* INPUT STYLES - IMPROVED */
-    .input-group {
-      display: flex;
-      gap: 1.2rem;
-      margin-bottom: 2rem;
-    }
-    
-    .cyber-input {
-      flex: 1;
-      padding: 1.2rem;
-      background: rgba(5, 5, 10, 0.9);
-      border: 1px solid var(--neon-purple);
-      color: var(--neon-green);
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 1.1rem;
-      box-shadow: 0 0 8px var(--neon-purple);
-      transition: all 0.3s ease;
-      border-radius: 2px;
-    }
-    
-    .cyber-input::placeholder {
-      color: var(--neon-purple);
-      opacity: 0.7;
-      font-style: italic;
-    }
-    
-    .cyber-input:focus {
-      outline: none;
-      border-color: var(--neon-blue);
-      box-shadow: 0 0 15px var(--neon-blue);
-      background: rgba(15, 15, 30, 0.9);
-    }
-    
-    /* BUTTON STYLES - ENHANCED */
-    .cyber-btn {
-      position: relative;
-      border: none;
-      padding: 1.2rem 2rem;
-      background: linear-gradient(to right, rgba(0, 255, 157, 0.1), rgba(0, 225, 255, 0.1));
-      color: var(--neon-green);
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1.1rem;
-      cursor: pointer;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      box-shadow: 0 0 8px var(--neon-blue);
-      text-transform: uppercase;
-      letter-spacing: 0.15rem;
-      z-index: 1;
-      will-change: transform, box-shadow;
-      border-radius: 2px;
-    }
-    
-    .cyber-btn::before {
-      content: "";
-      position: absolute;
-      top: 0; left: -100%;
-      width: 100%; height: 100%;
-      background: linear-gradient(90deg, 
-        transparent, 
-        rgba(0, 225, 255, 0.3), 
-        transparent);
-      transition: all 0.7s ease;
-      z-index: -1;
-    }
-    
-    .cyber-btn:hover::before {
-      left: 100%;
-    }
-    
-    .cyber-btn:hover {
-      background: linear-gradient(to right, rgba(0, 255, 157, 0.2), rgba(0, 225, 255, 0.2));
-      box-shadow: 0 0 20px var(--neon-green);
-      color: var(--neon-green);
-      transform: translateY(-2px);
-    }
-
-    .cyber-btn:active {
-      transform: translateY(0);
-    }
-    
-    /* SLIDER STYLES - IMPROVED */
-    .cyber-slider {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 6px;
-      background: rgba(5, 5, 15, 0.9);
-      outline: none;
-      margin-top: 0.8rem;
-      border-radius: 3px;
-      box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
-    }
-    
-    .cyber-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 18px;
-      height: 18px;
-      background: var(--neon-green);
-      cursor: pointer;
-      box-shadow: var(--green-glow);
-      border-radius: 50%;
-      border: 2px solid var(--darker-bg);
-      transition: all 0.2s ease;
-    }
-    
-    .cyber-slider::-webkit-slider-thumb:hover {
-      transform: scale(1.1);
-    }
-    
-    .cyber-slider::-moz-range-thumb {
-      width: 18px;
-      height: 18px;
-      background: var(--neon-green);
-      cursor: pointer;
-      box-shadow: var(--green-glow);
-      border-radius: 50%;
-      border: 2px solid var(--darker-bg);
-    }
-    
-    /* MUSIC CONTROLS - ENHANCED */
-    .music-controls {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-    
-    .volume-control {
-      display: flex;
-      flex-direction: column;
-      color: var(--neon-blue);
-      margin-top: 1.5rem;
-    }
-
-    .volume-control label {
-      margin-bottom: 0.5rem;
-      text-shadow: 0 0 5px var(--neon-blue);
-    }
-    
-    /* TERMINAL STYLES - IMPROVED */
-    .cyber-terminal {
-      background: rgba(5, 5, 10, 0.9);
-      border: 1px solid var(--neon-green);
-      box-shadow: var(--thin-glow), inset 0 0 10px rgba(0, 255, 157, 0.1);
-      font-family: 'Share Tech Mono', monospace;
-      color: var(--neon-green);
-      padding: 0;
-      overflow: hidden;
-      border-radius: 3px;
-    }
-    
-    .terminal-header {
-      display: flex;
-      align-items: center;
-      padding: 0.7rem 1.2rem;
-      background: linear-gradient(to right, rgba(0, 255, 157, 0.1), rgba(0, 225, 255, 0.1));
-      border-bottom: 1px solid var(--neon-green);
-    }
-    
-    .terminal-btn {
-      display: inline-block;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      margin-right: 8px;
-      transition: all 0.2s ease;
-    }
-
-    .terminal-btn:hover {
-      transform: scale(1.1);
-    }
-    
-    .terminal-btn.red { background: #ff5f56; box-shadow: 0 0 5px #ff5f56; }
-    .terminal-btn.yellow { background: #ffbd2e; box-shadow: 0 0 5px #ffbd2e; }
-    .terminal-btn.green { background: #27c93f; box-shadow: 0 0 5px #27c93f; }
-    
-    .terminal-title {
-      margin-left: 1.2rem;
-      color: var(--neon-green);
-      font-size: 1rem;
-      letter-spacing: 0.05rem;
-    }
-    
-    .terminal-content {
-      padding: 1.5rem;
-      min-height: 120px;
-      max-height: 350px;
-      overflow-y: auto;
-      line-height: 1.6;
-      font-size: 1.05rem;
-    }
-
-    .terminal-content::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    .terminal-content::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.2);
-    }
-
-    .terminal-content::-webkit-scrollbar-thumb {
-      background: var(--neon-green);
-      border-radius: 4px;
-    }
-    
-    /* PROJECTS GRID - IMPROVED */
-    .cyber-projects-container {
-      margin-top: 2.5rem;
-      padding: 1.5rem;
-      background: rgba(5, 5, 15, 0.8);
-      border: 1px solid var(--neon-purple);
-      box-shadow: var(--thin-glow), inset 0 0 15px rgba(189, 0, 255, 0.1);
-      border-radius: 3px;
-    }
-    
-    .cyber-projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.5rem;
-    }
-    
-    .cyber-project-btn {
-      position: relative;
-      width: 100%;
-      padding: 1.5rem;
-      background: rgba(10, 10, 20, 0.9);
-      border: 1px solid var(--neon-blue);
-      color: var(--neon-blue);
-      font-family: 'Share Tech Mono', monospace;
-      text-align: center;
-      cursor: pointer;
-      overflow: hidden;
-      transition: all 0.3s ease;
-      z-index: 1;
-      box-shadow: 0 0 8px var(--neon-blue);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      will-change: transform, box-shadow;
-      border-radius: 3px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .cyber-project-btn:hover {
-      color: var(--neon-green);
-      border-color: var(--neon-green);
-      box-shadow: 0 0 20px var(--neon-green);
-      transform: translateY(-3px);
-    }
-    
-    .cyber-project-btn::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(0, 225, 255, 0.2),
-        transparent
+  /* EFEKT VHS */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: 
+      linear-gradient(var(--scanline) 0 0 / 100% 2px,
+      repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.5),
+        rgba(0, 0, 0, 0.5) 1px,
+        transparent 1px,
+        transparent 2px
       );
-      transition: all 0.7s ease;
-      z-index: -1;
-    }
-    
-    .cyber-project-btn:hover::before {
-      left: 100%;
-    }
-    
-    .cyber-project-icon {
-      display: block;
-      margin: 0 auto 0.8rem;
-      font-size: 1.8rem;
-      color: var(--neon-green);
-      text-shadow: var(--green-glow);
-      transition: all 0.3s ease;
-    }
+    pointer-events: none;
+    z-index: 1000;
+    mix-blend-mode: overlay;
+  }
 
-    .cyber-project-btn:hover .cyber-project-icon {
-      transform: scale(1.1) rotate(10deg);
-    }
-    
-    .cyber-project-name {
-      display: block;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-    }
+  /* NAGŁÓWEK */
+  header h1 {
+    font-size: 2.5rem;
+    text-transform: uppercase;
+    animation: glitch 3s infinite;
+    margin-bottom: 0.5rem;
+  }
 
-    .cyber-project-btn:hover .cyber-project-name {
-      letter-spacing: 0.15rem;
-    }
-    
-    /* CONTACT SECTION - NEW */
-    .contact-section {
-      margin: 2rem;
-      padding: 2rem;
-      background: rgba(10, 10, 20, 0.7);
-      border: 1px solid var(--neon-purple);
-      box-shadow: var(--thin-glow), inset 0 0 15px rgba(189, 0, 255, 0.1);
-      border-radius: 3px;
-    }
+  /* TERMINAL */
+  .terminal {
+    border: 1px solid var(--text-color);
+    padding: 1rem;
+    margin: 1rem 0;
+    position: relative;
+  }
 
-    .contact-section h2 {
-      color: var(--neon-purple);
-      text-shadow: var(--purple-glow);
-      margin-bottom: 1.5rem;
-    }
+  .terminal::before {
+    content: ">";
+    position: absolute;
+    left: 0.5rem;
+    top: 0.5rem;
+  }
 
-    .contact-email {
-      display: inline-block;
-      padding: 1rem 1.5rem;
-      background: rgba(189, 0, 255, 0.1);
-      border: 1px solid var(--neon-purple);
-      color: var(--neon-blue);
-      font-family: 'Share Tech Mono', monospace;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      box-shadow: var(--thin-glow);
-      border-radius: 3px;
-      margin-top: 1rem;
-    }
+  /* PRZYCISKI */
+  button {
+    background: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--text-color);
+    padding: 0.5rem 1rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
 
-    .contact-email:hover {
-      background: rgba(189, 0, 255, 0.2);
-      color: var(--neon-purple);
-      box-shadow: var(--purple-glow);
-      transform: translateY(-2px);
-    }
-
-    .contact-email::before {
-      content: "✉ ";
-    }
-    
-    /* FOOTER STYLES - IMPROVED */
-    footer {
-      text-align: center;
-      padding: 2rem;
-      color: var(--neon-purple);
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.9rem;
-      border-top: 1px solid var(--neon-purple);
-      box-shadow: 0 0 8px var(--neon-purple);
-      letter-spacing: 0.15rem;
-      background: rgba(10, 10, 20, 0.7);
-    }
-
-    footer p {
-      animation: flicker 6s infinite;
-    }
-    
-    /* ANIMATIONS - ENHANCED */
-    @keyframes scan { 
-      0% { background-position: 0 0; }
-      100% { background-position: 0 0.5rem; } 
-    }
-    
-    @keyframes flicker {
-      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
-      20%, 22%, 24%, 55% { opacity: 0.7; }
-    }
-    
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes pulse {
-      0% { filter: drop-shadow(0 0 10px var(--neon-green)); }
-      100% { filter: drop-shadow(0 0 15px var(--neon-blue)); }
-    }
-
-    @keyframes textGlow {
-      0% { text-shadow: 0 0 10px var(--neon-green); }
-      50% { text-shadow: 0 0 15px var(--neon-green), 0 0 30px var(--neon-green); }
-      100% { text-shadow: 0 0 10px var(--neon-green); }
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
-    
-    .card { animation: flicker 8s infinite; }
-    .card:nth-child(2) { animation-delay: 0.5s; }
-    
-    .spinner {
-      display: inline-block;
-      animation: spin 1s linear infinite;
-      margin-right: 0.5rem;
-    }
-
-    .float {
-      animation: float 3s ease-in-out infinite;
-    }
-    
-    /* RESPONSIVE DESIGN - IMPROVED */
-    @media (max-width: 900px) {
-      body { padding: 1.5rem; }
-      .container { margin: 1.5rem auto; }
-      header { padding: 2rem 1.5rem; }
-      header h1 { font-size: 2.2rem; }
-      .section9-logo { width: 100px; height: 100px; }
-      .card { margin: 1.5rem; padding: 1.8rem; }
-      .input-group { flex-direction: column; }
-      .cyber-btn { width: 100%; margin-top: 1rem; }
-      .cyber-projects-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
-    }
-    
-    @media (max-width: 600px) {
-      body { padding: 1rem; }
-      header { padding: 1.5rem 1rem; }
-      header h1 { font-size: 1.8rem; letter-spacing: 0.2rem; }
-      header h2 { font-size: 1rem; }
-      .card { margin: 1rem; padding: 1.5rem; }
-      .cyber-input, .cyber-btn { padding: 1rem; }
-      .cyber-projects-grid { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 400px) {
-      header h1 { font-size: 1.5rem; }
-      .card h2 { font-size: 1.3rem; }
-      .terminal-content { padding: 1rem; font-size: 0.95rem; }
-    }
-  </style>
+  button:hover {
+    background: var(--text-color);
+    color: var(--main-bg);
+    animation: glitch 0.5s infinite;
+  }
+</style>
 </head>
 <body>
   <div class="scanlines"></div>
