@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
+  // Konfiguracja
+  const GITHUB_USER = 'Darin0v0';
+  const GITHUB_REPO = 'Darin0v0.github.io';
+  const PROJECTS_PATH = 'projects';
+
   // Elementy DOM
   const terminalOutput = document.getElementById('terminalOutput');
   const themeButtons = document.querySelectorAll('.theme-switcher button');
@@ -10,12 +15,17 @@ document.addEventListener('DOMContentLoaded', function() {
   
   let musicPlaying = false;
 
-  // Funkcja bezpiecznego wyświetlania tekstu w terminalu
+  // Funkcje pomocnicze
   const displayTerminalMessage = (message) => {
     const div = document.createElement('div');
     div.textContent = message;
     terminalOutput.appendChild(div);
     terminalOutput.scrollTop = terminalOutput.scrollHeight;
+  };
+
+  const setLoading = (isLoading) => {
+    apiBtn.disabled = isLoading;
+    apiBtn.textContent = isLoading ? 'LOADING...' : 'EXECUTE_QUERY';
   };
 
   // Funkcja zmiany motywu
@@ -64,21 +74,68 @@ document.addEventListener('DOMContentLoaded', function() {
     musicPlaying = !musicPlaying;
   });
 
-  // Symulowane projekty
-  const projects = [
-    {
-      name: "CYBER_TERMINAL",
-      description: "Interactive cyberpunk terminal interface",
-      technologies: "HTML, CSS, JavaScript",
-      url: "#"
-    },
-    {
-      name: "NEURAL_NETWORK",
-      description: "Machine learning implementation",
-      technologies: "Python, TensorFlow",
-      url: "#"
+  // Pobieranie projektów z GitHub
+  async function fetchProjects() {
+    try {
+      setLoading(true);
+      displayTerminalMessage("> CONNECTING TO GITHUB API...");
+      
+      const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${PROJECTS_PATH}`);
+      
+      if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.filter(item => item.type === 'dir');
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      displayTerminalMessage(`> ERROR: ${error.message}`);
+      return [];
+    } finally {
+      setLoading(false);
     }
-  ];
+  }
+
+  // Wyświetlanie projektów
+  async function showProjects() {
+    const projects = await fetchProjects();
+    projectsContainer.innerHTML = '';
+    projectsContainer.style.display = 'block';
+    
+    if (projects.length === 0) {
+      displayTerminalMessage("> NO PROJECTS FOUND");
+      return;
+    }
+    
+    projects.forEach(project => {
+      const projectCard = document.createElement('div');
+      projectCard.className = 'project-card';
+      
+      const title = document.createElement('h3');
+      title.className = 'project-title';
+      title.textContent = project.name.replace(/-/g, ' ').toUpperCase();
+      
+      const link = document.createElement('a');
+      link.className = 'project-link';
+      link.href = `https://${GITHUB_USER}.github.io/${GITHUB_REPO.split('.')[0]}/${PROJECTS_PATH}/${project.name}/`;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'VIEW LIVE DEMO';
+      
+      const githubLink = document.createElement('a');
+      githubLink.className = 'project-link github-link';
+      githubLink.href = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/${PROJECTS_PATH}/${project.name}`;
+      githubLink.target = '_blank';
+      githubLink.rel = 'noopener noreferrer';
+      githubLink.textContent = 'VIEW SOURCE CODE';
+      
+      projectCard.append(title, link, githubLink);
+      projectsContainer.appendChild(projectCard);
+    });
+    
+    displayTerminalMessage(`> LOADED ${projects.length} PROJECTS`);
+  }
 
   // Obsługa komend
   apiBtn.addEventListener('click', executeCommand);
@@ -107,6 +164,8 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (command === 'about') {
         displayTerminalMessage("> DARIN_0V0: FULL-STACK DEVELOPER");
         displayTerminalMessage("> SPECIALIZING IN CYBERPUNK AESTHETICS");
+        displayTerminalMessage(`> GITHUB: github.com/${GITHUB_USER}`);
+        displayTerminalMessage("> EMAIL: dawidmurias907@gmail.com");
       } else {
         displayTerminalMessage(`> UNKNOWN COMMAND: ${command.toUpperCase()}`);
         displayTerminalMessage("> TYPE 'HELP' FOR AVAILABLE COMMANDS");
@@ -120,46 +179,18 @@ document.addEventListener('DOMContentLoaded', function() {
       "> HELP - SHOW THIS MESSAGE",
       "> PROJECTS - DISPLAY MY PROJECTS",
       "> ABOUT - SHOW INFORMATION ABOUT ME",
-      "> CLEAR - CLEAR TERMINAL SCREEN"
+      "> CLEAR - CLEAR TERMINAL SCREEN",
+      "> ",
+      "> PROJECT NAVIGATION:",
+      "> - CLICK 'VIEW LIVE DEMO' TO OPEN PROJECT",
+      "> - CLICK 'VIEW SOURCE CODE' TO SEE CODE ON GITHUB"
     ];
     
     helpMessages.forEach(msg => displayTerminalMessage(msg));
   }
 
-  function showProjects() {
-    projectsContainer.innerHTML = '';
-    projectsContainer.style.display = 'block';
-    
-    projects.forEach(project => {
-      const projectCard = document.createElement('div');
-      projectCard.className = 'project-card';
-      
-      const title = document.createElement('h3');
-      title.className = 'project-title';
-      title.textContent = project.name;
-      
-      const desc = document.createElement('p');
-      desc.className = 'project-description';
-      desc.textContent = project.description;
-      
-      const tech = document.createElement('p');
-      tech.className = 'project-tech';
-      tech.textContent = project.technologies;
-      
-      const link = document.createElement('a');
-      link.className = 'project-link';
-      link.href = project.url;
-      link.target = '_blank';
-      link.textContent = 'VIEW PROJECT';
-      
-      projectCard.append(title, desc, tech, link);
-      projectsContainer.appendChild(projectCard);
-    });
-    
-    displayTerminalMessage("> PROJECTS LOADED. SCROLL TO VIEW.");
-  }
-
   // Inicjalizacja terminala
   displayTerminalMessage("> SYSTEM READY");
-  displayTerminalMessage("> AWAITING USER INPUT");
+  displayTerminalMessage("> WELCOME TO CYBERSPACE TERMINAL");
+  displayTerminalMessage("> TYPE 'HELP' FOR COMMAND LIST");
 });
