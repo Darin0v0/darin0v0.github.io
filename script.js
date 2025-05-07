@@ -12,6 +12,18 @@ document.addEventListener('DOMContentLoaded', function() {
   const savedTheme = localStorage.getItem('theme') || 'cyberpunk';
   setTheme(savedTheme);
   
+
+  // Obsługa przełączników motywów
+  themeButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const theme = this.dataset.theme;
+      setTheme(theme);
+      localStorage.setItem('theme', theme);
+      terminalOutput.innerHTML += `<br>> THEME_CHANGED: ${theme.toUpperCase()}`;
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    });
+  });
+
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   themeButtons.forEach(btn => {
@@ -26,24 +38,6 @@ function setTheme(theme) {
     }
   });
 }
-  // Obsługa przełączników motywów
-  themeButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      const theme = this.dataset.theme;
-      setTheme(theme);
-      localStorage.setItem('theme', theme);
-      terminalOutput.innerHTML += `<br>> THEME_CHANGED: ${theme.toUpperCase()}`;
-      terminalOutput.scrollTop = terminalOutput.scrollHeight;
-    });
-  });
-
-  function setTheme(theme) {
-    document.body.setAttribute('data-theme', theme);
-    themeButtons.forEach(btn => {
-      btn.style.borderColor = btn.dataset.theme === theme ? 'var(--accent-1)' : 'var(--text-color)';
-    });
-  }
-
   // Efekt pisania w terminalu
   const messages = [
     "> SYSTEM_SCAN_COMPLETE",
