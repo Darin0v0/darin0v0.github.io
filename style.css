@@ -1,4 +1,4 @@
-/* GLOBALNE STYLE */
+akie/* GLOBALNE STYLE */
 :root {
   --cyber-font: 'Share Tech Mono', monospace;
   --transition-base: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -352,22 +352,7 @@ body::before {
                 rgba(255, 45, 125, 0.15) 100%);
 }
 
-/* AKIRA */
-.theme-akira {
-  --primary: #ff0000;
-  --secondary: #ff9900;
-  --main-bg: #000033;
-  --text-color: #ffffff;
-  --accent: #990000;
-  --highlight: rgba(255, 0, 0, 0.1);
-  --scanline: rgba(255, 0, 51, 0.1);
-  --scanline-color: rgba(255, 0, 51, 0.15);
-  --bg-pattern: linear-gradient(135deg, 
-                rgba(160, 32, 240, 0.15) 0%, 
-                rgba(26, 0, 26, 1) 40%,
-                rgba(255, 45, 125, 0.15) 100%);
 
-}
 
 /* COWBOY BEBOP */
 .theme-cowboy-bebop {
