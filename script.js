@@ -121,14 +121,14 @@ document.addEventListener('DOMContentLoaded', function() {
       link.href = `https://${GITHUB_USER}.github.io/${PROJECTS_PATH}/${project.name}/`;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      link.textContent = 'VIEW LIVE DEMO';
+      link.textContent = 'OPEN';
       
       const githubLink = document.createElement('a');
       githubLink.className = 'project-link github-link';
       githubLink.href = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/${PROJECTS_PATH}/${project.name}`;
       githubLink.target = '_blank';
       githubLink.rel = 'noopener noreferrer';
-      githubLink.textContent = 'VIEW SOURCE CODE';
+      githubLink.textContent = '      SOURCE CODE';
       
       projectCard.append(title, link, githubLink);
       projectsContainer.appendChild(projectCard);
