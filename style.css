@@ -503,3 +503,24 @@ body.theme-death-note .terminal {
     display: none;
   }
 }
+/* Dodaj to do swojego CSS */
+#projectsContainer {
+  display: none;
+  margin-top: 1rem;
+}
+
+#projectsContainer .cyber-button {
+  width: 100%;
+  text-align: left;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 768px) {
+  #projectsContainer .cyber-button {
+    white-space: normal;
+  }
+}
