@@ -113,7 +113,7 @@ body.theme-vinland-saga {
   --container-blur: none;
   --container-border: 2px solid #8b4513;
   --container-shadow: 0 0 15px rgba(139, 69, 19, 0.5);
-  --bg-pattern: url('https://preview.redd.it/please-share-with-us-your-vinland-saga-wallpapers-v0-5ukq47czbv8d1.png?width=3840&format=png&auto=webp&s=5ade6833b75c9405c0ce84263951405572e1a67a');
+  --bg-pattern: url('https://images7.alphacoders.com/130/1304281.png');
 }
 
 /* 6. PERFECT BLUE - PSYCHOLOGICZNY */
@@ -128,7 +128,7 @@ body.theme-perfect-blue {
   --container-blur: blur(8px);
   --container-border: 1px dashed #9370db;
   --container-shadow: 0 0 40px rgba(147, 112, 219, 0.4);
-  --bg-pattern: linear-gradient(135deg, #1a0030 0%, #3a006f 100%);
+  --bg-pattern: url('https://w.wallhaven.cc/full/wy/wallhaven-wy92or.jpg');
 }
 
 /* 7. RUCHOMY ZAMEK - FANTASTYCZNY */
@@ -143,7 +143,7 @@ body.theme-ruchomy-zamek {
   --container-blur: blur(3px);
   --container-border: 1px solid #ff8c00;
   --container-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
-  --bg-pattern: url('https://i.imgur.com/JKvzWRb.jpg');
+  --bg-pattern: url('https://w.wallhaven.cc/full/4v/wallhaven-4vk2qp.jpg');
 }
 
 /* 8. MUJ SĄSIAD TOTORO - PRZYRODNICZY */
@@ -158,7 +158,7 @@ body.theme-totoro {
   --container-blur: none;
   --container-border: 2px solid #2e8b57;
   --container-shadow: 0 0 15px rgba(46, 139, 87, 0.2);
-  --bg-pattern: url('https://i.imgur.com/Tk3WQwB.png');
+  --bg-pattern: url('https://w.wallhaven.cc/full/ym/wallhaven-ymzz6l.jpg');
 }
 
 /* 9. AKIRA - NEONOWY */
@@ -190,7 +190,7 @@ body.theme-death-note {
   --container-blur: none;
   --container-border: 1px solid #c0c0c0;
   --container-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  --bg-pattern: url('https://i.imgur.com/R8XQYjW.png');
+  --bg-pattern: url('https://w.wallhaven.cc/full/nk/wallhaven-nkjxmq.jpg');
 }
 
 /* ELEMENTY WSPÓLNE */
