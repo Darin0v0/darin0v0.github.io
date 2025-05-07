@@ -15,6 +15,10 @@ body {
   color: var(--text-color);
   display: flex;
   flex-direction: column;
+  overflow-x: hidden;
+  background-image: var(--bg-pattern);
+  background-size: cover;
+  background-attachment: fixed;
 }
 
 .cyber-container {
@@ -24,389 +28,192 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
+  background-color: var(--container-bg);
+  backdrop-filter: var(--container-blur);
+  border: var(--container-border);
+  box-shadow: var(--container-shadow);
 }
 
-/* NAGŁÓWEK */
-.cyber-header {
-  text-align: center;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid var(--primary);
-  padding-bottom: 1rem;
-}
+/* MOTYWY ANIME */
 
-.cyber-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 2.5rem;
-  color: var(--primary);
-  margin-bottom: 0.5rem;
-  letter-spacing: 0.2rem;
-  text-shadow: 0 0 10px var(--primary);
-}
-
-.cyber-subtitle {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 1.2rem;
-  color: var(--secondary);
-  letter-spacing: 0.1rem;
-}
-
-/* PRZEŁĄCZNIK MOTYWÓW */
-.theme-switcher {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 1.5rem;
-}
-
-.theme-switcher button {
-  font-family: 'Share Tech Mono', monospace;
-  background: transparent;
-  color: var(--text-color);
-  border: 1px solid var(--primary);
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  transition: var(--transition-base);
-  text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 0.1rem;
-}
-
-.theme-switcher button:hover {
-  background: var(--highlight);
-  color: var(--primary);
-  text-shadow: 0 0 5px var(--primary);
-}
-
-/* TERMINAL */
-.terminal {
-  background-color: rgba(0, 0, 0, 0.5);
-  border: 1px solid var(--primary);
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  font-family: 'Share Tech Mono', monospace;
-  color: var(--primary);
-  height: 300px;
-  overflow-y: auto;
-  text-shadow: 0 0 5px currentColor;
-}
-
-.terminal::-webkit-scrollbar {
-  width: 5px;
-}
-
-.terminal::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.terminal::-webkit-scrollbar-thumb {
-  background: var(--primary);
-}
-
-/* INPUT */
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.cyber-input {
-  background: transparent;
-  border: 1px solid var(--primary);
-  padding: 0.8rem;
-  color: var(--text-color);
-  font-family: 'Share Tech Mono', monospace;
-  width: 100%;
-  transition: var(--transition-base);
-}
-
-.cyber-input:focus {
-  outline: none;
-  box-shadow: 0 0 10px var(--highlight);
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.cyber-input::placeholder {
-  color: var(--secondary);
-  opacity: 0.7;
-}
-
-/* PRZYCISKI */
-.button-group {
-  display: flex;
-  gap: 1rem;
-}
-
-.cyber-button {
-  font-family: 'Rajdhani', sans-serif;
-  background: transparent;
-  color: var(--text-color);
-  border: 1px solid var(--primary);
-  padding: 0.8rem 1.5rem;
-  cursor: pointer;
-  transition: var(--transition-base);
-  text-transform: uppercase;
-  letter-spacing: 0.1rem;
-  flex: 1;
-}
-
-.cyber-button:hover {
-  background: var(--highlight);
-  color: var(--primary);
-  text-shadow: 0 0 5px var(--primary);
-}
-
-/* STOPKA */
-.cyber-footer {
-  text-align: center;
-  border-top: 1px solid var(--primary);
-  padding-top: 1rem;
-  margin-top: 2rem;
-}
-
-.footer-links {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin-top: 1rem;
-}
-
-.cyber-link {
-  color: var(--secondary);
-  text-decoration: none;
-  transition: var(--transition-base);
-  font-family: 'Rajdhani', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.1rem;
-  font-size: 0.9rem;
-}
-
-.cyber-link:hover {
-  color: var(--primary);
-  text-shadow: 0 0 5px var(--primary);
-}
-
-/* MOTYWY */
-body.theme-cyberpunk {
-  --primary: #ff2a6d;
-  --secondary: #05d9e8;
-  --main-bg: #0d0221;
-  --text-color: #d1f7ff;
-  --highlight: rgba(255, 42, 109, 0.1);
-}
-
-body.theme-matrix {
-  --primary: #00ff41;
-  --secondary: #008f11;
-  --main-bg: #000;
-  --text-color: #00ff41;
-  --highlight: rgba(0, 255, 65, 0.1);
-}
-
-body.theme-solarized {
-  --primary: #b58900;
-  --secondary: #268bd2;
-  --main-bg: #002b36;
-  --text-color: #839496;
-  --highlight: rgba(181, 137, 0, 0.1);
-}
-
-body.theme-ghost-in-the-shell {
-  --primary: #ff4d4d;
-  --secondary: #4dffff;
-  --main-bg: #1a1a2e;
-  --text-color: #e6e6e6;
-  --highlight: rgba(255, 77, 77, 0.1);
-}
-
+/* 1. EVANGELION - UKŁAD Z CZERWONYM KONTRASTEM */
 body.theme-evangelion {
   --primary: #ff0033;
   --secondary: #9900ff;
   --main-bg: #0a0a1a;
   --text-color: #ccffff;
+  --accent: #ffcc00;
   --highlight: rgba(255, 0, 51, 0.1);
+  --container-bg: rgba(10, 10, 26, 0.8);
+  --container-blur: blur(5px);
+  --container-border: 1px solid #ff0033;
+  --container-shadow: 0 0 30px rgba(255, 0, 51, 0.3);
+  --bg-pattern: linear-gradient(135deg, 
+                rgba(160, 32, 240, 0.15) 0%, 
+                rgba(26, 0, 26, 1) 40%,
+                rgba(255, 45, 125, 0.15) 100%);
 }
 
-body.theme-cowboy-bebop {
-  --primary: #ff9900;
-  --secondary: #00ccff;
-  --main-bg: #000033;
-  --text-color: #ffffff;
-  --highlight: rgba(255, 153, 0, 0.1);
-}
-
+/* 2. PSYCHO-PASS - UKŁAD Z DOMINACJĄ CZERWIENI */
 body.theme-psycho-pass {
   --primary: #ff4d4d;
   --secondary: #4d4dff;
   --main-bg: #0d0d0d;
   --text-color: #f2f2f2;
+  --accent: #b30000;
   --highlight: rgba(255, 77, 77, 0.1);
+  --container-bg: rgba(13, 13, 13, 0.9);
+  --container-blur: blur(3px);
+  --container-border: 1px solid #ff4d4d;
+  --container-shadow: 0 0 25px rgba(255, 77, 77, 0.4);
+  --bg-pattern: url('https://i.imgur.com/VQ5ZQ9L.png');
 }
 
-
-/* ... (poprzedni CSS pozostaje bez zmian) ... */
-
-/* SPECJALNE UKŁADY DLA MOTYWÓW */
-
-/* CYBERPUNK - UKŁAD Z BOCZNYM NEONEM */
-body.theme-cyberpunk {
-  position: relative;
-  overflow-x: hidden;
-}
-
-body.theme-cyberpunk::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 100px;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 42, 109, 0.3),
-    transparent
-  );
-  z-index: -1;
-}
-
-/* MATRIX - UKŁAD Z PADAJĄCYMI ZNAKAMI */
-body.theme-matrix {
-  position: relative;
-}
-
-body.theme-matrix::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    rgba(0, 255, 65, 0.03) 1px,
-    transparent 1px
-  );
-  background-size: 100% 10px;
-  z-index: -1;
-  pointer-events: none;
-  animation: matrixRain 1s linear infinite;
-}
-
-@keyframes matrixRain {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 10px; }
-}
-
-/* SOLARIZED - KLASYCZNY UKŁAD Z CIENIAMI */
-body.theme-solarized .cyber-container {
-  max-width: 800px;
-  margin: 2rem auto;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
-  border-radius: 5px;
-}
-
-/* GHOST IN THE SHELL - UKŁAD Z OBRAZEM W TLE */
-body.theme-ghost-in-the-shell {
-  background-image: url('https://wallpapercave.com/wp/wp7210759.jpg');
-  background-size: cover;
-  background-attachment: fixed;
-  background-position: center;
-}
-
-body.theme-ghost-in-the-shell .cyber-container {
-  background-color: rgba(26, 26, 46, 0.85);
-  backdrop-filter: blur(5px);
-}
-
-/* EVANGELION - UKŁAD Z PIONOWYM GRADIENTEM */
-body.theme-evangelion {
-  background: linear-gradient(
-    to bottom,
-    #0a0a1a,
-    #1a001a,
-    #0a0a1a
-  );
-}
-
-body.theme-evangelion .cyber-header {
-  border-bottom-color: var(--secondary);
-}
-
-/* COWBOY BEBOP - UKŁAD Z STATKIEM KOSMICZNYM */
+/* 3. COWBOY BEBOP - UKŁAD KOSMICZNY */
 body.theme-cowboy-bebop {
-  background-image: url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986');
-  background-size: cover;
-  background-position: center;
+  --primary: #ff9900;
+  --secondary: #00ccff;
+  --main-bg: #000033;
+  --text-color: #ffffff;
+  --accent: #9900cc;
+  --highlight: rgba(255, 153, 0, 0.1);
+  --container-bg: rgba(0, 0, 51, 0.7);
+  --container-blur: blur(2px);
+  --container-border: 1px solid #ff9900;
+  --container-shadow: 0 0 20px rgba(255, 153, 0, 0.3);
+  --bg-pattern: url('https://i.imgur.com/YjqK9qV.png');
 }
 
-body.theme-cowboy-bebop .cyber-container {
-  background-color: rgba(0, 0, 51, 0.8);
-  backdrop-filter: blur(3px);
+/* 4. GHOST IN THE SHELL - CYBERNETYCZNY */
+body.theme-ghost-in-the-shell {
+  --primary: #ff4d4d;
+  --secondary: #4dffff;
+  --main-bg: #1a1a2e;
+  --text-color: #e6e6e6;
+  --accent: #ff9999;
+  --highlight: rgba(255, 77, 77, 0.1);
+  --container-bg: rgba(26, 26, 46, 0.85);
+  --container-blur: blur(5px);
+  --container-border: 1px solid #4dffff;
+  --container-shadow: 0 0 25px rgba(77, 255, 255, 0.3);
+  --bg-pattern: url('https://w.wallhaven.cc/full/od/wallhaven-odjqj5.jpg');
 }
 
-/* PSYCHO-PASS - UKŁAD Z DOMINACJĄ CZERWIENI */
-body.theme-psycho-pass {
-  background: linear-gradient(
-    135deg,
-    #0d0d0d,
-    #1a0000,
-    #0d0d0d
-  );
+/* 5. VINLAND SAGA - WIKINGOWSKI */
+body.theme-vinland-saga {
+  --primary: #8b4513;
+  --secondary: #4682b4;
+  --main-bg: #0a1a2a;
+  --text-color: #f5f5dc;
+  --accent: #a0522d;
+  --highlight: rgba(139, 69, 19, 0.1);
+  --container-bg: rgba(10, 26, 42, 0.9);
+  --container-blur: none;
+  --container-border: 2px solid #8b4513;
+  --container-shadow: 0 0 15px rgba(139, 69, 19, 0.5);
+  --bg-pattern: url('https://i.imgur.com/N8XQYjW.png');
 }
 
-body.theme-psycho-pass .cyber-header {
-  border-bottom-color: var(--accent);
+/* 6. PERFECT BLUE - PSYCHOLOGICZNY */
+body.theme-perfect-blue {
+  --primary: #9370db;
+  --secondary: #ff69b4;
+  --main-bg: #1a0030;
+  --text-color: #e6e6fa;
+  --accent: #ba55d3;
+  --highlight: rgba(147, 112, 219, 0.1);
+  --container-bg: rgba(26, 0, 48, 0.9);
+  --container-blur: blur(8px);
+  --container-border: 1px dashed #9370db;
+  --container-shadow: 0 0 40px rgba(147, 112, 219, 0.4);
+  --bg-pattern: linear-gradient(135deg, #1a0030 0%, #3a006f 100%);
 }
 
-/* ANIMACJE SPECJALNE */
-body.theme-cyberpunk .cyber-title {
-  animation: neonFlicker 3s infinite alternate;
+/* 7. RUCHOMY ZAMEK - FANTASTYCZNY */
+body.theme-ruchomy-zamek {
+  --primary: #ff8c00;
+  --secondary: #4169e1;
+  --main-bg: #2a3439;
+  --text-color: #f8f8ff;
+  --accent: #daa520;
+  --highlight: rgba(255, 140, 0, 0.1);
+  --container-bg: rgba(42, 52, 57, 0.85);
+  --container-blur: blur(3px);
+  --container-border: 1px solid #ff8c00;
+  --container-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
+  --bg-pattern: url('https://i.imgur.com/JKvzWRb.jpg');
 }
 
-@keyframes neonFlicker {
-  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
-    opacity: 1;
-    text-shadow: 0 0 10px var(--primary);
-  }
-  20%, 22%, 24%, 55% {
-    opacity: 0.8;
-    text-shadow: none;
-  }
+/* 8. MUJ SĄSIAD TOTORO - PRZYRODNICZY */
+body.theme-totoro {
+  --primary: #2e8b57;
+  --secondary: #f4a460;
+  --main-bg: #e6f7e6;
+  --text-color: #2f4f4f;
+  --accent: #8fbc8f;
+  --highlight: rgba(46, 139, 87, 0.1);
+  --container-bg: rgba(255, 255, 255, 0.9);
+  --container-blur: none;
+  --container-border: 2px solid #2e8b57;
+  --container-shadow: 0 0 15px rgba(46, 139, 87, 0.2);
+  --bg-pattern: url('https://i.imgur.com/Tk3WQwB.png');
 }
 
-body.theme-evangelion .cyber-button:hover {
-  background: linear-gradient(
-    45deg,
-    var(--primary),
-    var(--secondary)
-  );
-  color: #000;
+/* 9. AKIRA - NEONOWY */
+body.theme-akira {
+  --primary: #ff0000;
+  --secondary: #0066ff;
+  --main-bg: #000033;
+  --text-color: #ffffff;
+  --accent: #990000;
+  --highlight: rgba(255, 0, 0, 0.1);
+  --container-bg: rgba(0, 0, 51, 0.95);
+  --container-blur: none;
+  --container-border: 3px solid #ff0000;
+  --container-shadow: 0 0 50px rgba(255, 0, 0, 0.6);
+  --bg-pattern: radial-gradient(circle at center, 
+                rgba(255, 26, 26, 0.25) 0%, 
+                rgba(0, 0, 0, 1) 70%);
 }
 
-body.theme-ghost-in-the-shell .terminal {
-  border-image: linear-gradient(
-    to right,
-    var(--primary),
-    var(--secondary),
-    var(--primary)
-  ) 1;
-  border-image-slice: 1;
+/* 10. DEATH NOTE - DRAMATYCZNY */
+body.theme-death-note {
+  --primary: #000000;
+  --secondary: #c0c0c0;
+  --main-bg: #1a1a1a;
+  --text-color: #ffffff;
+  --accent: #8b0000;
+  --highlight: rgba(0, 0, 0, 0.2);
+  --container-bg: rgba(26, 26, 26, 0.9);
+  --container-blur: none;
+  --container-border: 1px solid #c0c0c0;
+  --container-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  --bg-pattern: url('https://i.imgur.com/R8XQYjW.png');
 }
 
-/* RESPONSYWNOŚĆ DLA SPECJALNYCH UKŁADÓW */
-@media (max-width: 768px) {
-  body.theme-cyberpunk::before {
-    width: 50px;
-  }
-  
-  body.theme-ghost-in-the-shell,
-  body.theme-cowboy-bebop {
-    background-attachment: scroll;
-  }
-  
-  body.theme-matrix::after {
-    background-size: 100% 15px;
-  }
+/* ELEMENTY WSPÓLNE */
+.cyber-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  position: relative;
+  padding: 2rem 0;
+  border-bottom: var(--header-border);
+}
+
+.cyber-title {
+  font-size: clamp(1.8rem, 5vw, 2.5rem);
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.2rem;
+  text-shadow: var(--header-glow);
+}
+
+.cyber-subtitle {
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  color: var(--secondary);
+  letter-spacing: 0.1rem;
 }
 
 /* RESPONSYWNOŚĆ */
@@ -415,28 +222,11 @@ body.theme-ghost-in-the-shell .terminal {
     padding: 1rem;
   }
   
-  .cyber-title {
-    font-size: 1.8rem;
+  body {
+    background-attachment: scroll;
   }
   
-  .cyber-subtitle {
-    font-size: 1rem;
-  }
-  
-  .theme-switcher {
-    flex-direction: column;
-  }
-  
-  .button-group {
-    flex-direction: column;
-  }
-  
-  .footer-links {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .terminal {
-    height: 250px;
+  body[class*="theme-"] .cyber-container {
+    backdrop-filter: none;
   }
 }
