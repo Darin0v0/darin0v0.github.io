@@ -45,18 +45,26 @@ document.addEventListener('DOMContentLoaded', function() {
     terminalOutput.scrollTop = terminalOutput.scrollHeight;
   });
 
-  // Symulowane projekty
+  // Lista projektów jako przyciski
   const projects = [
     {
       name: "CYBER_TERMINAL",
       description: "Interactive cyberpunk terminal interface",
-      technologies: "HTML, CSS, JavaScript",
       url: "#"
     },
     {
       name: "NEURAL_NETWORK",
       description: "Machine learning implementation",
-      technologies: "Python, TensorFlow",
+      url: "#"
+    },
+    {
+      name: "GITHUB_PROFILE",
+      description: "Check my GitHub repositories",
+      url: "https://github.com/Darin0v0"
+    },
+    {
+      name: "QUANTUM_SIM",
+      description: "Quantum computing simulation",
       url: "#"
     }
   ];
@@ -109,15 +117,14 @@ document.addEventListener('DOMContentLoaded', function() {
     projectsContainer.style.display = 'block';
     
     projects.forEach(project => {
-      const projectCard = document.createElement('div');
-      projectCard.className = 'project-card';
-      projectCard.innerHTML = `
-        <h3 class="project-title">${project.name}</h3>
-        <p class="project-description">${project.description}</p>
-        <p class="project-tech">${project.technologies}</p>
-        <a href="${project.url}" class="project-link" target="_blank">VIEW PROJECT</a>
-      `;
-      projectsContainer.appendChild(projectCard);
+      const projectBtn = document.createElement('a');
+      projectBtn.href = project.url;
+      projectBtn.className = 'cyber-button';
+      projectBtn.style.display = 'block';
+      projectBtn.style.margin = '0.5rem 0';
+      projectBtn.textContent = `${project.name} - ${project.description}`;
+      projectBtn.target = '_blank';
+      projectsContainer.appendChild(projectBtn);
     });
     
     terminalOutput.innerHTML += "> PROJECTS LOADED. SCROLL TO VIEW.<br>";
