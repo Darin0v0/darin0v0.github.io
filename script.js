@@ -1,166 +1,174 @@
 document.addEventListener('DOMContentLoaded', function() {
-  // Elementy DOM
   const terminalOutput = document.getElementById('terminalOutput');
-  const repoPath = document.getElementById('repoPath');
   const apiBtn = document.getElementById('apiBtn');
   const playMusicBtn = document.getElementById('playMusicBtn');
-  const projectsContainer = document.getElementById('projectsContainer');
+  const repoPath = document.getElementById('repoPath');
   const bgMusic = document.getElementById('bgMusic');
+  const projectsContainer = document.getElementById('projectsContainer');
   const themeButtons = document.querySelectorAll('.theme-switcher button');
-  const body = document.body;
-  
-  // Zmienne stanu
-  let musicPlaying = false;
-  
-  // Funkcje pomocnicze
-  function addToTerminal(text) {
-    terminalOutput.innerHTML += text + '<br>';
-    terminalOutput.scrollTop = terminalOutput.scrollHeight;
-  }
-  
-  function typeWriter(text, element) {
-    let i = 0;
-    const speed = 20;
-    function typing() {
-      if (i < text.length) {
-        element.innerHTML = text.substring(0, i+1);
-        i++;
-        setTimeout(typing, speed);
-      }
-    }
-    typing();
-  }
+  let isPlaying = false;
 
-  // Dane projektów
-  const projects = [
-    {
-      name: "CYBER_TERMINAL",
-      description: "Interactive terminal interface",
-      url: "#"
-    },
-    {
-      name: "NEURAL_NETWORK",
-      description: "Machine learning implementation",
-      url: "#"
-    },
-    {
-      name: "GITHUB_PROFILE",
-      description: "My GitHub repositories",
-      url: "https://github.com/Darin0v0"
-    }
-  ];
+  // Ładowanie zapisanego motywu z localStorage
+  const savedTheme = localStorage.getItem('theme') || 'cyberpunk';
+  document.body.setAttribute('data-theme', savedTheme);
+  updateThemeButtons(savedTheme);
 
-  // Inicjalizacja terminala
-  addToTerminal("> SYSTEM INITIALIZED");
-  addToTerminal("> WELCOME TO MY DIGITAL SPACE");
-  addToTerminal("> TYPE COMMAND BELOW");
-
-  // Przełącznik motywów
+  // Obsługa przełączników motywów
   themeButtons.forEach(button => {
     button.addEventListener('click', function() {
-      const theme = this.getAttribute('data-theme');
-      body.className = `theme-${theme}`;
-      localStorage.setItem('cyberTheme', theme);
-      addToTerminal(`> THEME CHANGED TO ${theme.toUpperCase()}`);
+      const theme = this.dataset.theme;
+      document.body.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+      updateThemeButtons(theme);
+      terminalOutput.innerHTML += `<br>> THEME_CHANGED: ${theme.toUpperCase()}`;
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
     });
   });
 
-  // Przywróć zapisany motyw
-  const savedTheme = localStorage.getItem('cyberTheme');
-  if (savedTheme) {
-    body.className = `theme-${savedTheme}`;
-  }
-
-  // Muzyka
-  playMusicBtn.addEventListener('click', function() {
-    if (musicPlaying) {
-      bgMusic.pause();
-      addToTerminal("> AMBIENT SOUNDS DISABLED");
-      this.textContent = "TOGGLE_AMBIENT";
-    } else {
-      bgMusic.play().catch(e => console.log("Audio play failed:", e));
-      addToTerminal("> AMBIENT SOUNDS ENABLED");
-      this.textContent = "MUTE_AMBIENT";
-    }
-    musicPlaying = !musicPlaying;
-  });
-
-  // Obsługa komend
-  apiBtn.addEventListener('click', executeCommand);
-  repoPath.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') executeCommand();
-  });
-
-  function executeCommand() {
-    const command = repoPath.value.trim().toLowerCase();
-    repoPath.value = '';
-    
-    if (!command) {
-      addToTerminal("> ERROR: NO COMMAND PROVIDED");
-      return;
-    }
-    
-    addToTerminal(`> EXECUTING: ${command.toUpperCase()}`);
-    
-    setTimeout(() => {
-      if (command === 'help' || command === '?') {
-        showHelp();
-      } else if (command === 'projects' || command === 'show projects') {
-        showProjects();
-      } else if (command === 'clear') {
-        terminalOutput.innerHTML = '';
-        projectsContainer.style.display = 'none';
-      } else if (command === 'about') {
-        showAbout();
+  function updateThemeButtons(selectedTheme) {
+    themeButtons.forEach(btn => {
+      if (btn.dataset.theme === selectedTheme) {
+        btn.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color');
+        btn.style.color = getComputedStyle(document.documentElement).getPropertyValue('--main-bg');
+        btn.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-1');
       } else {
-        addToTerminal(`> UNKNOWN COMMAND: ${command.toUpperCase()}`);
-        addToTerminal("> TYPE 'HELP' FOR AVAILABLE COMMANDS");
+        btn.style.backgroundColor = 'transparent';
+        btn.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text-color');
+        btn.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--text-color');
       }
-    }, 500);
-  }
-  
-  function showHelp() {
-    const helpText = [
-      "> AVAILABLE COMMANDS:",
-      "> HELP - SHOW THIS HELP MESSAGE",
-      "> PROJECTS - DISPLAY MY PROJECTS",
-      "> ABOUT - SHOW INFORMATION ABOUT ME",
-      "> CLEAR - CLEAR TERMINAL SCREEN"
-    ].join('<br>');
-    
-    addToTerminal(helpText);
-  }
-  
-  function showProjects() {
-    projectsContainer.innerHTML = '';
-    projectsContainer.style.display = 'block';
-    
-    projects.forEach(project => {
-      const projectBtn = document.createElement('a');
-      projectBtn.href = project.url;
-      projectBtn.className = 'cyber-button';
-      projectBtn.style.display = 'block';
-      projectBtn.style.margin = '0.5rem 0';
-      projectBtn.style.textAlign = 'left';
-      projectBtn.style.padding = '1rem';
-      projectBtn.textContent = `${project.name} - ${project.description}`;
-      projectBtn.target = '_blank';
-      projectsContainer.appendChild(projectBtn);
     });
-    
-    addToTerminal("> PROJECTS LOADED. SCROLL TO VIEW.");
   }
+
+  // Reszta kodu pozostaje bez zmian...
+  // Efekt pisania w terminalu
+  const messages = [
+    "> SYSTEM_SCAN_COMPLETE",
+    "> NO_MALWARE_DETECTED",
+    "> CONNECTION_SECURE"
+  ];
+
+  let i = 0;
+  function typeWriter() {
+    if (i < messages.length) {
+      terminalOutput.innerHTML += `<br>${messages[i]}`;
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+      i++;
+      setTimeout(typeWriter, 1000);
+    }
+  }
+  setTimeout(typeWriter, 1500);
+
+  // Efekt glitch na przyciskach
+  document.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('mouseover', () => {
+      btn.style.textShadow = `0 0 5px ${Math.random() > 0.5 ? 'var(--accent-1)' : 'var(--accent-2)'}`;
+    });
+  });
+
+  // Funkcje audio
+  function togglePlay() {
+    if (isPlaying) {
+      bgMusic.pause();
+      playMusicBtn.textContent = 'TOGGLE_AMBIENT';
+      terminalOutput.innerHTML += '<br>> AUDIO_STREAM_TERMINATED';
+    } else {
+      bgMusic.play()
+        .then(() => {
+          playMusicBtn.textContent = 'STOP_AMBIENT';
+          terminalOutput.innerHTML += '<br>> AMBIENT_AUDIO_ACTIVATED';
+        })
+        .catch(error => {
+          console.error("Audio playback error:", error);
+          terminalOutput.innerHTML += '<br>> AUDIO_ERROR: USER_INTERACTION_REQUIRED';
+        });
+    }
+    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    isPlaying = !isPlaying;
+  }
+
+  playMusicBtn.addEventListener('click', togglePlay);
+
+  // Funkcje API GitHub
+  function escapeHtml(unsafe) {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function createProjectButton(folderName) {
+    const button = document.createElement('div');
+    button.className = 'cyber-project-btn';
+    button.textContent = folderName;
+    
+    const indexUrl = `https://darin0v0.github.io/projects/${folderName}/index.html`;
+    
+    button.onclick = function() {
+      terminalOutput.innerHTML += `<br>> OPENING_PROJECT: ${escapeHtml(folderName)}...`;
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+      window.open(indexUrl, '_blank');
+    };
+    
+    return button;
+  }
+
+  apiBtn.addEventListener('click', async function() {
+    const path = repoPath.value.trim() || 'projects';
+    terminalOutput.innerHTML += `<br>> INITIATING_GITHUB_API_REQUEST: ${escapeHtml(path)}`;
+    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    
+    try {
+      const response = await fetch(`https://api.github.com/repos/Darin0v0/Darin0v0.github.io/contents/${path}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        let errorMessage = `ERROR_ACCESSING_PATH: ${escapeHtml(path)}`;
+        
+        if (errorData?.message) {
+          errorMessage += `<br>> GITHUB_API: ${escapeHtml(errorData.message)}`;
+        }
+        
+        throw new Error(errorMessage);
+      }
+      
+      const contents = await response.json();
+      const folders = contents.filter(item => item.type === 'dir');
+      
+      terminalOutput.innerHTML += `<br>> SCAN_COMPLETE. PROJECTS_DETECTED: ${folders.length}`;
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+      
+      // Tworzenie kontenera projektów
+      projectsContainer.style.display = 'block';
+      projectsContainer.innerHTML = '<div class="cyber-projects-grid" id="projectsGrid"></div>';
+      const projectsGrid = document.getElementById('projectsGrid');
+      
+      if (folders.length === 0) {
+        projectsGrid.innerHTML = '<div>NO PROJECTS FOUND</div>';
+      } else {
+        folders.forEach(folder => {
+          projectsGrid.appendChild(createProjectButton(folder.name));
+        });
+      }
+      
+      terminalOutput.innerHTML += '<br>> READY_FOR_NEXT_QUERY';
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+      
+    } catch (error) {
+      terminalOutput.innerHTML += `
+        <br><br>> SYSTEM_ERROR:
+        <br>> ${escapeHtml(error.message).replace('\n', '<br>> ')}
+        <br><br>> WARNING: UNAUTHENTICATED_REQUESTS_LIMITED
+      `;
+      console.error('GitHub API error:', error);
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    }
+  });
   
-  function showAbout() {
-    const aboutText = [
-      "> DARIN_0V0",
-      "> FULL-STACK DEVELOPER",
-      "> SPECIALIZING IN:",
-      "> - WEB DEVELOPMENT",
-      "> - CYBERPUNK AESTHETICS",
-      "> - INTERACTIVE DESIGN"
-    ].join('<br>');
-    
-    addToTerminal(aboutText);
-  }
+  repoPath.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      apiBtn.click();
+    }
+  });
 });
