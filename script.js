@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       const link = document.createElement('a');
       link.className = 'project-link';
-      link.href = `https://${GITHUB_USER}.github.io/${GITHUB_REPO.split('.')[0]}/${PROJECTS_PATH}/${project.name}/`;
+      link.href = `https://${GITHUB_USER}.github.io/${PROJECTS_PATH}/${project.name}/`;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
       link.textContent = 'VIEW LIVE DEMO';
