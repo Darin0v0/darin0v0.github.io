@@ -244,6 +244,171 @@ body.theme-psycho-pass {
   --highlight: rgba(255, 77, 77, 0.1);
 }
 
+
+/* ... (poprzedni CSS pozostaje bez zmian) ... */
+
+/* SPECJALNE UKŁADY DLA MOTYWÓW */
+
+/* CYBERPUNK - UKŁAD Z BOCZNYM NEONEM */
+body.theme-cyberpunk {
+  position: relative;
+  overflow-x: hidden;
+}
+
+body.theme-cyberpunk::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 100px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 42, 109, 0.3),
+    transparent
+  );
+  z-index: -1;
+}
+
+/* MATRIX - UKŁAD Z PADAJĄCYMI ZNAKAMI */
+body.theme-matrix {
+  position: relative;
+}
+
+body.theme-matrix::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    rgba(0, 255, 65, 0.03) 1px,
+    transparent 1px
+  );
+  background-size: 100% 10px;
+  z-index: -1;
+  pointer-events: none;
+  animation: matrixRain 1s linear infinite;
+}
+
+@keyframes matrixRain {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 10px; }
+}
+
+/* SOLARIZED - KLASYCZNY UKŁAD Z CIENIAMI */
+body.theme-solarized .cyber-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+}
+
+/* GHOST IN THE SHELL - UKŁAD Z OBRAZEM W TLE */
+body.theme-ghost-in-the-shell {
+  background-image: url('https://wallpapercave.com/wp/wp7210759.jpg');
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+}
+
+body.theme-ghost-in-the-shell .cyber-container {
+  background-color: rgba(26, 26, 46, 0.85);
+  backdrop-filter: blur(5px);
+}
+
+/* EVANGELION - UKŁAD Z PIONOWYM GRADIENTEM */
+body.theme-evangelion {
+  background: linear-gradient(
+    to bottom,
+    #0a0a1a,
+    #1a001a,
+    #0a0a1a
+  );
+}
+
+body.theme-evangelion .cyber-header {
+  border-bottom-color: var(--secondary);
+}
+
+/* COWBOY BEBOP - UKŁAD Z STATKIEM KOSMICZNYM */
+body.theme-cowboy-bebop {
+  background-image: url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986');
+  background-size: cover;
+  background-position: center;
+}
+
+body.theme-cowboy-bebop .cyber-container {
+  background-color: rgba(0, 0, 51, 0.8);
+  backdrop-filter: blur(3px);
+}
+
+/* PSYCHO-PASS - UKŁAD Z DOMINACJĄ CZERWIENI */
+body.theme-psycho-pass {
+  background: linear-gradient(
+    135deg,
+    #0d0d0d,
+    #1a0000,
+    #0d0d0d
+  );
+}
+
+body.theme-psycho-pass .cyber-header {
+  border-bottom-color: var(--accent);
+}
+
+/* ANIMACJE SPECJALNE */
+body.theme-cyberpunk .cyber-title {
+  animation: neonFlicker 3s infinite alternate;
+}
+
+@keyframes neonFlicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    opacity: 1;
+    text-shadow: 0 0 10px var(--primary);
+  }
+  20%, 22%, 24%, 55% {
+    opacity: 0.8;
+    text-shadow: none;
+  }
+}
+
+body.theme-evangelion .cyber-button:hover {
+  background: linear-gradient(
+    45deg,
+    var(--primary),
+    var(--secondary)
+  );
+  color: #000;
+}
+
+body.theme-ghost-in-the-shell .terminal {
+  border-image: linear-gradient(
+    to right,
+    var(--primary),
+    var(--secondary),
+    var(--primary)
+  ) 1;
+  border-image-slice: 1;
+}
+
+/* RESPONSYWNOŚĆ DLA SPECJALNYCH UKŁADÓW */
+@media (max-width: 768px) {
+  body.theme-cyberpunk::before {
+    width: 50px;
+  }
+  
+  body.theme-ghost-in-the-shell,
+  body.theme-cowboy-bebop {
+    background-attachment: scroll;
+  }
+  
+  body.theme-matrix::after {
+    background-size: 100% 15px;
+  }
+}
+
 /* RESPONSYWNOŚĆ */
 @media (max-width: 768px) {
   .cyber-container {
