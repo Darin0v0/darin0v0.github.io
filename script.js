@@ -11,7 +11,21 @@ document.addEventListener('DOMContentLoaded', function() {
   // Ładowanie zapisanego motywu z localStorage
   const savedTheme = localStorage.getItem('theme') || 'cyberpunk';
   setTheme(savedTheme);
-
+  
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  themeButtons.forEach(btn => {
+    if (btn.dataset.theme === theme) {
+      btn.style.backgroundColor = 'var(--text-color)';
+      btn.style.color = 'var(--main-bg)';
+      btn.style.borderColor = 'var(--accent-1)';
+    } else {
+      btn.style.backgroundColor = 'transparent';
+      btn.style.color = 'var(--text-color)';
+      btn.style.borderColor = 'var(--text-color)';
+    }
+  });
+}
   // Obsługa przełączników motywów
   themeButtons.forEach(button => {
     button.addEventListener('click', function() {
