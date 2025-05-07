@@ -50,6 +50,8 @@ body.theme-evangelion {
   --container-blur: blur(5px);
   --container-border: 1px solid #ff0033;
   --container-shadow: 0 0 30px rgba(255, 0, 51, 0.3);
+    --bg-pattern: url('https://w.wallhaven.cc/full/d5/wallhaven-d5579l.png');
+ 
   --bg-pattern: linear-gradient(135deg, 
                 rgba(160, 32, 240, 0.15) 0%, 
                 rgba(26, 0, 26, 1) 40%,
