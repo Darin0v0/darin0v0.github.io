@@ -133,10 +133,12 @@
       padding: 1rem;
       text-align: center;
       cursor: pointer;
+      transition: all 0.3s;
     }
 
     .cyber-project-btn:hover {
       background: rgba(0, 255, 0, 0.2);
+      transform: scale(1.02);
     }
 
     /* STOPKA */
@@ -271,11 +273,6 @@
           window.open(indexUrl, '_blank');
         };
         
-        button.addEventListener('mouseenter', () => {
-          terminalOutput.innerHTML += `<br>> HIGHLIGHTED: ${escapeHtml(folderName)}`;
-          terminalOutput.scrollTop = terminalOutput.scrollHeight;
-        });
-        
         return button;
       }
 
@@ -314,7 +311,6 @@
           } else {
             folders.forEach(folder => {
               projectsGrid.appendChild(createProjectButton(folder.name));
-              terminalOutput.innerHTML += `<br>> LOADED: ${escapeHtml(folder.name)}`;
             });
           }
           
