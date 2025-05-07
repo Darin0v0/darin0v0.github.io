@@ -366,6 +366,7 @@ body::before {
   --bg-pattern: radial-gradient(circle at center, 
                 rgba(255, 26, 26, 0.25) 0%, 
                 rgba(0, 0, 0, 1) 70%);
+    background-attachment: fixed;
 }
 
 /* COWBOY BEBOP */
