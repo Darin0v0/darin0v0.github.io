@@ -10,17 +10,34 @@ document.addEventListener('DOMContentLoaded', function() {
   
   let musicPlaying = false;
 
-  // Funkcja zmiany motywu
-  const setTheme = (theme) => {
-    document.body.className = `theme-${theme}`;
-    localStorage.setItem('cyberTheme', theme);
-    terminalOutput.innerHTML += `> THEME CHANGED TO ${theme.toUpperCase()}<br>`;
+  // Funkcja bezpiecznego wyświetlania tekstu w terminalu
+  const displayTerminalMessage = (message) => {
+    const div = document.createElement('div');
+    div.textContent = message;
+    terminalOutput.appendChild(div);
     terminalOutput.scrollTop = terminalOutput.scrollHeight;
   };
 
+  // Funkcja zmiany motywu
+  const setTheme = (theme) => {
+    try {
+      document.body.className = `theme-${theme}`;
+      localStorage.setItem('cyberTheme', theme);
+      displayTerminalMessage(`> THEME CHANGED TO ${theme.toUpperCase()}`);
+    } catch (e) {
+      console.error("Error saving theme:", e);
+      displayTerminalMessage("> THEME CHANGED BUT NOT SAVED");
+    }
+  };
+
   // Przywróć zapisany motyw
-  const savedTheme = localStorage.getItem('cyberTheme') || 'matrix';
-  setTheme(savedTheme);
+  try {
+    const savedTheme = localStorage.getItem('cyberTheme') || 'matrix';
+    setTheme(savedTheme);
+  } catch (e) {
+    console.error("Error loading theme:", e);
+    setTheme('matrix');
+  }
 
   // Obsługa przycisków motywów
   themeButtons.forEach(button => {
@@ -34,15 +51,17 @@ document.addEventListener('DOMContentLoaded', function() {
   playMusicBtn.addEventListener('click', () => {
     if (musicPlaying) {
       bgMusic.pause();
-      terminalOutput.innerHTML += "> AMBIENT SOUNDS DISABLED<br>";
+      displayTerminalMessage("> AMBIENT SOUNDS DISABLED");
       playMusicBtn.textContent = "TOGGLE_AMBIENT";
     } else {
-      bgMusic.play().catch(e => console.log("Audio error:", e));
-      terminalOutput.innerHTML += "> AMBIENT SOUNDS ENABLED<br>";
+      bgMusic.play().catch(e => {
+        console.log("Audio error:", e);
+        displayTerminalMessage("> ERROR: CLICK TO ENABLE AUDIO");
+      });
+      displayTerminalMessage("> AMBIENT SOUNDS ENABLED");
       playMusicBtn.textContent = "MUTE_AMBIENT";
     }
     musicPlaying = !musicPlaying;
-    terminalOutput.scrollTop = terminalOutput.scrollHeight;
   });
 
   // Symulowane projekty
@@ -72,11 +91,11 @@ document.addEventListener('DOMContentLoaded', function() {
     repoPath.value = '';
     
     if (!command) {
-      terminalOutput.innerHTML += "> ERROR: NO COMMAND PROVIDED<br>";
+      displayTerminalMessage("> ERROR: NO COMMAND PROVIDED");
       return;
     }
     
-    terminalOutput.innerHTML += `> EXECUTING: ${command.toUpperCase()}<br>`;
+    displayTerminalMessage(`> EXECUTING: ${command.toUpperCase()}`);
     
     setTimeout(() => {
       if (command === 'help' || command === '?') {
@@ -86,22 +105,25 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (command === 'clear') {
         terminalOutput.innerHTML = '';
       } else if (command === 'about') {
-        terminalOutput.innerHTML += "> DARIN_0V0: FULL-STACK DEVELOPER<br>> SPECIALIZING IN CYBERPUNK AESTHETICS<br>";
+        displayTerminalMessage("> DARIN_0V0: FULL-STACK DEVELOPER");
+        displayTerminalMessage("> SPECIALIZING IN CYBERPUNK AESTHETICS");
       } else {
-        terminalOutput.innerHTML += `> UNKNOWN COMMAND: ${command.toUpperCase()}<br>> TYPE 'HELP' FOR AVAILABLE COMMANDS<br>`;
+        displayTerminalMessage(`> UNKNOWN COMMAND: ${command.toUpperCase()}`);
+        displayTerminalMessage("> TYPE 'HELP' FOR AVAILABLE COMMANDS");
       }
-      terminalOutput.scrollTop = terminalOutput.scrollHeight;
     }, 500);
   }
 
   function showHelp() {
-    terminalOutput.innerHTML += `
-      > AVAILABLE COMMANDS:<br>
-      > HELP - SHOW THIS MESSAGE<br>
-      > PROJECTS - DISPLAY MY PROJECTS<br>
-      > ABOUT - SHOW INFORMATION ABOUT ME<br>
-      > CLEAR - CLEAR TERMINAL SCREEN<br>
-    `;
+    const helpMessages = [
+      "> AVAILABLE COMMANDS:",
+      "> HELP - SHOW THIS MESSAGE",
+      "> PROJECTS - DISPLAY MY PROJECTS",
+      "> ABOUT - SHOW INFORMATION ABOUT ME",
+      "> CLEAR - CLEAR TERMINAL SCREEN"
+    ];
+    
+    helpMessages.forEach(msg => displayTerminalMessage(msg));
   }
 
   function showProjects() {
@@ -111,18 +133,33 @@ document.addEventListener('DOMContentLoaded', function() {
     projects.forEach(project => {
       const projectCard = document.createElement('div');
       projectCard.className = 'project-card';
-      projectCard.innerHTML = `
-        <h3 class="project-title">${project.name}</h3>
-        <p class="project-description">${project.description}</p>
-        <p class="project-tech">${project.technologies}</p>
-        <a href="${project.url}" class="project-link" target="_blank">VIEW PROJECT</a>
-      `;
+      
+      const title = document.createElement('h3');
+      title.className = 'project-title';
+      title.textContent = project.name;
+      
+      const desc = document.createElement('p');
+      desc.className = 'project-description';
+      desc.textContent = project.description;
+      
+      const tech = document.createElement('p');
+      tech.className = 'project-tech';
+      tech.textContent = project.technologies;
+      
+      const link = document.createElement('a');
+      link.className = 'project-link';
+      link.href = project.url;
+      link.target = '_blank';
+      link.textContent = 'VIEW PROJECT';
+      
+      projectCard.append(title, desc, tech, link);
       projectsContainer.appendChild(projectCard);
     });
     
-    terminalOutput.innerHTML += "> PROJECTS LOADED. SCROLL TO VIEW.<br>";
+    displayTerminalMessage("> PROJECTS LOADED. SCROLL TO VIEW.");
   }
 
   // Inicjalizacja terminala
-  terminalOutput.innerHTML += "> SYSTEM READY<br>> AWAITING USER INPUT<br>";
+  displayTerminalMessage("> SYSTEM READY");
+  displayTerminalMessage("> AWAITING USER INPUT");
 });
