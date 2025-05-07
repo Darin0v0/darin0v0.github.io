@@ -34,9 +34,56 @@ body {
   backdrop-filter: var(--container-blur);
   border: var(--container-border);
   box-shadow: var(--container-shadow);
+  border-radius: var(--container-radius);
 }
 
-/* MOTYWY ANIME */
+/* STYL TERMINALA */
+.terminal {
+  position: relative;
+  background-color: var(--terminal-bg);
+  color: var(--terminal-text);
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: var(--terminal-border);
+  box-shadow: var(--terminal-shadow);
+  margin: 1rem 0;
+  font-family: var(--cyber-font);
+  min-height: 200px;
+  overflow: hidden;
+}
+
+.terminal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  background: var(--terminal-header-bg);
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  display: flex;
+  align-items: center;
+  padding-left: 15px;
+}
+
+.terminal::after {
+  content: "•••";
+  position: absolute;
+  top: 8px;
+  left: 15px;
+  color: var(--terminal-header-dots);
+  letter-spacing: 2px;
+  font-size: 1.2rem;
+}
+
+.terminal-content {
+  margin-top: 40px;
+  height: calc(100% - 40px);
+  overflow-y: auto;
+}
+
+/* MOTYWY ANIME - ZAKTUALIZOWANE Z TERMINALEM */
 
 /* 1. EVANGELION - UKŁAD Z CZERWONYM KONTRASTEM */
 body.theme-evangelion {
@@ -50,12 +97,19 @@ body.theme-evangelion {
   --container-blur: blur(5px);
   --container-border: 1px solid #ff0033;
   --container-shadow: 0 0 30px rgba(255, 0, 51, 0.3);
-    --bg-pattern: url('https://w.wallhaven.cc/full/d5/wallhaven-d5579l.png');
- 
+  --container-radius: 0;
   --bg-pattern: linear-gradient(135deg, 
                 rgba(160, 32, 240, 0.15) 0%, 
                 rgba(26, 0, 26, 1) 40%,
                 rgba(255, 45, 125, 0.15) 100%);
+  
+  /* Terminal */
+  --terminal-bg: rgba(5, 5, 15, 0.9);
+  --terminal-text: #ccffff;
+  --terminal-border: 1px solid #ff0033;
+  --terminal-shadow: 0 0 20px rgba(255, 0, 51, 0.4);
+  --terminal-header-bg: linear-gradient(90deg, #ff0033, #9900ff);
+  --terminal-header-dots: #000;
 }
 
 /* 2. PSYCHO-PASS - UKŁAD Z DOMINACJĄ CZERWIENI */
@@ -70,10 +124,19 @@ body.theme-psycho-pass {
   --container-blur: blur(3px);
   --container-border: 1px solid #ff4d4d;
   --container-shadow: 0 0 25px rgba(255, 77, 77, 0.4);
+  --container-radius: 5px 20px 5px 20px;
   --bg-pattern: url('https://w.wallhaven.cc/full/42/wallhaven-4218w9.png');
+  
+  /* Terminal */
+  --terminal-bg: rgba(20, 20, 20, 0.95);
+  --terminal-text: #f2f2f2;
+  --terminal-border: 1px solid #ff4d4d;
+  --terminal-shadow: inset 0 0 10px rgba(255, 77, 77, 0.3), 0 0 20px rgba(255, 77, 77, 0.3);
+  --terminal-header-bg: linear-gradient(90deg, #0d0d0d, #b30000);
+  --terminal-header-dots: #ff4d4d;
 }
 
-/* 3. COWBOY BEBOP - UKŁAD KOSMICZNY */
+/* 3. COWBOY BEBOP - UKŁAD KOSMICZNY Z JAZZEM */
 body.theme-cowboy-bebop {
   --primary: #ff9900;
   --secondary: #00ccff;
@@ -85,10 +148,19 @@ body.theme-cowboy-bebop {
   --container-blur: blur(2px);
   --container-border: 1px solid #ff9900;
   --container-shadow: 0 0 20px rgba(255, 153, 0, 0.3);
+  --container-radius: 0;
   --bg-pattern: url('https://w.wallhaven.cc/full/9d/wallhaven-9dvmdd.jpg');
+  
+  /* Terminal */
+  --terminal-bg: rgba(0, 0, 30, 0.9);
+  --terminal-text: #ffffff;
+  --terminal-border: 1px dashed #00ccff;
+  --terminal-shadow: 0 0 15px rgba(0, 204, 255, 0.4);
+  --terminal-header-bg: linear-gradient(90deg, #000033, #9900cc);
+  --terminal-header-dots: #ff9900;
 }
 
-/* 4. GHOST IN THE SHELL - CYBERNETYCZNY */
+/* 4. GHOST IN THE SHELL - CYBERNETYCZNY MATRIX */
 body.theme-ghost-in-the-shell {
   --primary: #ff4d4d;
   --secondary: #4dffff;
@@ -100,10 +172,19 @@ body.theme-ghost-in-the-shell {
   --container-blur: blur(5px);
   --container-border: 1px solid #4dffff;
   --container-shadow: 0 0 25px rgba(77, 255, 255, 0.3);
+  --container-radius: 0;
   --bg-pattern: url('https://w.wallhaven.cc/full/od/wallhaven-odjqj5.jpg');
+  
+  /* Terminal */
+  --terminal-bg: rgba(10, 10, 20, 0.95);
+  --terminal-text: #4dffff;
+  --terminal-border: 1px solid #ff4d4d;
+  --terminal-shadow: 0 0 30px rgba(77, 255, 255, 0.2);
+  --terminal-header-bg: linear-gradient(90deg, #1a1a2e, #ff4d4d);
+  --terminal-header-dots: #4dffff;
 }
 
-/* 5. VINLAND SAGA - WIKINGOWSKI */
+/* 5. VINLAND SAGA - WIKINGOWSKI PAPIER */
 body.theme-vinland-saga {
   --primary: #8b4513;
   --secondary: #4682b4;
@@ -115,10 +196,19 @@ body.theme-vinland-saga {
   --container-blur: none;
   --container-border: 2px solid #8b4513;
   --container-shadow: 0 0 15px rgba(139, 69, 19, 0.5);
+  --container-radius: 0;
   --bg-pattern: url('https://w.wallhaven.cc/full/l8/wallhaven-l8l7dr.jpg');
+  
+  /* Terminal */
+  --terminal-bg: rgba(15, 25, 35, 0.95);
+  --terminal-text: #f5f5dc;
+  --terminal-border: 2px groove #8b4513;
+  --terminal-shadow: inset 0 0 10px rgba(139, 69, 19, 0.5);
+  --terminal-header-bg: linear-gradient(90deg, #0a1a2a, #a0522d);
+  --terminal-header-dots: #f5f5dc;
 }
 
-/* 6. PERFECT BLUE - PSYCHOLOGICZNY */
+/* 6. PERFECT BLUE - PSYCHODELICZNY */
 body.theme-perfect-blue {
   --primary: #9370db;
   --secondary: #ff69b4;
@@ -130,10 +220,19 @@ body.theme-perfect-blue {
   --container-blur: blur(8px);
   --container-border: 1px dashed #9370db;
   --container-shadow: 0 0 40px rgba(147, 112, 219, 0.4);
+  --container-radius: 10px;
   --bg-pattern: url('https://w.wallhaven.cc/full/wy/wallhaven-wy92or.jpg');
+  
+  /* Terminal */
+  --terminal-bg: rgba(30, 0, 50, 0.95);
+  --terminal-text: #e6e6fa;
+  --terminal-border: 1px dotted #ff69b4;
+  --terminal-shadow: 0 0 25px rgba(147, 112, 219, 0.6);
+  --terminal-header-bg: linear-gradient(90deg, #1a0030, #ff69b4);
+  --terminal-header-dots: #9370db;
 }
 
-/* 7. RUCHOMY ZAMEK - FANTASTYCZNY */
+/* 7. RUCHOMY ZAMEK - MECHANICZNY */
 body.theme-ruchomy-zamek {
   --primary: #ff8c00;
   --secondary: #4169e1;
@@ -145,10 +244,19 @@ body.theme-ruchomy-zamek {
   --container-blur: blur(3px);
   --container-border: 1px solid #ff8c00;
   --container-shadow: 0 0 20px rgba(255, 140, 0, 0.3);
+  --container-radius: 5px;
   --bg-pattern: url('https://w.wallhaven.cc/full/4v/wallhaven-4vk2qp.jpg');
+  
+  /* Terminal */
+  --terminal-bg: rgba(35, 40, 45, 0.95);
+  --terminal-text: #f8f8ff;
+  --terminal-border: 1px solid #4169e1;
+  --terminal-shadow: inset 0 0 10px rgba(255, 140, 0, 0.3);
+  --terminal-header-bg: linear-gradient(90deg, #2a3439, #daa520);
+  --terminal-header-dots: #ff8c00;
 }
 
-/* 8. MUJ SĄSIAD TOTORO - PRZYRODNICZY */
+/* 8. MUJ SĄSIAD TOTORO - NATURALNY */
 body.theme-totoro {
   --primary: #2e8b57;
   --secondary: #f4a460;
@@ -160,10 +268,19 @@ body.theme-totoro {
   --container-blur: none;
   --container-border: 2px solid #2e8b57;
   --container-shadow: 0 0 15px rgba(46, 139, 87, 0.2);
+  --container-radius: 15px;
   --bg-pattern: url('https://w.wallhaven.cc/full/ym/wallhaven-ymzz6l.jpg');
+  
+  /* Terminal */
+  --terminal-bg: rgba(255, 255, 255, 0.95);
+  --terminal-text: #2f4f4f;
+  --terminal-border: 2px solid #8fbc8f;
+  --terminal-shadow: 0 0 10px rgba(46, 139, 87, 0.2);
+  --terminal-header-bg: linear-gradient(90deg, #e6f7e6, #2e8b57);
+  --terminal-header-dots: #2f4f4f;
 }
 
-/* 9. AKIRA - NEONOWY */
+/* 9. AKIRA - NEONOWA KANAKAWA */
 body.theme-akira {
   --primary: #ff0000;
   --secondary: #0066ff;
@@ -175,12 +292,21 @@ body.theme-akira {
   --container-blur: none;
   --container-border: 3px solid #ff0000;
   --container-shadow: 0 0 50px rgba(255, 0, 0, 0.6);
+  --container-radius: 0;
   --bg-pattern: radial-gradient(circle at center, 
                 rgba(255, 26, 26, 0.25) 0%, 
                 rgba(0, 0, 0, 1) 70%);
+  
+  /* Terminal */
+  --terminal-bg: rgba(0, 0, 30, 0.95);
+  --terminal-text: #ffffff;
+  --terminal-border: 2px solid #0066ff;
+  --terminal-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+  --terminal-header-bg: linear-gradient(90deg, #000033, #ff0000);
+  --terminal-header-dots: #0066ff;
 }
 
-/* 10. DEATH NOTE - DRAMATYCZNY */
+/* 10. DEATH NOTE - MROCZNY NOTATNIK */
 body.theme-death-note {
   --primary: #000000;
   --secondary: #c0c0c0;
@@ -192,7 +318,64 @@ body.theme-death-note {
   --container-blur: none;
   --container-border: 1px solid #c0c0c0;
   --container-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  --container-radius: 0;
   --bg-pattern: url('https://w.wallhaven.cc/full/nk/wallhaven-nkjxmq.jpg');
+  
+  /* Terminal */
+  --terminal-bg: rgba(30, 30, 30, 0.95);
+  --terminal-text: #ffffff;
+  --terminal-border: 1px solid #8b0000;
+  --terminal-shadow: inset 0 0 20px rgba(0, 0, 0, 0.7);
+  --terminal-header-bg: linear-gradient(90deg, #1a1a1a, #8b0000);
+  --terminal-header-dots: #c0c0c0;
+}
+
+/* 11. ATTACK ON TITAN - MIKASA'S SCARF */
+body.theme-attack-on-titan {
+  --primary: #c40233;
+  --secondary: #3a6ea5;
+  --main-bg: #0c0c0c;
+  --text-color: #ffffff;
+  --accent: #ffd700;
+  --highlight: rgba(196, 2, 51, 0.1);
+  --container-bg: rgba(20, 20, 20, 0.9);
+  --container-blur: none;
+  --container-border: 1px solid #c40233;
+  --container-shadow: 0 0 25px rgba(196, 2, 51, 0.4);
+  --container-radius: 0;
+  --bg-pattern: url('https://w.wallhaven.cc/full/1k/wallhaven-1k3y3y.jpg');
+  
+  /* Terminal */
+  --terminal-bg: rgba(15, 15, 15, 0.95);
+  --terminal-text: #ffffff;
+  --terminal-border: 1px solid #3a6ea5;
+  --terminal-shadow: 0 0 20px rgba(196, 2, 51, 0.3);
+  --terminal-header-bg: linear-gradient(90deg, #0c0c0c, #c40233);
+  --terminal-header-dots: #ffd700;
+}
+
+/* 12. SPIRITED AWAY - BAJKOWY */
+body.theme-spirited-away {
+  --primary: #e63946;
+  --secondary: #457b9d;
+  --main-bg: #f1faee;
+  --text-color: #1d3557;
+  --accent: #a8dadc;
+  --highlight: rgba(230, 57, 70, 0.1);
+  --container-bg: rgba(255, 255, 255, 0.9);
+  --container-blur: blur(2px);
+  --container-border: 2px solid #a8dadc;
+  --container-shadow: 0 0 15px rgba(168, 218, 220, 0.4);
+  --container-radius: 10px;
+  --bg-pattern: url('https://w.wallhaven.cc/full/4x/wallhaven-4x3e1v.jpg');
+  
+  /* Terminal */
+  --terminal-bg: rgba(255, 255, 255, 0.95);
+  --terminal-text: #1d3557;
+  --terminal-border: 2px solid #457b9d;
+  --terminal-shadow: 0 0 10px rgba(168, 218, 220, 0.3);
+  --terminal-header-bg: linear-gradient(90deg, #f1faee, #e63946);
+  --terminal-header-dots: #1d3557;
 }
 
 /* ELEMENTY WSPÓLNE */
@@ -218,20 +401,6 @@ body.theme-death-note {
   letter-spacing: 0.1rem;
 }
 
-/* RESPONSYWNOŚĆ */
-@media (max-width: 768px) {
-  .cyber-container {
-    padding: 1rem;
-  }
-  
-  body {
-    background-attachment: scroll;
-  }
-  
-  body[class*="theme-"] .cyber-container {
-    backdrop-filter: none;
-  }
-}
 /* UNIKALNE UKŁADY STRONY DLA KAŻDEGO ANIME */
 
 /* 1. EVANGELION - UKŁAD Z PIONOWĄ STREFĄ LCL */
@@ -352,7 +521,7 @@ body.theme-vinland-saga .cyber-header {
   padding: 80px 0;
 }
 
-/* 6. PERFECT BLUE - UKŁAD ZAŁAMANEJ RZECZYWISTOŚCI */
+/* 6. PERFECT BLUE - ZAŁAMANA RZECZYWISTOŚĆ */
 body.theme-perfect-blue .cyber-container {
   transform: rotate(0.5deg);
   animation: perfectBlueTilt 15s infinite alternate;
@@ -373,7 +542,7 @@ body.theme-perfect-blue .terminal {
   );
 }
 
-/* 7. RUCHOMY ZAMEK - UKŁAD Z WIRUJĄCYMI ELEMENTAMI */
+/* 7. RUCHOMY ZAMEK - WIRUJĄCE ELEMENTY */
 body.theme-ruchomy-zamek .cyber-header {
   position: relative;
 }
@@ -406,7 +575,7 @@ body.theme-ruchomy-zamek .cyber-header::after {
   to { transform: rotate(0deg); }
 }
 
-/* 8. MUJ SĄSIAD TOTORO - UKŁAD LASU */
+/* 8. MUJ SĄSIAD TOTORO - LAS */
 body.theme-totoro {
   background-image: url('https://w.wallhaven.cc/full/4y/wallhaven-4ygx17.jpg');
   background-position: bottom right;
@@ -425,7 +594,7 @@ body.theme-totoro .terminal {
   background-blend-mode: overlay;
 }
 
-/* 9. AKIRA - UKŁAD NEONOWEJ DROGI */
+/* 9. AKIRA - NEONOWA DROGA */
 body.theme-akira .cyber-container {
   border-left: none;
   border-right: none;
@@ -465,7 +634,7 @@ body.theme-akira .cyber-main::before {
   to { background-position: 0 50px; }
 }
 
-/* 10. DEATH NOTE - UKŁAD KARTY NOTATNIKA */
+/* 10. DEATH NOTE - KARTA NOTATNIKA */
 body.theme-death-note .cyber-container {
   background-image: linear-gradient(
     to bottom,
@@ -485,8 +654,72 @@ body.theme-death-note .terminal {
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+/* 11. ATTACK ON TITAN - MURY */
+body.theme-attack-on-titan .cyber-container {
+  position: relative;
+  overflow: hidden;
+}
+
+body.theme-attack-on-titan .cyber-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: repeating-linear-gradient(
+    to right,
+    transparent,
+    transparent 20px,
+    var(--primary) 20px,
+    var(--primary) 40px
+  );
+}
+
+body.theme-attack-on-titan .cyber-container::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: repeating-linear-gradient(
+    to right,
+    transparent,
+    transparent 20px,
+    var(--primary) 20px,
+    var(--primary) 40px
+  );
+}
+
+/* 12. SPIRITED AWAY - MAGICZNE DRZWI */
+body.theme-spirited-away .cyber-header {
+  background-image: url('https://w.wallhaven.cc/full/4x/wallhaven-4x3e1v.jpg');
+  background-size: cover;
+  background-position: center;
+  padding: 100px 0;
+  color: white;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+}
+
+body.theme-spirited-away .cyber-title {
+  color: white;
+}
+
 /* RESPONSYWNOŚĆ */
 @media (max-width: 768px) {
+  .cyber-container {
+    padding: 1rem;
+  }
+  
+  body {
+    background-attachment: scroll;
+  }
+  
+  body[class*="theme-"] .cyber-container {
+    backdrop-filter: none;
+  }
+  
   body.theme-ghost-in-the-shell .cyber-container {
     grid-template-columns: 1fr;
   }
@@ -505,7 +738,8 @@ body.theme-death-note .terminal {
     display: none;
   }
 }
-/* Dodaj to do swojego CSS */
+
+/* Projekty */
 #projectsContainer {
   display: none;
   margin-top: 1rem;
@@ -519,6 +753,15 @@ body.theme-death-note .terminal {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  background-color: var(--highlight);
+  border: 1px solid var(--secondary);
+  color: var(--text-color);
+  transition: var(--transition-base);
+}
+
+#projectsContainer .cyber-button:hover {
+  background-color: var(--primary);
+  color: white;
 }
 
 @media (max-width: 768px) {
