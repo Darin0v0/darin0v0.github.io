@@ -47,6 +47,52 @@ body {
   --highlight-hover: rgba(131, 148, 150, 0.2);
 }
 
+
+/* Domyślny layout */
+#menuPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 30px;
+  padding: 20px;
+}
+
+/* Cyberpunk - ramka, środek */
+[data-theme="cyberpunk"] #menuPanel {
+  border: 2px solid var(--accent-1);
+  background-color: rgba(0, 0, 0, 0.3);
+  width: 60%;
+  margin: 40px auto;
+  align-items: center;
+}
+
+/* Solarized - menu po prawej */
+[data-theme="solarized"] #menuPanel {
+  position: absolute;
+  top: 100px;
+  right: 40px;
+  width: 300px;
+  align-items: flex-start;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-left: 2px solid var(--accent-1);
+  padding: 20px;
+}
+
+/* Matrix - menu na dole */
+[data-theme="matrix"] #menuPanel {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  flex-direction: row;
+  gap: 15px;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 10px 20px;
+  border: 1px solid var(--accent-2);
+  box-shadow: 0 0 15px var(--accent-2);
+}
+
 /* EFEKT GLITCHA */
 @keyframes glitch {
   0% { text-shadow: 2px 0 var(--accent-1); }
