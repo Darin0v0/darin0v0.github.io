@@ -1,4 +1,4 @@
-akie/* GLOBALNE STYLE */
+/* GLOBALNE STYLE */
 :root {
   --cyber-font: 'Share Tech Mono', monospace;
   --transition-base: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -331,7 +331,7 @@ body::before {
   --glow: 0 0 5px var(--primary), 0 0 10px var(--primary);
   --scanline: rgba(255, 77, 77, 0.1);
   --scanline-color: rgba(255, 77, 77, 0.15);
-  --bg-image("https://w.wallhaven.cc/full/od/wallhaven-odjqj5.jpg");
+  --bg-image url("https://w.wallhaven.cc/full/od/wallhaven-odjqj5.jpg");
   --bg-pattern: radial-gradient(circle at 70% 30%, rgba(255, 77, 77, 0.1) 0%, transparent 30%),
                 radial-gradient(circle at 30% 70%, rgba(77, 255, 255, 0.1) 0%, transparent 30%);
 }
