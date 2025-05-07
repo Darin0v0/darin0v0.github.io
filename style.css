@@ -198,7 +198,11 @@ body.theme-vinland-saga {
   --container-shadow: 0 0 15px rgba(139, 69, 19, 0.5);
   --container-radius: 0;
   --bg-pattern: url('https://w.wallhaven.cc/full/l8/wallhaven-l8l7dr.jpg');
-  
+  background-image: var(--bg-pattern);
+  background-size: cover;       /* Dopasowuje obrazek do wymiarów ekranu */
+  background-position: center;  /* Wyśrodkowuje obrazek */
+  background-repeat: no-repeat; /* Zapobiega powtarzaniu */
+  background-attachment: fixed; /* Tło pozostaje nieruchome podczas scrollowania */
   /* Terminal */
   --terminal-bg: rgba(15, 25, 35, 0.95);
   --terminal-text: #f5f5dc;
