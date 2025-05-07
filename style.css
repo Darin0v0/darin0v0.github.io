@@ -580,9 +580,32 @@ body.theme-ruchomy-zamek .cyber-header::after {
 
 /* 8. MUJ SĄSIAD TOTORO - LAS */
 body.theme-totoro {
-  background-image: url('https://w.wallhaven.cc/full/4y/wallhaven-4ygx17.jpg');
-  background-position: bottom right;
-  background-size: 30%;
+  --primary: #2e8b57;
+  --secondary: #f4a460;
+  --main-bg: #e6f7e6;
+  --text-color: #2f4f4f;
+  --accent: #8fbc8f;
+  --highlight: rgba(46, 139, 87, 0.1);
+  --container-bg: rgba(255, 255, 255, 0.9);
+  --container-blur: none;
+  --container-border: 2px solid #2e8b57;
+  --container-shadow: 0 0 15px rgba(46, 139, 87, 0.2);
+  --container-radius: 15px;
+  --bg-pattern: url('https://w.wallhaven.cc/full/4y/wallhaven-4ygx17.jpg');
+  
+  /* Nowe właściwości tła */
+  background-size: cover; /* Zamiast 30% - rozciąga na całą stronę */
+  background-position: center; /* Zamiast bottom right - wyśrodkowuje */
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  
+  /* Terminal */
+  --terminal-bg: rgba(255, 255, 255, 0.95);
+  --terminal-text: #2f4f4f;
+  --terminal-border: 2px solid #8fbc8f;
+  --terminal-shadow: 0 0 10px rgba(46, 139, 87, 0.2);
+  --terminal-header-bg: linear-gradient(90deg, #e6f7e6, #2e8b57);
+  --terminal-header-dots: #2f4f4f;
 }
 
 body.theme-totoro .cyber-container {
