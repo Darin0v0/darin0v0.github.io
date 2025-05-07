@@ -360,13 +360,13 @@ body::before {
   --text-color: #ffffff;
   --accent: #990000;
   --highlight: rgba(255, 0, 0, 0.1);
-  --glow: 0 0 5px var(--primary), 0 0 10px var(--primary);
-  --scanline: rgba(255, 0, 0, 0.1);
-  --scanline-color: rgba(255, 0, 0, 0.15);
-  --bg-pattern: radial-gradient(circle at center, 
-                rgba(255, 26, 26, 0.25) 0%, 
-                rgba(0, 0, 0, 1) 70%);
-    background-attachment: fixed;
+  --scanline: rgba(255, 0, 51, 0.1);
+  --scanline-color: rgba(255, 0, 51, 0.15);
+  --bg-pattern: linear-gradient(135deg, 
+                rgba(160, 32, 240, 0.15) 0%, 
+                rgba(26, 0, 26, 1) 40%,
+                rgba(255, 45, 125, 0.15) 100%);
+
 }
 
 /* COWBOY BEBOP */
