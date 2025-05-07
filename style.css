@@ -622,3 +622,259 @@ footer a:hover::after {
     margin: 0.5rem 0;
   }
 }
+/* DODATKOWE UKŁADY STRONY DLA MOTYWÓW */
+
+/* GHOST IN THE SHELL - HORYZONTALNY UKŁAD */
+[data-theme="ghost-in-the-shell"] main {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+[data-theme="ghost-in-the-shell"] #menuPanel {
+  position: sticky;
+  top: 2rem;
+  background: rgba(0, 10, 20, 0.8);
+  border: 1px solid var(--accent-2);
+  backdrop-filter: blur(10px);
+  padding: 2rem;
+  border-radius: 0 20px 20px 0;
+}
+
+[data-theme="ghost-in-the-shell"] .terminal-container {
+  background-image: url('https://i.imgur.com/JKvzWRb.jpg');
+  background-size: cover;
+  background-position: center;
+  padding: 2rem;
+  border-radius: 20px 0 0 20px;
+  border: 1px solid var(--accent-1);
+}
+
+/* EVANGELION - CENTRALNY UKŁAD Z EFEKTEM LILITH */
+[data-theme="evangelion"] body {
+  background-image: 
+    url('https://i.imgur.com/N8XQYjW.png'),
+    var(--bg-pattern);
+  background-position: center;
+  background-size: 30%, cover;
+  background-repeat: no-repeat;
+}
+
+[data-theme="evangelion"] main {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+[data-theme="evangelion"]::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, transparent 60%, rgba(160, 32, 240, 0.1));
+  z-index: 1;
+}
+
+/* AKIRA - UKŁAD Z BOCZNYM PASKEM */
+[data-theme="akira"] body {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+}
+
+[data-theme="akira"] header,
+[data-theme="akira"] main,
+[data-theme="akira"] footer {
+  grid-column: 2;
+}
+
+[data-theme="akira"]::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 100px;
+  background: linear-gradient(to right, 
+    rgba(255, 26, 26, 0.8) 0%, 
+    rgba(0, 0, 0, 0.9) 100%);
+  border-right: 3px solid var(--accent-2);
+}
+
+[data-theme="akira"] .theme-switcher {
+  position: fixed;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+/* COWBOY BEBOP - UKŁAD STATKU KOSMICZNEGO */
+[data-theme="cowboy-bebop"] body {
+  background-image: 
+    url('https://i.imgur.com/YjqK9qV.png'),
+    linear-gradient(160deg, #000033 0%, #000066 100%);
+  background-attachment: fixed;
+  background-position: right bottom;
+  background-size: auto 50%;
+}
+
+[data-theme="cowboy-bebop"] main {
+  max-width: 70%;
+  margin-left: 5%;
+}
+
+[data-theme="cowboy-bebop"] footer {
+  text-align: left;
+  padding-left: 5%;
+}
+
+/* PSYCHO-PASS - UKŁAD Z HAKOIRONOMA */
+[data-theme="psycho-pass"] body {
+  background-image: 
+    url('https://i.imgur.com/VQ5ZQ9L.png'),
+    var(--bg-pattern);
+  background-position: right top;
+  background-repeat: no-repeat;
+  background-size: 300px, cover;
+}
+
+[data-theme="psycho-pass"] main {
+  max-width: 70%;
+}
+
+[data-theme="psycho-pass"] .terminal {
+  background-color: rgba(15, 22, 32, 0.8);
+  backdrop-filter: blur(5px);
+}
+
+/* SPECJALNE ELEMENTY DLA MOTYWÓW ANIME */
+
+/* ANIME BACKGROUNDS */
+[data-theme="ghost-in-the-shell"] {
+  --anime-bg: url('https://i.imgur.com/JKvzWRb.jpg');
+}
+
+[data-theme="evangelion"] {
+  --anime-bg: url('https://i.imgur.com/N8XQYjW.png');
+}
+
+[data-theme="akira"] {
+  --anime-bg: url('https://i.imgur.com/9X6QYjX.jpg');
+}
+
+[data-theme="cowboy-bebop"] {
+  --anime-bg: url('https://i.imgur.com/YjqK9qV.png');
+}
+
+[data-theme="psycho-pass"] {
+  --anime-bg: url('https://i.imgur.com/VQ5ZQ9L.png');
+}
+
+/* ANIME CHARACTER FLOATS */
+[data-theme="ghost-in-the-shell"]::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 300px;
+  height: 300px;
+  background-image: url('https://i.imgur.com/Tk3WQwB.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.7;
+  z-index: -1;
+}
+
+[data-theme="evangelion"]::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 200px;
+  height: 200px;
+  background-image: url('https://i.imgur.com/R8XQYjW.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.8;
+  z-index: -1;
+  animation: float 6s ease-in-out infinite;
+}
+
+/* ANIMACJE SPECJALNE */
+@keyframes neon-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    opacity: 1;
+  }
+  20%, 22%, 24%, 55% {
+    opacity: 0.5;
+  }
+}
+
+[data-theme="ghost-in-the-shell"] header h1 {
+  animation: neon-flicker 3s infinite;
+}
+
+[data-theme="akira"] .cyber-project-btn {
+  transition: all 0.3s, transform 0.1s;
+}
+
+[data-theme="akira"] .cyber-project-btn:active {
+  transform: scale(0.95) rotate(-1deg);
+  background-color: var(--accent-1);
+}
+
+/* RESPONSYWNOŚĆ DLA UKŁADÓW ANIME */
+@media (max-width: 1024px) {
+  [data-theme="ghost-in-the-shell"] main {
+    grid-template-columns: 1fr;
+  }
+  
+  [data-theme="ghost-in-the-shell"] #menuPanel {
+    position: static;
+    margin-bottom: 2rem;
+  }
+  
+  [data-theme="cowboy-bebop"] main,
+  [data-theme="psycho-pass"] main {
+    max-width: 90%;
+    margin: 0 auto;
+  }
+  
+  [data-theme="akira"] body {
+    grid-template-columns: 1fr;
+  }
+  
+  [data-theme="akira"]::after {
+    display: none;
+  }
+  
+  [data-theme="akira"] .theme-switcher {
+    position: static;
+    flex-direction: row;
+    transform: none;
+    margin: 1rem 0;
+  }
+}
+
+@media (max-width: 768px) {
+  [data-theme="psycho-pass"] body,
+  [data-theme="cowboy-bebop"] body {
+    background-size: 200px, cover;
+  }
+  
+  [data-theme="evangelion"] body {
+    background-size: 50%, cover;
+  }
+  
+  [data-theme*="anime"]::after {
+    opacity: 0.3;
+    width: 150px;
+    height: 150px;
+  }
+}
