@@ -230,3 +230,276 @@ body.theme-death-note {
     backdrop-filter: none;
   }
 }
+/* UNIKALNE UKŁADY STRONY DLA KAŻDEGO ANIME */
+
+/* 1. EVANGELION - UKŁAD Z PIONOWĄ STREFĄ LCL */
+body.theme-evangelion {
+  position: relative;
+  overflow: hidden;
+}
+
+body.theme-evangelion::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100px;
+  background: linear-gradient(90deg, 
+             transparent, 
+             rgba(255, 0, 51, 0.3));
+  z-index: -1;
+  animation: evangelionGlow 3s infinite alternate;
+}
+
+@keyframes evangelionGlow {
+  0% { opacity: 0.3; }
+  100% { opacity: 0.7; }
+}
+
+/* 2. PSYCHO-PASS - UKŁAD Z DYNAMOMETREM */
+body.theme-psycho-pass .cyber-container {
+  clip-path: polygon(
+    0 0, 
+    100% 0, 
+    100% calc(100% - 50px), 
+    calc(100% - 50px) 100%, 
+    0 100%
+  );
+  border-left: 5px solid var(--accent);
+}
+
+body.theme-psycho-pass .cyber-header::after {
+  content: "CRIME COEFFICIENT: 000";
+  position: absolute;
+  bottom: -25px;
+  right: 20px;
+  font-size: 0.9rem;
+  color: var(--primary);
+  animation: psychoPassScan 5s infinite;
+}
+
+@keyframes psychoPassScan {
+  0%, 100% { content: "CRIME COEFFICIENT: 000"; }
+  50% { content: "CRIME COEFFICIENT: 280"; }
+}
+
+/* 3. COWBOY BEBOP - UKŁAD STATKU BEBOP */
+body.theme-cowboy-bebop {
+  background-position: center 30%;
+}
+
+body.theme-cowboy-bebop .cyber-container {
+  border-top: 3px solid var(--primary);
+  border-bottom: 3px solid var(--secondary);
+  border-left: none;
+  border-right: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 51, 0.9) 0%,
+    rgba(0, 0, 51, 0.7) 50%,
+    rgba(0, 0, 51, 0.9) 100%
+  );
+}
+
+/* 4. GHOST IN THE SHELL - UKŁAD SIECIOWY */
+body.theme-ghost-in-the-shell {
+  background-size: cover;
+}
+
+body.theme-ghost-in-the-shell .cyber-container {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap: 20px;
+  background-color: rgba(26, 26, 46, 0.7);
+}
+
+body.theme-ghost-in-the-shell .cyber-header {
+  grid-column: 1 / -1;
+}
+
+body.theme-ghost-in-the-shell .theme-switcher {
+  grid-row: 2;
+  flex-direction: column;
+  align-self: start;
+}
+
+body.theme-ghost-in-the-shell .cyber-main {
+  grid-column: 2;
+}
+
+/* 5. VINLAND SAGA - UKŁAD DŁUGIEJ ŁODZI */
+body.theme-vinland-saga .cyber-container {
+  max-width: 800px;
+  border-left: 15px solid var(--primary);
+  border-right: 15px solid var(--primary);
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(139, 69, 19, 0.2),
+    transparent
+  );
+}
+
+body.theme-vinland-saga .cyber-header {
+  background-image: url('https://i.imgur.com/N8XQYjW.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  padding: 80px 0;
+}
+
+/* 6. PERFECT BLUE - UKŁAD ZAŁAMANEJ RZECZYWISTOŚCI */
+body.theme-perfect-blue .cyber-container {
+  transform: rotate(0.5deg);
+  animation: perfectBlueTilt 15s infinite alternate;
+}
+
+@keyframes perfectBlueTilt {
+  0%, 100% { transform: rotate(0.5deg); }
+  50% { transform: rotate(-0.5deg); }
+}
+
+body.theme-perfect-blue .terminal {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(147, 112, 219, 0.1),
+    rgba(147, 112, 219, 0.1) 1px,
+    transparent 1px,
+    transparent 20px
+  );
+}
+
+/* 7. RUCHOMY ZAMEK - UKŁAD Z WIRUJĄCYMI ELEMENTAMI */
+body.theme-ruchomy-zamek .cyber-header {
+  position: relative;
+}
+
+body.theme-ruchomy-zamek .cyber-header::before {
+  content: "⚙️";
+  position: absolute;
+  font-size: 2rem;
+  top: 10px;
+  left: 20px;
+  animation: gearSpin 10s linear infinite;
+}
+
+body.theme-ruchomy-zamek .cyber-header::after {
+  content: "⚙️";
+  position: absolute;
+  font-size: 1.5rem;
+  bottom: 10px;
+  right: 20px;
+  animation: gearSpinReverse 8s linear infinite;
+}
+
+@keyframes gearSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes gearSpinReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+/* 8. MUJ SĄSIAD TOTORO - UKŁAD LASU */
+body.theme-totoro {
+  background-image: url('https://i.imgur.com/Tk3WQwB.png');
+  background-position: bottom right;
+  background-size: 30%;
+}
+
+body.theme-totoro .cyber-container {
+  background-color: rgba(255, 255, 255, 0.85);
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(46, 139, 87, 0.3);
+}
+
+body.theme-totoro .terminal {
+  background-image: url('https://i.imgur.com/9X6QYjX.png');
+  background-size: 50px;
+  background-blend-mode: overlay;
+}
+
+/* 9. AKIRA - UKŁAD NEONOWEJ DROGI */
+body.theme-akira .cyber-container {
+  border-left: none;
+  border-right: none;
+  background: linear-gradient(
+    to right,
+    #000033,
+    #000033 45%,
+    transparent 45%,
+    transparent 55%,
+    #000033 55%,
+    #000033
+  );
+}
+
+body.theme-akira .cyber-main {
+  position: relative;
+}
+
+body.theme-akira .cyber-main::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--primary),
+    transparent
+  );
+  animation: akiraRoad 2s linear infinite;
+}
+
+@keyframes akiraRoad {
+  from { background-position: 0 0; }
+  to { background-position: 0 50px; }
+}
+
+/* 10. DEATH NOTE - UKŁAD KARTY NOTATNIKA */
+body.theme-death-note .cyber-container {
+  background-image: linear-gradient(
+    to bottom,
+    #ffffff,
+    #ffffff 50px,
+    #f0f0f0 50px,
+    #f0f0f0
+  );
+  background-size: 100% 100px;
+  border-left: 10px solid var(--primary);
+}
+
+body.theme-death-note .terminal {
+  background-color: #f8f8f8;
+  color: #000000;
+  border: 1px solid #c0c0c0;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* RESPONSYWNOŚĆ */
+@media (max-width: 768px) {
+  body.theme-ghost-in-the-shell .cyber-container {
+    grid-template-columns: 1fr;
+  }
+  
+  body.theme-ghost-in-the-shell .theme-switcher {
+    grid-row: auto;
+    flex-direction: row;
+  }
+  
+  body.theme-vinland-saga .cyber-container {
+    border-left: 5px solid var(--primary);
+    border-right: 5px solid var(--primary);
+  }
+  
+  body.theme-akira .cyber-main::before {
+    display: none;
+  }
+}
