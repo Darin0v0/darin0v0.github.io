@@ -4,53 +4,73 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DAWID_MURIAS // CYBERSPACE_TERMINAL</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;500;700&family=Orbitron:wght@400;700&family=Michroma&family=Titillium+Web:wght@300;600&family=Exo+2:wght@300;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" id="theme-style">
   
+  <!-- Czcionki -->
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;500;700&family=Orbitron:wght@400;700&family=Michroma&family=Titillium+Web:wght@300;600&family=Exo+2:wght@300;600&display=swap" rel="stylesheet">
+  
+  <!-- Ikona -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💻</text></svg>">
+  
+  <!-- Style -->
+  <link rel="stylesheet" href="styles.css" id="theme-style">
+  
+  <!-- Preload audio -->
+  <link rel="preload" href="https://www.myinstants.com/media/sounds/ghost-in-the-shell-innocence-cyberbrain-conversation.mp3" as="audio">
 </head>
 <body>
-  <header>
+  <div class="cyber-container">
+    <header class="cyber-header">
+      <h1 class="cyber-title">DAWID_MURIAS</h1>
+      <p class="cyber-subtitle">CYBERSPACE_TERMINAL_v4.2.1</p>
+      
+      <div class="theme-switcher">
+        <button data-theme="cyberpunk" aria-label="Cyberpunk theme">CYBERPUNK</button>
+        <button data-theme="matrix" aria-label="Matrix theme">MATRIX</button>
+        <button data-theme="solarized" aria-label="Solarized theme">SOLARIZED</button>
+        <button data-theme="ghost-in-the-shell" aria-label="Ghost in the Shell theme">GHOST IN SHELL</button>
+        <button data-theme="evangelion" aria-label="Evangelion theme">EVANGELION</button>
+        <button data-theme="akira" aria-label="Akira theme">AKIRA</button>
+        <button data-theme="cowboy-bebop" aria-label="Cowboy Bebop theme">COWBOY BEBOP</button>
+        <button data-theme="psycho-pass" aria-label="Psycho-Pass theme">PSYCHO-PASS</button>
+      </div>
+    </header>
 
-    <p>CYBERSPACE_TERMINAL_v4.2.1</p>
-   <div class="theme-switcher">
-  <button data-theme="cyberpunk">CYBERPUNK</button>
-  <button data-theme="matrix">MATRIX</button>
-  <button data-theme="solarized">SOLARIZED</button>
-  <button data-theme="ghost-in-the-shell">GHOST IN SHELL</button>
-  <button data-theme="evangelion">EVANGELION</button>
-  <button data-theme="akira">AKIRA</button>
-  <button data-theme="cowboy-bebop">COWBOY BEBOP</button>
-  <button data-theme="psycho-pass">PSYCHO-PASS</button>
-</div>
-  </header>
+    <main class="cyber-main">
+      <div class="terminal" id="terminalOutput" aria-live="polite">
+        > SYSTEM INITIALIZED<br>
+        > WELCOME TO MY DIGITAL SPACE<br>
+        > TYPE COMMAND BELOW
+      </div>
 
-  <main>
-    <div class="terminal" id="terminalOutput">
-      > SYSTEM INITIALIZED<br>
-      > WELCOME TO MY DIGITAL SPACE<br>
-      > TYPE COMMAND BELOW
-    </div>
+      <div class="input-group">
+        <input type="text" id="repoPath" placeholder="ENTER_QUERY_PATH::" class="cyber-input" aria-label="Command input">
+        <div class="button-group">
+          <button id="apiBtn" class="cyber-button">EXECUTE_QUERY</button>
+          <button id="playMusicBtn" class="cyber-button">TOGGLE_AMBIENT</button>
+        </div>
+      </div>
 
-    <div class="input-group">
-      <input type="text" id="repoPath" placeholder="ENTER_QUERY_PATH::" class="cyber-input">
-      <button id="apiBtn">EXECUTE_QUERY</button>
-      <button id="playMusicBtn">TOGGLE_AMBIENT</button>
-    </div>
+      <div id="projectsContainer" class="terminal" style="display:none;" aria-live="polite">
+        <!-- Projekty będą ładowane dynamicznie -->
+      </div>
+    </main>
 
-    <div id="projectsContainer" class="terminal" style="display:none;">
-      <!-- Projekty będą ładowane dynamicznie -->
-    </div>
-  </main>
+    <footer class="cyber-footer">
+      <p>CONNECT:</p>
+      <div class="footer-links">
+        <a href="mailto:dawidmurias907@gmail.com" class="cyber-link">EMAIL</a>
+        <a href="https://github.com/Darin0v0" class="cyber-link" target="_blank" rel="noopener noreferrer">GITHUB</a>
+      </div>
+    </footer>
+  </div>
 
-  <footer>
-    <p>CONNECT:</p>
-    <a href="mailto:dawidmurias907@gmail.com">EMAIL</a>
-    <a href="https://github.com/Darin0v0">GITHUB</a>
-  </footer>
+  <!-- Audio -->
+  <audio id="bgMusic" loop>
+    <source src="https://www.myinstants.com/media/sounds/ghost-in-the-shell-innocence-cyberbrain-conversation.mp3" type="audio/mpeg">
+    Twoja przeglądarka nie obsługuje elementu audio.
+  </audio>
 
-  <audio id="bgMusic" src="https://www.myinstants.com/media/sounds/ghost-in-the-shell-innocence-cyberbrain-conversation.mp3" loop></audio>
-
-  <script src="script.js"></script>
+  <!-- Skrypt -->
+  <script src="script.js" defer></script>
 </body>
 </html>
