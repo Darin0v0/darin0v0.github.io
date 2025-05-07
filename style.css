@@ -270,7 +270,10 @@ body.theme-totoro {
   --container-shadow: 0 0 15px rgba(46, 139, 87, 0.2);
   --container-radius: 15px;
   --bg-pattern: url('https://w.wallhaven.cc/full/ym/wallhaven-ymzz6l.jpg');
-  
+  background-size: cover; 
+  background-repeat: no-repeat;
+  background-position: center center; 
+  background-attachment: fixed;
   /* Terminal */
   --terminal-bg: rgba(255, 255, 255, 0.95);
   --terminal-text: #2f4f4f;
