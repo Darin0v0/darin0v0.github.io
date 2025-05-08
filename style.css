@@ -555,13 +555,13 @@ body.theme-vinland-saga .cyber-header {
 
 /* 6. PERFECT BLUE - ZAŁAMANA RZECZYWISTOŚĆ */
 body.theme-perfect-blue .cyber-container {
-  transform: rotate(0.5deg);
+  transform: rotate(1deg);
   animation: perfectBlueTilt 15s infinite alternate;
 }
 
 @keyframes perfectBlueTilt {
-  0%, 100% { transform: rotate(0.5deg); }
-  50% { transform: rotate(-0.5deg); }
+  0%, 100% { transform: rotate(1deg); }
+  50% { transform: rotate(-1deg); }
 }
 
 body.theme-perfect-blue .terminal {
