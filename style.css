@@ -535,8 +535,7 @@ body.theme-ghost-in-the-shell .cyber-main {
 /* 5. VINLAND SAGA - UKŁAD DŁUGIEJ ŁODZI */
 body.theme-vinland-saga .cyber-container {
   max-width: 800px;
-  border-left: 15px solid var(--primary);
-  border-right: 15px solid var(--primary);
+ 
   background: linear-gradient(
     to right,
     transparent,
