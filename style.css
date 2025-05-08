@@ -203,8 +203,6 @@ body.theme-vinland-saga {
   --highlight: rgba(139, 69, 19, 0.1);
   --container-bg: rgba(10, 26, 42, 0.9);
   --container-blur: none;
-  --container-border: 2px solid #8b4513;
-  --container-shadow: 0 0 15px rgba(139, 69, 19, 0.5);
   --container-radius: 0;
   --bg-pattern: url('https://w.wallhaven.cc/full/l8/wallhaven-l8l7dr.jpg');
   background-image: var(--bg-pattern);
