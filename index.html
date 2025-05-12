@@ -20,7 +20,7 @@
 <body class="theme-matrix">
   <div class="cyber-container">
     <header class="cyber-header">
-      <h1 class="cyber-title">Darin_0v0</h1>
+      <h1 class="cyber-title" data-text="Darin_0v0">Darin_0v0</h1>
       <p class="cyber-subtitle">CYBERSPACE_TERMINAL_v4.2.1</p>
       
      <div class="theme-switcher">
@@ -36,6 +36,10 @@
   <button data-theme="death-note">DEATH NOTE</button>
   <button data-theme="attack-on-titan">ATTACK ON TITAN</button>
   <button data-theme="spirited-away">SPIRITED AWAY</button>
+  <button data-theme="lain">SERIAL EXPERIMENTS LAIN</button>
+  <button data-theme="jjk">JUJUTSU KAISEN</button>
+  <button data-theme="steins-gate">STEINS;GATE</button>
+  <a href="https://fauux.neocities.org/Love" target="_blank" rel="noopener" class="lain-love-link">LoveLain</a>
 </div>
     </header>
 
@@ -69,13 +73,18 @@
     </footer>
   </div>
 
-  <!-- Audio -->
-  <audio id="bgMusic" loop>
-    <source src="https://soundcloud.com/notrealband/ghost-in-the-shell-mp3" type="audio/mpeg">
-    Twoja przeglądarka nie obsługuje elementu audio.
-  </audio>
+  <!-- YouTube Player -->
+  <div id="player"></div>
 
-  <!-- Skrypt -->
+  <div class="audio-controls">
+    <div class="volume-slider">
+      <input type="range" id="volumeControl" min="0" max="100" value="50">
+      <span class="volume-value">50%</span>
+    </div>
+    <div class="audio-status">INITIALIZING...</div>
+  </div>
+
+  <!-- Script -->
   <script src="script.js"></script>
 </body>
 </html>
