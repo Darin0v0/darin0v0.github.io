@@ -15,6 +15,166 @@ document.addEventListener('DOMContentLoaded', function() {
   
   let musicPlaying = false;
 
+  // Audio System Variables
+  const volumeControl = document.getElementById('volumeControl');
+  const volumeValue = document.querySelector('.volume-value');
+  const audioVisualizer = document.getElementById('audioVisualizer');
+  const audioStatus = document.querySelector('.audio-status');
+  let audioContext = null;
+  let analyser = null;
+  let audioSource = null;
+  let isPlaying = false;
+  let animationFrame;
+  let player;
+
+  // Load YouTube IFrame API
+  function loadYouTubeAPI() {
+    if (window.YT) {
+      initPlayer();
+      return;
+    }
+
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  }
+
+  // Initialize YouTube Player
+  function initPlayer() {
+    try {
+      player = new YT.Player('player', {
+        videoId: 'cReuQk0pJbI',
+        playerVars: {
+          'autoplay': 1,
+          'controls': 0,
+          'disablekb': 1,
+          'enablejsapi': 1,
+          'fs': 0,
+          'modestbranding': 1,
+          'playsinline': 1,
+          'rel': 0,
+          'showinfo': 0
+        },
+        events: {
+          'onReady': onPlayerReady,
+          'onStateChange': onPlayerStateChange,
+          'onError': onPlayerError
+        }
+      });
+      displayTerminalMessage("> INITIALIZING YOUTUBE PLAYER");
+    } catch (error) {
+      console.error('YouTube player initialization failed:', error);
+      displayTerminalMessage("> ERROR: YOUTUBE PLAYER INITIALIZATION FAILED");
+      audioStatus.textContent = "ERROR";
+    }
+  }
+
+  function onPlayerReady(event) {
+    try {
+      // Set initial volume
+      const savedVolume = localStorage.getItem('audioVolume') || 50;
+      player.setVolume(savedVolume);
+      volumeControl.value = savedVolume;
+      volumeValue.textContent = `${savedVolume}%`;
+      
+      // Start playing
+      event.target.playVideo();
+      isPlaying = true;
+      playMusicBtn.textContent = "MUTE_AMBIENT";
+      audioStatus.textContent = "PLAYING";
+      displayTerminalMessage("> YOUTUBE PLAYER READY");
+    } catch (error) {
+      console.error('Player ready handler failed:', error);
+      displayTerminalMessage("> ERROR: PLAYER SETUP FAILED");
+      audioStatus.textContent = "ERROR";
+    }
+  }
+
+  function onPlayerStateChange(event) {
+    try {
+      if (event.data == YT.PlayerState.PLAYING) {
+        isPlaying = true;
+        playMusicBtn.textContent = "MUTE_AMBIENT";
+        audioStatus.textContent = "PLAYING";
+        displayTerminalMessage("> AMBIENT SOUNDS ENABLED");
+      } else if (event.data == YT.PlayerState.PAUSED) {
+        isPlaying = false;
+        playMusicBtn.textContent = "TOGGLE_AMBIENT";
+        audioStatus.textContent = "PAUSED";
+        displayTerminalMessage("> AMBIENT SOUNDS DISABLED");
+      } else if (event.data == YT.PlayerState.ENDED) {
+        // Restart the video when it ends
+        player.playVideo();
+      }
+    } catch (error) {
+      console.error('State change handler failed:', error);
+      displayTerminalMessage("> ERROR: PLAYER STATE CHANGE FAILED");
+    }
+  }
+
+  function onPlayerError(event) {
+    console.error('YouTube player error:', event.data);
+    displayTerminalMessage("> ERROR: YOUTUBE PLAYER ERROR");
+    audioStatus.textContent = "ERROR";
+  }
+
+  // Volume Control
+  volumeControl.addEventListener('input', (e) => {
+    try {
+      const volume = parseInt(e.target.value);
+      if (player && player.setVolume) {
+        player.setVolume(volume);
+        volumeValue.textContent = `${volume}%`;
+        localStorage.setItem('audioVolume', volume);
+      }
+    } catch (error) {
+      console.error('Volume control failed:', error);
+      displayTerminalMessage("> ERROR: VOLUME CONTROL FAILED");
+    }
+  });
+
+  // Toggle Play/Pause
+  playMusicBtn.addEventListener('click', () => {
+    try {
+      if (player && player.getPlayerState) {
+        if (isPlaying) {
+          player.pauseVideo();
+        } else {
+          player.playVideo();
+        }
+      } else {
+        displayTerminalMessage("> ERROR: PLAYER NOT READY");
+      }
+    } catch (error) {
+      console.error('Play/Pause failed:', error);
+      displayTerminalMessage("> ERROR: PLAYBACK CONTROL FAILED");
+    }
+  });
+
+  // Handle visibility change
+  document.addEventListener('visibilitychange', () => {
+    try {
+      if (document.hidden) {
+        if (isPlaying && player && player.setVolume) {
+          player.setVolume(20);
+          audioStatus.textContent = "BACKGROUND";
+        }
+      } else {
+        if (isPlaying && player && player.setVolume) {
+          player.setVolume(parseInt(volumeControl.value));
+          audioStatus.textContent = "PLAYING";
+        }
+      }
+    } catch (error) {
+      console.error('Visibility change handler failed:', error);
+    }
+  });
+
+  // Initialize YouTube API
+  window.onYouTubeIframeAPIReady = initPlayer;
+  loadYouTubeAPI();
+
   // Funkcje pomocnicze
   const displayTerminalMessage = (message) => {
     const div = document.createElement('div');
@@ -57,21 +217,100 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Obsługa muzyki
-  playMusicBtn.addEventListener('click', () => {
-    if (musicPlaying) {
-      bgMusic.pause();
-      displayTerminalMessage("> AMBIENT SOUNDS DISABLED");
-      playMusicBtn.textContent = "TOGGLE_AMBIENT";
-    } else {
-      bgMusic.play().catch(e => {
-        console.log("Audio error:", e);
-        displayTerminalMessage("> ERROR: CLICK TO ENABLE AUDIO");
-      });
-      displayTerminalMessage("> AMBIENT SOUNDS ENABLED");
-      playMusicBtn.textContent = "MUTE_AMBIENT";
+  // Audio System Initialization
+  function initializeAudioContext() {
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      return true;
+    } catch (error) {
+      console.error('Failed to initialize Audio Context:', error);
+      displayTerminalMessage("> ERROR: AUDIO SYSTEM INITIALIZATION FAILED");
+      return false;
     }
-    musicPlaying = !musicPlaying;
+  }
+
+  // Audio System Setup
+  function setupAudioSystem() {
+    if (!audioContext && !initializeAudioContext()) {
+      return false;
+    }
+
+    try {
+      if (!audioSource) {
+        audioSource = audioContext.createMediaElementSource(bgMusic);
+        audioSource.connect(analyser);
+        analyser.connect(audioContext.destination);
+      }
+
+      // Configure analyser
+      analyser.fftSize = 256;
+      setupVisualizer();
+      return true;
+    } catch (error) {
+      console.error('Failed to setup audio system:', error);
+      displayTerminalMessage("> ERROR: AUDIO SETUP FAILED");
+      return false;
+    }
+  }
+
+  // Visualizer Setup
+  function setupVisualizer() {
+    const canvas = audioVisualizer;
+    const canvasCtx = canvas.getContext('2d');
+    
+    // Set canvas size
+    function resizeCanvas() {
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+
+    function drawVisualizer() {
+      animationFrame = requestAnimationFrame(drawVisualizer);
+
+      analyser.getByteFrequencyData(dataArray);
+      canvasCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const barWidth = (canvas.width / bufferLength) * 2.5;
+      let barHeight;
+      let x = 0;
+
+      for(let i = 0; i < bufferLength; i++) {
+        barHeight = (dataArray[i] / 255) * canvas.height;
+
+        // Use theme colors for visualizer
+        const computedStyle = getComputedStyle(document.body);
+        const primary = computedStyle.getPropertyValue('--primary');
+        const secondary = computedStyle.getPropertyValue('--secondary');
+        
+        const gradient = canvasCtx.createLinearGradient(0, canvas.height, 0, canvas.height - barHeight);
+        gradient.addColorStop(0, primary || '#ff0000');
+        gradient.addColorStop(1, secondary || '#00ff00');
+        
+        canvasCtx.fillStyle = gradient;
+        canvasCtx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+
+        x += barWidth + 1;
+      }
+    }
+
+    drawVisualizer();
+  }
+
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', () => {
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame);
+    }
+    if (audioContext) {
+      audioContext.close();
+    }
   });
 
   // Pobieranie projektów z GitHub
@@ -193,4 +432,21 @@ document.addEventListener('DOMContentLoaded', function() {
   displayTerminalMessage("> SYSTEM READY");
   displayTerminalMessage("> WELCOME TO CYBERSPACE TERMINAL");
   displayTerminalMessage("> TYPE 'HELP' FOR COMMAND LIST");
+
+  // Remove old Lain theme background effect
+  document.addEventListener('mousemove', (e) => {
+    if (document.body.classList.contains('theme-lain')) {
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      document.body.style.setProperty('--mouse-x', `${x}%`);
+      document.body.style.setProperty('--mouse-y', `${y}%`);
+    }
+  });
+
+  // Reset background when leaving Lain theme
+  document.querySelectorAll('.theme-switcher button').forEach(button => {
+    button.addEventListener('click', () => {
+      document.body.style.background = '';
+    });
+  });
 });
