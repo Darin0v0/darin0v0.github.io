@@ -1,7 +1,10 @@
 /* GLOBALNE STYLE */
 :root {
   --cyber-font: 'Share Tech Mono', monospace;
-  --transition-base: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  --title-font: 'Orbitron', sans-serif;
+  --subtitle-font: 'Rajdhani', sans-serif;
+  --transition-base: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --glitch-transition: all 0.2s steps(2, jump-none);
 }
 
 body {
@@ -19,11 +22,28 @@ body {
   background-image: var(--bg-pattern);
   background-size: cover;
   background-attachment: fixed;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
 .cyber-container {
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 2rem auto;
   padding: 2rem;
   flex: 1;
   display: flex;
@@ -35,14 +55,66 @@ body {
   border: var(--container-border);
   box-shadow: var(--container-shadow);
   border-radius: var(--container-radius);
+  animation: containerAppear 0.5s ease-out forwards;
 }
 
-/* STYL TERMINALA */
+@keyframes containerAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cyber-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  position: relative;
+  padding: 1rem;
+}
+
+.cyber-title {
+  font-family: var(--title-font);
+  font-size: 3.5rem;
+  margin: 0;
+  background: linear-gradient(45deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 10px rgba(var(--primary-rgb), 0.3);
+  letter-spacing: 2px;
+  position: relative;
+  animation: titleGlitch 5s infinite;
+}
+
+@keyframes titleGlitch {
+  0%, 100% { transform: none; opacity: 1; }
+  92% { transform: skew(-0.5deg); }
+  93% { transform: skew(0.5deg); opacity: 0.75; }
+  94% { transform: skew(-0.5deg); }
+  95% { transform: none; opacity: 1; }
+  96% { transform: skew(0.5deg); opacity: 0.75; }
+  97% { transform: none; opacity: 1; }
+}
+
+.cyber-subtitle {
+  font-family: var(--subtitle-font);
+  font-size: 1.2rem;
+  color: var(--accent);
+  margin: 0.5rem 0;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* TERMINAL STYLES */
 .terminal {
   position: relative;
   background-color: var(--terminal-bg);
   color: var(--terminal-text);
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
   border-radius: 8px;
   border: var(--terminal-border);
   box-shadow: var(--terminal-shadow);
@@ -50,6 +122,7 @@ body {
   font-family: var(--cyber-font);
   min-height: 200px;
   overflow: hidden;
+  transition: var(--transition-base);
 }
 
 .terminal::before {
@@ -68,7 +141,7 @@ body {
 }
 
 .terminal::after {
-  content: "•••";
+  content: "• • •";
   position: absolute;
   top: 8px;
   left: 15px;
@@ -77,10 +150,177 @@ body {
   font-size: 1.2rem;
 }
 
-.terminal-content {
-  margin-top: 40px;
-  height: calc(100% - 40px);
-  overflow-y: auto;
+.terminal:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--terminal-shadow), 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* INPUT STYLES */
+.input-group {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  flex-wrap: wrap;
+}
+
+.cyber-input {
+  flex: 1;
+  background: var(--terminal-bg);
+  border: 2px solid var(--primary);
+  color: var(--text-color);
+  padding: 0.8rem 1rem;
+  font-family: var(--cyber-font);
+  font-size: 1rem;
+  border-radius: 4px;
+  transition: var(--transition-base);
+}
+
+.cyber-input:focus {
+  outline: none;
+  border-color: var(--secondary);
+  box-shadow: 0 0 10px rgba(var(--secondary-rgb), 0.3);
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cyber-button {
+  background: linear-gradient(45deg, var(--primary), var(--secondary));
+  border: none;
+  color: var(--text-color);
+  padding: 0.8rem 1.5rem;
+  font-family: var(--cyber-font);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.cyber-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.cyber-button:hover::before {
+  left: 100%;
+}
+
+.cyber-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* THEME SWITCHER */
+.theme-switcher {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.theme-switcher button {
+  background: var(--terminal-bg);
+  border: 1px solid var(--primary);
+  color: var(--text-color);
+  padding: 0.8rem;
+  font-family: var(--cyber-font);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition-base);
+  border-radius: 4px;
+}
+
+.theme-switcher button:hover {
+  background: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* FOOTER */
+.cyber-footer {
+  text-align: center;
+  margin-top: 3rem;
+  padding: 2rem 0;
+  border-top: 1px solid var(--primary);
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.cyber-link {
+  color: var(--text-color);
+  text-decoration: none;
+  position: relative;
+  padding: 0.5rem 1rem;
+  transition: var(--transition-base);
+}
+
+.cyber-link::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--primary);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
+}
+
+.cyber-link:hover::before {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  .cyber-container {
+    margin: 1rem;
+    padding: 1rem;
+  }
+
+  .cyber-title {
+    font-size: 2.5rem;
+  }
+
+  .input-group {
+    flex-direction: column;
+  }
+
+  .button-group {
+    width: 100%;
+  }
+
+  .cyber-button {
+    flex: 1;
+  }
+
+  .theme-switcher {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
 }
 
 /* MOTYWY ANIME - ZAKTUALIZOWANE Z TERMINALEM */
@@ -99,17 +339,105 @@ body.theme-evangelion {
   --container-shadow: 0 0 30px rgba(255, 0, 51, 0.3);
   --container-radius: 0;
   --bg-pattern: url('https://w.wallhaven.cc/full/d5/wallhaven-d5579l.png');
-  background-size: cover; 
-  background-repeat: no-repeat;
-  background-position: center center; 
-  background-attachment: fixed;
-  /* Terminal */
-  --terminal-bg: rgba(5, 5, 15, 0.9);
-  --terminal-text: #ccffff;
-  --terminal-border: 1px solid #ff0033;
-  --terminal-shadow: 0 0 20px rgba(255, 0, 51, 0.4);
-  --terminal-header-bg: linear-gradient(90deg, #ff0033, #9900ff);
-  --terminal-header-dots: #000;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body.theme-evangelion::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 30%;
+  background: linear-gradient(90deg, 
+    rgba(255, 0, 51, 0) 0%,
+    rgba(255, 0, 51, 0.1) 50%,
+    rgba(255, 0, 51, 0.2) 100%
+  );
+  z-index: -1;
+  animation: evangelionGlow 4s infinite alternate;
+  pointer-events: none;
+}
+
+body.theme-evangelion::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.1) 0px,
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+  animation: scanline 10s linear infinite;
+  opacity: 0.3;
+}
+
+body.theme-evangelion .cyber-container {
+  position: relative;
+  overflow: visible;
+}
+
+body.theme-evangelion .cyber-container::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  background: linear-gradient(45deg, var(--primary), var(--secondary));
+  z-index: -1;
+  animation: pulse 2s infinite;
+  opacity: 0.5;
+}
+
+body.theme-evangelion .cyber-title {
+  position: relative;
+  animation: float 6s ease-in-out infinite;
+}
+
+body.theme-evangelion .cyber-title::before,
+body.theme-evangelion .cyber-title::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--primary);
+  clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%);
+  animation: glitch 3s infinite;
+  animation-timing-function: steps(2, end);
+}
+
+body.theme-evangelion .cyber-title::after {
+  background: var(--secondary);
+  clip-path: polygon(0 80%, 100% 20%, 100% 100%, 0 100%);
+  animation-duration: 3s;
+  animation-delay: -1s;
+}
+
+body.theme-evangelion .terminal {
+  border-color: var(--primary);
+  position: relative;
+  overflow: hidden;
+}
+
+body.theme-evangelion .terminal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--primary);
+  animation: pulse 2s infinite;
+  z-index: 1;
 }
 
 /* 2. PSYCHO-PASS - UKŁAD Z DOMINACJĄ CZERWIENI */
@@ -441,7 +769,7 @@ body.theme-evangelion {
 
 body.theme-evangelion::before {
   content: "";
-  position: fixed;
+  position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
@@ -505,29 +833,130 @@ body.theme-cowboy-bebop .cyber-container {
 
 /* 4. GHOST IN THE SHELL - UKŁAD SIECIOWY */
 body.theme-ghost-in-the-shell {
-  background-size: cover;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body.theme-ghost-in-the-shell::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(90deg, 
+      rgba(77, 255, 255, 0.1) 1px,
+      transparent 1px
+    ) 0 0 / 20px 20px,
+    linear-gradient(0deg,
+      rgba(77, 255, 255, 0.1) 1px,
+      transparent 1px
+    ) 0 0 / 20px 20px;
+  pointer-events: none;
+  animation: float 10s infinite linear;
 }
 
 body.theme-ghost-in-the-shell .cyber-container {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  grid-template-rows: auto 1fr auto;
-  gap: 20px;
-  background-color: rgba(26, 26, 46, 0.7);
+  position: relative;
+  border: 1px solid var(--primary);
+  animation: cyberPulse 4s infinite;
+  overflow: visible;
 }
 
-body.theme-ghost-in-the-shell .cyber-header {
-  grid-column: 1 / -1;
+body.theme-ghost-in-the-shell .cyber-container::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  background: linear-gradient(45deg,
+    transparent 0%,
+    rgba(77, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  z-index: -1;
+  animation: rotate 20s linear infinite;
 }
 
-body.theme-ghost-in-the-shell .theme-switcher {
-  grid-row: 2;
-  flex-direction: column;
-  align-self: start;
+body.theme-ghost-in-the-shell .cyber-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0%,
+    transparent 50%,
+    rgba(77, 255, 255, 0.1) 50%,
+    rgba(77, 255, 255, 0.1) 51%,
+    transparent 51%,
+    transparent 100%
+  );
+  background-size: 100% 4px;
+  animation: dataStream 10s linear infinite;
+  pointer-events: none;
 }
 
-body.theme-ghost-in-the-shell .cyber-main {
-  grid-column: 2;
+body.theme-ghost-in-the-shell .cyber-title {
+  position: relative;
+  animation: hackEffect 5s infinite;
+  text-shadow: 0 0 10px var(--primary);
+}
+
+body.theme-ghost-in-the-shell .cyber-title::before {
+  content: attr(data-text);
+  position: absolute;
+  left: -2px;
+  text-shadow: 2px 0 var(--secondary);
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch 3s infinite linear alternate-reverse;
+}
+
+body.theme-ghost-in-the-shell .cyber-title::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 2px;
+  text-shadow: -2px 0 var(--primary);
+  clip: rect(44px, 450px, 56px, 0);
+  animation: glitch 2s infinite linear alternate-reverse;
+}
+
+body.theme-ghost-in-the-shell .terminal {
+  position: relative;
+  border: 1px solid var(--secondary);
+  overflow: hidden;
+}
+
+body.theme-ghost-in-the-shell .terminal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(90deg,
+      transparent 50%,
+      rgba(77, 255, 255, 0.1) 50%
+    );
+  background-size: 4px 100%;
+  animation: matrixRain 20s linear infinite;
+  opacity: 0.3;
+}
+
+body.theme-ghost-in-the-shell .terminal::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--primary);
+  animation: cyberScan 4s ease-in-out infinite;
 }
 
 /* 5. VINLAND SAGA - UKŁAD DŁUGIEJ ŁODZI */
@@ -773,12 +1202,15 @@ body.theme-spirited-away .cyber-title {
   }
   
   body.theme-ghost-in-the-shell .cyber-container {
-    grid-template-columns: 1fr;
+    animation: cyberPulse 6s infinite;
   }
   
-  body.theme-ghost-in-the-shell .theme-switcher {
-    grid-row: auto;
-    flex-direction: row;
+  body.theme-ghost-in-the-shell .terminal::before {
+    animation: matrixRain 30s linear infinite;
+  }
+  
+  body.theme-ghost-in-the-shell .cyber-title {
+    animation: hackEffect 8s infinite;
   }
   
   body.theme-vinland-saga .cyber-container {
@@ -820,4 +1252,703 @@ body.theme-spirited-away .cyber-title {
   #projectsContainer .cyber-button {
     white-space: normal;
   }
+}
+
+/* AUDIO CONTROLS */
+.audio-status {
+  font-family: var(--cyber-font);
+  color: var(--text-color);
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  margin-top: 5px;
+}
+
+.audio-controls {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--terminal-bg);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid var(--primary);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  backdrop-filter: blur(5px);
+  transition: var(--transition-base);
+  min-width: 200px;
+}
+
+.audio-controls:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+}
+
+.volume-slider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.volume-slider input[type="range"] {
+  -webkit-appearance: none;
+  width: 100px;
+  height: 4px;
+  background: var(--primary);
+  border-radius: 2px;
+  outline: none;
+  opacity: 0.7;
+  transition: var(--transition-base);
+}
+
+.volume-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  background: var(--secondary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.volume-slider input[type="range"]::-moz-range-thumb {
+  width: 15px;
+  height: 15px;
+  background: var(--secondary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--transition-base);
+}
+
+.volume-slider input[type="range"]:hover {
+  opacity: 1;
+}
+
+.volume-slider input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 10px var(--secondary);
+}
+
+.volume-value {
+  font-family: var(--cyber-font);
+  color: var(--text-color);
+  font-size: 0.8rem;
+  min-width: 40px;
+}
+
+.audio-visualizer {
+  width: 150px;
+  height: 30px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#audioVisualizer {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  .audio-controls {
+    bottom: 10px;
+    right: 10px;
+    padding: 10px;
+  }
+
+  .volume-slider input[type="range"] {
+    width: 80px;
+  }
+
+  .audio-visualizer {
+    width: 120px;
+    height: 25px;
+  }
+}
+
+/* ANIMATION KEYFRAMES */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rotateReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes glitch {
+  0% {
+    clip-path: inset(40% 0 61% 0);
+    transform: translate(-2px, 2px);
+  }
+  20% {
+    clip-path: inset(92% 0 1% 0);
+    transform: translate(1px, -3px);
+  }
+  40% {
+    clip-path: inset(43% 0 1% 0);
+    transform: translate(-1px, 3px);
+  }
+  60% {
+    clip-path: inset(25% 0 58% 0);
+    transform: translate(3px, -1px);
+  }
+  80% {
+    clip-path: inset(54% 0 7% 0);
+    transform: translate(-3px, 2px);
+  }
+  100% {
+    clip-path: inset(58% 0 43% 0);
+    transform: translate(2px, -2px);
+  }
+}
+
+@keyframes borderFlow {
+  0% { border-image-source: linear-gradient(0deg, var(--primary), var(--secondary)); }
+  25% { border-image-source: linear-gradient(90deg, var(--primary), var(--secondary)); }
+  50% { border-image-source: linear-gradient(180deg, var(--primary), var(--secondary)); }
+  75% { border-image-source: linear-gradient(270deg, var(--primary), var(--secondary)); }
+  100% { border-image-source: linear-gradient(360deg, var(--primary), var(--secondary)); }
+}
+
+@keyframes shine {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* IMPROVED ANIMATIONS FOR ALL THEMES */
+.cyber-container {
+  animation: containerAppear 0.8s ease-out forwards;
+}
+
+.cyber-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.cyber-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: 0.5s;
+}
+
+.cyber-button:hover::before {
+  left: 100%;
+}
+
+.cyber-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.terminal {
+  transition: all 0.3s ease;
+}
+
+.terminal:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--terminal-shadow), 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* AUDIO VISUALIZER IMPROVEMENTS */
+.audio-visualizer {
+  position: relative;
+  overflow: hidden;
+}
+
+.audio-visualizer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--primary);
+  animation: pulse 2s infinite;
+  z-index: 1;
+}
+
+/* RESPONSIVE IMPROVEMENTS */
+@media (max-width: 768px) {
+  body.theme-evangelion::before {
+    width: 20%;
+  }
+  
+  .cyber-container {
+    margin: 1rem;
+    backdrop-filter: none;
+  }
+  
+  .audio-controls {
+    bottom: 10px;
+    right: 10px;
+    padding: 10px;
+  }
+}
+
+/* PSYCHO-PASS THEME ANIMATIONS */
+body.theme-psycho-pass .cyber-container {
+  position: relative;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0 100%);
+  animation: pulse 3s infinite;
+}
+
+body.theme-psycho-pass .terminal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  animation: shine 3s linear infinite;
+  background-size: 200% auto;
+}
+
+/* COWBOY BEBOP THEME ANIMATIONS */
+body.theme-cowboy-bebop .cyber-container {
+  border-image: linear-gradient(45deg, var(--primary), var(--secondary)) 1;
+  animation: borderFlow 4s linear infinite;
+}
+
+body.theme-cowboy-bebop .cyber-title {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* GHOST IN THE SHELL THEME ANIMATIONS */
+body.theme-ghost-in-the-shell .cyber-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, 
+    transparent 0%,
+    rgba(77, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  animation: rotate 20s linear infinite;
+}
+
+body.theme-ghost-in-the-shell .terminal {
+  border-image: linear-gradient(90deg, var(--primary), var(--secondary)) 1;
+  animation: borderFlow 3s linear infinite;
+}
+
+/* VINLAND SAGA THEME ANIMATIONS */
+body.theme-vinland-saga .cyber-container {
+  position: relative;
+  overflow: hidden;
+}
+
+body.theme-vinland-saga .cyber-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><rect width="20" height="20" fill="none" stroke="rgba(139,69,19,0.1)" stroke-width="1"/></svg>');
+  animation: float 10s infinite linear;
+  pointer-events: none;
+}
+
+/* PERFECT BLUE THEME ANIMATIONS */
+body.theme-perfect-blue .cyber-container {
+  animation: float 8s ease-in-out infinite;
+}
+
+body.theme-perfect-blue .terminal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, 
+    transparent 0%,
+    rgba(147, 112, 219, 0.1) 50%,
+    transparent 100%
+  );
+  animation: rotate 15s linear infinite;
+}
+
+/* RUCHOMY ZAMEK THEME ANIMATIONS */
+body.theme-ruchomy-zamek .cyber-container {
+  position: relative;
+}
+
+body.theme-ruchomy-zamek .cyber-container::before,
+body.theme-ruchomy-zamek .cyber-container::after {
+  content: "⚙️";
+  position: absolute;
+  font-size: 2rem;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+body.theme-ruchomy-zamek .cyber-container::before {
+  top: 10px;
+  left: 10px;
+  animation: rotate 10s linear infinite;
+}
+
+body.theme-ruchomy-zamek .cyber-container::after {
+  bottom: 10px;
+  right: 10px;
+  animation: rotateReverse 10s linear infinite;
+}
+
+/* TOTORO THEME ANIMATIONS */
+body.theme-totoro .cyber-container {
+  animation: float 6s ease-in-out infinite;
+}
+
+body.theme-totoro .terminal {
+  position: relative;
+  overflow: hidden;
+}
+
+body.theme-totoro .terminal::after {
+  content: '🌱';
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 20px;
+  animation: float 4s ease-in-out infinite;
+}
+
+/* AKIRA THEME ANIMATIONS */
+body.theme-akira .cyber-container {
+  position: relative;
+  overflow: hidden;
+}
+
+body.theme-akira .cyber-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  background: var(--primary);
+  animation: pulse 2s infinite;
+}
+
+/* DEATH NOTE THEME ANIMATIONS */
+body.theme-death-note .cyber-container {
+  position: relative;
+  animation: float 8s ease-in-out infinite;
+}
+
+body.theme-death-note .terminal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--accent);
+  animation: shine 3s linear infinite;
+  background-size: 200% auto;
+}
+
+/* ATTACK ON TITAN THEME ANIMATIONS */
+body.theme-attack-on-titan .cyber-container::before,
+body.theme-attack-on-titan .cyber-container::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--primary),
+    var(--primary) 20px,
+    transparent 20px,
+    transparent 40px
+  );
+}
+
+body.theme-attack-on-titan .cyber-container::before {
+  top: 0;
+  animation: shine 3s linear infinite;
+}
+
+body.theme-attack-on-titan .cyber-container::after {
+  bottom: 0;
+  animation: shine 3s linear infinite reverse;
+}
+
+/* SPIRITED AWAY THEME ANIMATIONS */
+body.theme-spirited-away .cyber-container {
+  animation: float 10s ease-in-out infinite;
+}
+
+body.theme-spirited-away .terminal {
+  position: relative;
+  overflow: hidden;
+}
+
+body.theme-spirited-away .terminal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg,
+    transparent 0%,
+    rgba(230, 57, 70, 0.1) 50%,
+    transparent 100%
+  );
+  animation: rotate 20s linear infinite;
+}
+
+/* COMMON ANIMATIONS FOR ALL THEMES */
+.cyber-title {
+  animation: fadeInUp 1s ease-out;
+}
+
+.cyber-subtitle {
+  animation: fadeInUp 1s ease-out 0.3s backwards;
+}
+
+.terminal {
+  animation: fadeInUp 1s ease-out 0.5s backwards;
+}
+
+.theme-switcher {
+  animation: fadeInUp 1s ease-out 0.7s backwards;
+}
+
+/* RESPONSIVE ADJUSTMENTS */
+@media (max-width: 768px) {
+  /* Reduce animation intensity on mobile */
+  [class*="theme-"] .cyber-container {
+    animation-duration: 5s;
+  }
+  
+  [class*="theme-"] .terminal::before,
+  [class*="theme-"] .terminal::after {
+    animation-duration: 3s;
+  }
+  
+  body[class*="theme-"] .cyber-container::before,
+  body[class*="theme-"] .cyber-container::after {
+    animation-duration: 8s;
+  }
+}
+
+/* Additional Keyframes for Ghost in the Shell */
+@keyframes dataStream {
+  0% {
+    background-position: 0% 0%;
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
+  100% {
+    background-position: 0% 100%;
+    opacity: 0.3;
+  }
+}
+
+@keyframes matrixRain {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes cyberPulse {
+  0% {
+    box-shadow: 0 0 5px var(--primary),
+                0 0 10px var(--primary),
+                0 0 15px var(--secondary);
+  }
+  50% {
+    box-shadow: 0 0 10px var(--primary),
+                0 0 20px var(--primary),
+                0 0 30px var(--secondary);
+  }
+  100% {
+    box-shadow: 0 0 5px var(--primary),
+                0 0 10px var(--primary),
+                0 0 15px var(--secondary);
+  }
+}
+
+@keyframes hackEffect {
+  0% { transform: translate(0, 0) skew(0deg); }
+  20% { transform: translate(-2px, 2px) skew(2deg); }
+  40% { transform: translate(2px, -2px) skew(-2deg); }
+  60% { transform: translate(-2px, -2px) skew(2deg); }
+  80% { transform: translate(2px, 2px) skew(-2deg); }
+  100% { transform: translate(0, 0) skew(0deg); }
+}
+
+@keyframes cyberScan {
+  0% {
+    height: 0;
+    opacity: 0;
+  }
+  50% {
+    height: 100%;
+    opacity: 0.5;
+  }
+  100% {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+/* NEW THEMES */
+
+/* SERIAL EXPERIMENTS LAIN THEME - FAUUX INSPIRED */
+body.theme-lain {
+  --primary: #d2738a;
+  --secondary: #00ff00;
+  --main-bg: #000000;
+  --text-color: #ffffff;
+  --accent: #d2738a;
+  --highlight: rgba(210, 115, 138, 0.1);
+  --container-bg: rgba(0, 0, 0, 0.98);
+  --container-blur: none;
+  --container-border: 1px solid #d2738a;
+  --container-shadow: none;
+  --container-radius: 0;
+  --bg-pattern: url('https://w.wallhaven.cc/full/4x/wallhaven-4x762l.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+body.theme-lain .cyber-title {
+  color: #d2738a;
+  text-shadow: 0 0 10px #d2738a;
+  background: none;
+  -webkit-text-fill-color: #d2738a;
+}
+
+body.theme-lain .cyber-subtitle {
+  color: #d2738a;
+  text-shadow: 0 0 5px #d2738a;
+}
+
+body.theme-lain .terminal {
+  border: 1px solid #d2738a;
+  background: rgba(0, 0, 0, 0.95);
+}
+
+body.theme-lain .cyber-button {
+  border: 1px solid #d2738a;
+  color: #d2738a;
+  background: transparent;
+}
+
+body.theme-lain .theme-switcher button {
+  border: 1px solid #d2738a;
+  color: #d2738a;
+  background: transparent;
+}
+
+.lain-love-link {
+  display: none;
+  text-decoration: none;
+  color: #d2738a;
+  font-family: monospace;
+  padding: 8px 16px;
+  border: 1px solid rgba(210, 115, 138, 0.3);
+  margin: 5px;
+  background: transparent;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: 100%;
+  text-align: center;
+  opacity: 0.7;
+}
+
+body.theme-lain .lain-love-link {
+  display: block;
+  margin: 10px auto;
+  max-width: 300px;
+}
+
+body.theme-lain::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.97) 0px,
+    rgba(0, 0, 0, 0.97) 1px,
+    rgba(210, 115, 138, 0.1) 1px,
+    rgba(210, 115, 138, 0.1) 2px
+  );
+  pointer-events: none;
+  animation: scanline 10s linear infinite;
+  opacity: 0.3;
+  z-index: 1;
+}
+
+#player {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  left: -9999px;
+  top: -9999px;
+  opacity: 0;
+  visibility: hidden;
 }
