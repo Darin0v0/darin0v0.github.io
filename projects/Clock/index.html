@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab Nixie Clock - Steins;Gate</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    :root {
+      --main-color: #ff3355;
+      --glow-color: rgba(255, 50, 50, 0.8);
+      --bg-color: rgba(0, 0, 0, 0.9);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #000;
+      font-family: 'Share Tech Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      color: var(--main-color);
+      position: relative;
+      padding: 20px;
+    }
+
+    .lab-background {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -3;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(255, 50, 50, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(255, 50, 50, 0.1) 0%, transparent 40%),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.7));
+    }
+
+    .circuit-pattern {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -2;
+      background-image: 
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><path d="M0,0 L200,200 M200,0 L0,200" stroke="%23ff3355" stroke-width="0.5" opacity="0.3"/><circle cx="100" cy="100" r="80" stroke="%23ff3355" stroke-width="0.5" fill="none" opacity="0.3"/></svg>'),
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><path d="M50,50 L250,250 M250,50 L50,250" stroke="%23ff3355" stroke-width="0.5" opacity="0.3"/></svg>');
+      opacity: 0.8;
+    }
+
+    .lab-text {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -2;
+      background-image: 
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500"><text x="50%" y="50%" font-family="Courier New" font-size="24" fill="%23ff3355" opacity="0.15" text-anchor="middle" dominant-baseline="middle" transform="rotate(45 250 250)">WORLD LINE 1.048596α</text></svg>'),
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500"><text x="50%" y="50%" font-family="Courier New" font-size="20" fill="%23ff3355" opacity="0.12" text-anchor="middle" dominant-baseline="middle" transform="rotate(-30 250 250)">EL PSY CONGROO</text></svg>');
+      background-repeat: repeat;
+      opacity: 0.8;
+    }
+
+    .world-line {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      border: 2px dashed var(--main-color);
+      opacity: 0.15;
+      animation: rotate 80s linear infinite;
+      z-index: -2;
+    }
+
+    .world-line:nth-of-type(1) {
+      top: -200px;
+      left: -200px;
+      animation-direction: normal;
+    }
+
+    .world-line:nth-of-type(2) {
+      bottom: -200px;
+      right: -200px;
+      animation-direction: reverse;
+    }
+
+    .scanlines {
+      pointer-events: none;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.03) 0,
+        rgba(255, 255, 255, 0.03) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      z-index: -1;
+    }
+
+    .nixie-tube {
+      display: inline-block;
+      width: 40px;
+      height: 80px;
+      margin: 5px;
+      font-size: 60px;
+      color: var(--main-color);
+      text-align: center;
+      line-height: 80px;
+      background-color: rgba(0, 0, 0, 0.6);
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9), 0 0 10px rgba(255, 50, 50, 0.3);
+      border-radius: 8px;
+      transition: all 0.2s ease-in-out;
+    }
+
+    .colon {
+      font-size: 60px;
+      margin: 0 5px;
+      color: var(--main-color);
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .lab-label {
+      margin-top: 10px;
+      font-size: 18px;
+      opacity: 0.6;
+      text-align: center;
+    }
+
+    #leds {
+      display: flex;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .led {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--main-color);
+      box-shadow: 0 0 8px var(--glow-color);
+      margin: 0 5px;
+      animation: blink 2s infinite alternate;
+    }
+
+    .led:nth-child(1) { animation-delay: 0s; }
+    .led:nth-child(2) { animation-delay: 0.5s; }
+    .led:nth-child(3) { animation-delay: 1s; }
+    .led:nth-child(4) { animation-delay: 1.5s; }
+
+    h1 {
+      margin-bottom: 20px;
+      text-align: center;
+      font-size: 24px;
+      text-shadow: 0 0 10px var(--glow-color);
+    }
+
+    select {
+      background-color: rgba(0, 0, 0, 0.7);
+      color: var(--main-color);
+      border: 1px solid var(--main-color);
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-family: 'Share Tech Mono', monospace;
+      margin-bottom: 20px;
+      outline: none;
+    }
+
+    select:hover {
+      box-shadow: 0 0 10px var(--glow-color);
+    }
+
+    #clock-container {
+      text-align: center;
+    }
+
+    #clock {
+      display: inline-block;
+    }
+
+    @keyframes blink {
+      from { opacity: 0.3; }
+      to { opacity: 1; }
+    }
+
+    .spark {
+      position: fixed;
+      width: 2px;
+      height: 2px;
+      background: white;
+      animation: spark-move 0.5s ease-out forwards;
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    @keyframes spark-move {
+      to {
+        transform: translate(var(--tx), var(--ty));
+        opacity: 0;
+      }
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 600px) {
+      .nixie-tube {
+        width: 30px;
+        height: 60px;
+        font-size: 40px;
+        line-height: 60px;
+      }
+      
+      .colon {
+        font-size: 40px;
+      }
+      
+      h1 {
+        font-size: 20px;
+      }
+      
+      .lab-label {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="lab-background"></div>
+  <div class="circuit-pattern"></div>
+  <div class="lab-text"></div>
+  <div class="world-line"></div>
+  <div class="world-line"></div>
+  <div class="scanlines"></div>
+
+  <div id="leds">
+    <div class="led"></div>
+    <div class="led"></div>
+    <div class="led"></div>
+    <div class="led"></div>
+  </div>
+
+  <h1>LAB NIXIE CLOCK</h1>
+
+  <select id="timezone">
+    <option value="Europe/Warsaw">AKIHABARA LAB</option>
+    <option value="Asia/Tokyo">TOKYO</option>
+    <option value="America/New_York">AMERICA</option>
+    <option value="UTC">WORLD LINE</option>
+  </select>
+
+  <div id="clock-container">
+    <div id="clock"></div>
+    <div class="lab-label">EL PSY CONGROO</div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const clockContainer = document.getElementById("clock");
+      const timezoneSelect = document.getElementById("timezone");
+
+      function createDigits() {
+        clockContainer.innerHTML = "";
+        for (let i = 0; i < 8; i++) {
+          if (i === 2 || i === 5) {
+            const colon = document.createElement("span");
+            colon.className = "colon";
+            colon.textContent = ":";
+            clockContainer.appendChild(colon);
+          } else {
+            const tube = document.createElement("div");
+            tube.className = "nixie-tube";
+            tube.textContent = "8";
+            clockContainer.appendChild(tube);
+          }
+        }
+      }
+
+      function updateClock() {
+        const now = new Date();
+        const tz = timezoneSelect.value;
+
+        try {
+          const time = now.toLocaleTimeString("pl-PL", {
+            timeZone: tz,
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+          });
+
+          const digits = time.replace(/:/g, "").split("");
+          const digitElements = document.querySelectorAll(".nixie-tube");
+
+          digitElements.forEach((el, i) => {
+            if (el.textContent !== digits[i]) {
+              el.style.transform = "scale(1.1)";
+              el.style.opacity = 0.5;
+              setTimeout(() => {
+                el.textContent = digits[i];
+                el.style.opacity = 1;
+                el.style.transform = "scale(1)";
+                createSpark(el);
+              }, 150);
+            }
+          });
+        } catch (e) {
+          console.error("Error updating clock:", e);
+        }
+      }
+
+      function createSpark(element) {
+        const rect = element.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+
+        for (let i = 0; i < 5; i++) {
+          const spark = document.createElement("div");
+          spark.className = "spark";
+          spark.style.left = x + "px";
+          spark.style.top = y + "px";
+
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 10 + Math.random() * 20;
+          spark.style.setProperty('--tx', Math.cos(angle) * distance + "px");
+          spark.style.setProperty('--ty', Math.sin(angle) * distance + "px");
+
+          document.body.appendChild(spark);
+          setTimeout(() => spark.remove(), 500);
+        }
+      }
+
+      function randomEffects() {
+        const tubes = document.querySelectorAll('.nixie-tube');
+        if (tubes.length === 0) return;
+        
+        const randomTube = tubes[Math.floor(Math.random() * tubes.length)];
+        randomTube.style.opacity = 0.5;
+        setTimeout(() => {
+          randomTube.style.opacity = 1;
+        }, 100 + Math.random() * 200);
+
+        if (Math.random() > 0.7) {
+          createSpark(document.querySelector('#clock-container'));
+        }
+      }
+
+      timezoneSelect.addEventListener("change", updateClock);
+      createDigits();
+      updateClock();
+      setInterval(updateClock, 1000);
+      setInterval(randomEffects, 3000);
+    });
+  </script>
+</body>
+</html>
