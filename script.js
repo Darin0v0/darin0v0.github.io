@@ -176,10 +176,17 @@ document.addEventListener('DOMContentLoaded', function() {
   loadYouTubeAPI();
 
   // Funkcje pomocnicze
+  const MAX_TERMINAL_LINES = 10;
   const displayTerminalMessage = (message) => {
     const div = document.createElement('div');
     div.textContent = message;
     terminalOutput.appendChild(div);
+
+    // Ograniczenie liczby linii w terminalu
+    while (terminalOutput.children.length > MAX_TERMINAL_LINES) {
+      terminalOutput.removeChild(terminalOutput.firstChild);
+    }
+
     terminalOutput.scrollTop = terminalOutput.scrollHeight;
   };
 
