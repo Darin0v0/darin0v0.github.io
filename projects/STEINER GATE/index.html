@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Digital Clock</title>
+    <style>
+        :root {
+            --primary-color: #00ff9d;
+            --secondary-color: #007bff;
+            --bg-color: #1a1a2e;
+            --panel-color: #16213e;
+            --border-color: #00ff9d;
+            --text-color: #e6e6e6;
+            --highlight-color: #00ff9d;
+            --alert-color: #ff2d75;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background-color: var(--panel-color);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 1px solid rgba(0, 255, 157, 0.1);
+        }
+
+        .display {
+            padding: 25px;
+            background: linear-gradient(135deg, rgba(0, 255, 157, 0.05) 0%, rgba(0, 0, 0, 0.1) 100%);
+            text-align: center;
+            position: relative;
+        }
+
+        .display::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 5%;
+            width: 90%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-color), transparent);
+        }
+
+        .date {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .time {
+            font-size: 3.5rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin: 10px 0;
+            font-family: 'Digital', monospace;
+            color: var(--highlight-color);
+            text-shadow: 0 0 10px rgba(0, 255, 157, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+        }
+
+        .control-btn {
+            flex: 1;
+            background-color: transparent;
+            color: var(--text-color);
+            border: none;
+            padding: 12px;
+            margin: 0 5px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            background-color: rgba(0, 255, 157, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .control-btn.active {
+            color: var(--highlight-color);
+            background-color: rgba(0, 255, 157, 0.1);
+        }
+
+        .control-btn i {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .panel {
+            padding: 20px;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .panel.active {
+            display: block;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--highlight-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .panel-title i {
+            margin-right: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: rgba(0, 0, 0, 0.2);
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--highlight-color);
+            box-shadow: 0 0 0 2px rgba(0, 255, 157, 0.2);
+        }
+
+        .btn {
+            background-color: var(--highlight-color);
+            color: #111;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: #00e68a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 157, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            box-shadow: none;
+        }
+
+        .list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 10px;
+        }
+
+        .list-item {
+            padding: 12px;
+            border-radius: 8px;
+            background-color: rgba(0, 0, 0, 0.1);
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .list-item:hover {
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .blink {
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Stargate Effect */
+        .stargate-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(0, 150, 255, 0.1) 0%, rgba(0, 0, 50, 0.9) 70%);
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+        }
+
+        .stargate {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 3px solid #00a2ff;
+            box-shadow: 0 0 30px #0066ff,
+                        inset 0 0 30px #0066ff;
+            animation: stargate-rotate 20s linear infinite;
+        }
+
+        .stargate-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            border: 2px dashed #00ccff;
+            animation: stargate-rotate-reverse 15s linear infinite;
+        }
+
+        @keyframes stargate-rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes stargate-rotate-reverse {
+            from { transform: translate(-50%, -50%) rotate(360deg); }
+            to { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        /* Responsywność */
+        @media (max-width: 480px) {
+            .time {
+                font-size: 2.8rem;
+            }
+            
+            .control-btn {
+                padding: 10px 5px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Ikony (Font Awesome) */
+        .fas {
+            font-family: 'Font Awesome';
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body>
+    <!-- Stargate Effect -->
+    <div class="stargate-overlay" id="stargate-overlay">
+        <div class="stargate">
+            <div class="stargate-inner"></div>
+        </div>
+    </div>
+
+    <!-- Główny kontener -->
+    <div class="container">
+        <!-- Wyświetlacz -->
+        <div class="display">
+            <div class="date" id="date">Czwartek, 26 czerwca 2025</div>
+            <div class="time" id="time">23:11:10</div>
+            <div class="status" id="status"></div>
+        </div>
+
+        <!-- Główne przyciski kontrolne -->
+        <div class="controls">
+            <button class="control-btn" id="alarm-btn">
+                <i class="fas fa-bell"></i>
+                <span>Alarm</span>
+            </button>
+            <button class="control-btn" id="stopwatch-btn">
+                <i class="fas fa-stopwatch"></i>
+                <span>Stoper</span>
+            </button>
+            <button class="control-btn" id="timer-btn">
+                <i class="fas fa-hourglass-half"></i>
+                <span>Timer</span>
+            </button>
+            <button class="control-btn" id="settings-btn">
+                <i class="fas fa-cog"></i>
+                <span>Ustawienia</span>
+            </button>
+        </div>
+
+        <!-- Panel Alarmu -->
+        <div class="panel" id="alarm-panel">
+            <h3 class="panel-title"><i class="fas fa-bell"></i> Ustawienia Alarmu</h3>
+            <div class="form-group">
+                <label for="alarm-time">Czas alarmu:</label>
+                <input type="time" id="alarm-time">
+            </div>
+            <div class="form-group">
+                <label for="alarm-sound">Dźwięk alarmu:</label>
+                <select id="alarm-sound">
+                    <option value="beep">Standardowy sygnał</option>
+                    <option value="siren">Syrena alarmowa</option>
+                    <option value="bell">Dzwonek</option>
+                    <option value="digital">Dźwięk cyfrowy</option>
+                    <option value="stargate">Stargate (specjalny)</option>
+                </select>
+            </div>
+            <button class="btn" id="set-alarm-btn">Ustaw Alarm</button>
+            <button class="btn btn-secondary" id="clear-alarm-btn">Wyłącz Wszystkie</button>
+            
+            <div class="list" id="alarms-list">
+                <!-- Lista alarmów będzie dodawana dynamicznie -->
+            </div>
+        </div>
+
+        <!-- Panel Stopera -->
+        <div class="panel" id="stopwatch-panel">
+            <h3 class="panel-title"><i class="fas fa-stopwatch"></i> Stoper</h3>
+            <div class="time" id="stopwatch-display">00:00:00.00</div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn" id="start-stopwatch-btn">Start</button>
+                <button class="btn btn-secondary" id="stop-stopwatch-btn" disabled>Stop</button>
+                <button class="btn btn-secondary" id="reset-stopwatch-btn">Reset</button>
+            </div>
+            <button class="btn btn-secondary" id="lap-stopwatch-btn" disabled style="margin-top: 10px;">Okrążenie</button>
+            
+            <div class="list" id="laps-list">
+                <!-- Lista okrążeń będzie dodawana dynamicznie -->
+            </div>
+        </div>
+
+        <!-- Panel Timera -->
+        <div class="panel" id="timer-panel">
+            <h3 class="panel-title"><i class="fas fa-hourglass-half"></i> Timer</h3>
+            <div class="time" id="timer-display">00:00:00</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0;">
+                <div class="form-group">
+                    <label for="timer-hours">Godziny</label>
+                    <input type="number" id="timer-hours" min="0" max="23" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="timer-minutes">Minuty</label>
+                    <input type="number" id="timer-minutes" min="0" max="59" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="timer-seconds">Sekundy</label>
+                    <input type="number" id="timer-seconds" min="0" max="59" value="0">
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" id="start-timer-btn">Start</button>
+                <button class="btn btn-secondary" id="pause-timer-btn" disabled>Pauza</button>
+                <button class="btn btn-secondary" id="reset-timer-btn">Reset</button>
+            </div>
+        </div>
+
+        <!-- Panel Ustawień -->
+        <div class="panel" id="settings-panel">
+            <h3 class="panel-title"><i class="fas fa-cog"></i> Ustawienia</h3>
+            <div class="form-group">
+                <label>Motyw:</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                    <button class="btn btn-secondary theme-btn" data-theme="default">Domyślny</button>
+                    <button class="btn btn-secondary theme-btn" data-theme="blue">Niebieski</button>
+                    <button class="btn btn-secondary theme-btn" data-theme="red">Czerwony</button>
+                    <button class="btn btn-secondary theme-btn" data-theme="purple">Fioletowy</button>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                <label>Efekty specjalne:</label>
+                <button class="btn btn-secondary" id="stargate-btn" style="margin-top: 10px;">
+                    <i class="fas fa-star"></i> Aktywuj Stargate
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Elementy audio -->
+    <audio id="beep-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" preload="auto"></audio>
+    <audio id="siren-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-sci-fi-alarm-990.mp3" preload="auto"></audio>
+    <audio id="bell-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-clock-bell-880.mp3" preload="auto"></audio>
+    <audio id="digital-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-digital-clock-digital-alarm-buzzer-992.mp3" preload="auto"></audio>
+    <audio id="stargate-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-sci-fi-space-warp-3000.mp3" preload="auto"></audio>
+
+    <script>
+        // Elementy DOM
+        const timeElement = document.getElementById('time');
+        const dateElement = document.getElementById('date');
+        const statusElement = document.getElementById('status');
+        
+        // Panele
+        const panels = {
+            alarm: document.getElementById('alarm-panel'),
+            stopwatch: document.getElementById('stopwatch-panel'),
+            timer: document.getElementById('timer-panel'),
+            settings: document.getElementById('settings-panel')
+        };
+        
+        // Przyciski główne
+        const mainButtons = {
+            alarm: document.getElementById('alarm-btn'),
+            stopwatch: document.getElementById('stopwatch-btn'),
+            timer: document.getElementById('timer-btn'),
+            settings: document.getElementById('settings-btn')
+        };
+        
+        // Alarm
+        const alarmTimeInput = document.getElementById('alarm-time');
+        const alarmSoundSelect = document.getElementById('alarm-sound');
+        const setAlarmBtn = document.getElementById('set-alarm-btn');
+        const clearAlarmBtn = document.getElementById('clear-alarm-btn');
+        const alarmsList = document.getElementById('alarms-list');
+        
+        // Stoper
+        const stopwatchDisplay = document.getElementById('stopwatch-display');
+        const startStopwatchBtn = document.getElementById('start-stopwatch-btn');
+        const stopStopwatchBtn = document.getElementById('stop-stopwatch-btn');
+        const resetStopwatchBtn = document.getElementById('reset-stopwatch-btn');
+        const lapStopwatchBtn = document.getElementById('lap-stopwatch-btn');
+        const lapsList = document.getElementById('laps-list');
+        
+        // Timer
+        const timerDisplay = document.getElementById('timer-display');
+        const timerHoursInput = document.getElementById('timer-hours');
+        const timerMinutesInput = document.getElementById('timer-minutes');
+        const timerSecondsInput = document.getElementById('timer-seconds');
+        const startTimerBtn = document.getElementById('start-timer-btn');
+        const pauseTimerBtn = document.getElementById('pause-timer-btn');
+        const resetTimerBtn = document.getElementById('reset-timer-btn');
+        
+        // Ustawienia
+        const themeButtons = document.querySelectorAll('.theme-btn');
+        const stargateBtn = document.getElementById('stargate-btn');
+        const stargateOverlay = document.getElementById('stargate-overlay');
+        
+        // Audio
+        const sounds = {
+            beep: document.getElementById('beep-sound'),
+            siren: document.getElementById('siren-sound'),
+            bell: document.getElementById('bell-sound'),
+            digital: document.getElementById('digital-sound'),
+            stargate: document.getElementById('stargate-sound')
+        };
+        
+        // Zmienne stanu
+        let currentPanel = null;
+        let alarms = [];
+        let stopwatch = {
+            running: false,
+            startTime: 0,
+            elapsed: 0,
+            interval: null,
+            laps: []
+        };
+        let timer = {
+            running: false,
+            targetTime: 0,
+            remaining: 0,
+            interval: null
+        };
+        let stargateActive = false;
+        
+        // Inicjalizacja
+        document.addEventListener('DOMContentLoaded', function() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            setInterval(checkAlarms, 1000);
+            
+            // Event listeners dla przycisków głównych
+            for (const [panelName, button] of Object.entries(mainButtons)) {
+                button.addEventListener('click', () => togglePanel(panelName));
+            }
+            
+            // Alarm
+            setAlarmBtn.addEventListener('click', setAlarm);
+            clearAlarmBtn.addEventListener('click', clearAlarm);
+            
+            // Stoper
+            startStopwatchBtn.addEventListener('click', startStopwatch);
+            stopStopwatchBtn.addEventListener('click', stopStopwatch);
+            resetStopwatchBtn.addEventListener('click', resetStopwatch);
+            lapStopwatchBtn.addEventListener('click', recordLap);
+            
+            // Timer
+            startTimerBtn.addEventListener('click', startTimer);
+            pauseTimerBtn.addEventListener('click', pauseTimer);
+            resetTimerBtn.addEventListener('click', resetTimer);
+            
+            // Ustawienia
+            themeButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.body.className = `theme-${btn.dataset.theme}`;
+                    showAlert(`Motyw zmieniony na ${btn.textContent}`);
+                });
+            });
+            
+            stargateBtn.addEventListener('click', toggleStargate);
+        });
+        
+        // Funkcje zegara
+        function updateClock() {
+            const now = new Date();
+            
+            // Aktualizuj czas
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            
+            // Efekt migania dwukropków
+            const colon = now.getSeconds() % 2 === 0 ? ':' : '<span class="blink">:</span>';
+            
+            timeElement.innerHTML = `${hours}${colon}${minutes}${colon}${seconds}`;
+            
+            // Aktualizuj datę
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateElement.textContent = now.toLocaleDateString('pl-PL', options);
+        }
+        
+        // Funkcje paneli
+        function togglePanel(panelName) {
+            if (currentPanel === panelName) {
+                panels[panelName].classList.remove('active');
+                mainButtons[panelName].classList.remove('active');
+                currentPanel = null;
+            } else {
+                // Ukryj wszystkie panele
+                Object.values(panels).forEach(panel => panel.classList.remove('active'));
+                Object.values(mainButtons).forEach(btn => btn.classList.remove('active'));
+                
+                // Pokaż wybrany panel
+                panels[panelName].classList.add('active');
+                mainButtons[panelName].classList.add('active');
+                currentPanel = panelName;
+            }
+        }
+        
+        // Funkcje alarmu
+        function setAlarm() {
+            if (!alarmTimeInput.value) {
+                showAlert('Proszę ustawić czas alarmu!');
+                return;
+            }
+            
+            const [hours, minutes] = alarmTimeInput.value.split(':');
+            const now = new Date();
+            
+            const alarmTime = new Date();
+            alarmTime.setHours(parseInt(hours));
+            alarmTime.setMinutes(parseInt(minutes));
+            alarmTime.setSeconds(0);
+            
+            // Jeśli czas już minął dzisiaj, ustaw na jutro
+            if (alarmTime <= now) {
+                alarmTime.setDate(alarmTime.getDate() + 1);
+            }
+            
+            const sound = alarmSoundSelect.value;
+            
+            alarms.push({
+                time: alarmTime,
+                sound: sound,
+                active: true
+            });
+            
+            updateAlarmsList();
+            showAlert(`Alarm ustawiony na ${alarmTime.toLocaleTimeString('pl-PL', {hour: '2-digit', minute:'2-digit'})}`);
+        }
+        
+        function clearAlarm() {
+            alarms = [];
+            updateAlarmsList();
+            showAlert('Wszystkie alarmy wyłączone');
+        }
+        
+        function checkAlarms() {
+            const now = new Date();
+            
+            alarms.forEach(alarm => {
+                if (alarm.active && now >= alarm.time) {
+                    triggerAlarm(alarm);
+                }
+            });
+        }
+        
+        function triggerAlarm(alarm) {
+            // Odtwórz dźwięk alarmu
+            playSound(alarm.sound);
+            
+            // Efekt wizualny
+            document.querySelector('.container').style.boxShadow = `0 0 30px ${alarm.sound === 'stargate' ? '#0066ff' : 'var(--alert-color)'}`;
+            
+            // Wyłącz alarm po potwierdzeniu
+            const checkAlarm = setInterval(() => {
+                if (confirm('ALARM! Wyłączyć alarm?')) {
+                    stopSound(alarm.sound);
+                    document.querySelector('.container').style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5)';
+                    alarm.active = false;
+                    updateAlarmsList();
+                    clearInterval(checkAlarm);
+                }
+            }, 1000);
+        }
+        
+        function updateAlarmsList() {
+            alarmsList.innerHTML = '';
+            
+            if (alarms.length === 0) {
+                alarmsList.innerHTML = '<div class="list-item">Brak aktywnych alarmów</div>';
+                return;
+            }
+            
+            alarms.forEach((alarm, index) => {
+                const alarmItem = document.createElement('div');
+                alarmItem.className = 'list-item';
+                alarmItem.innerHTML = `
+                    <div>
+                        <strong>${alarm.time.toLocaleTimeString('pl-PL', {hour: '2-digit', minute:'2-digit'})}</strong>
+                        <small>${alarm.sound}</small>
+                    </div>
+                    <span style="color: ${alarm.active ? 'var(--highlight-color)' : '#888'}">
+                        ${alarm.active ? 'Aktywny' : 'Wyłączony'}
+                    </span>
+                `;
+                alarmsList.appendChild(alarmItem);
+            });
+        }
+        
+        // Funkcje stopera
+        function startStopwatch() {
+            if (!stopwatch.running) {
+                stopwatch.startTime = Date.now() - stopwatch.elapsed;
+                stopwatch.interval = setInterval(updateStopwatch, 10);
+                stopwatch.running = true;
+                
+                startStopwatchBtn.disabled = true;
+                stopStopwatchBtn.disabled = false;
+                lapStopwatchBtn.disabled = false;
+                
+                statusElement.textContent = 'Stoper: działa...';
+            }
+        }
+        
+        function stopStopwatch() {
+            if (stopwatch.running) {
+                clearInterval(stopwatch.interval);
+                stopwatch.elapsed = Date.now() - stopwatch.startTime;
+                stopwatch.running = false;
+                
+                startStopwatchBtn.disabled = false;
+                stopStopwatchBtn.disabled = true;
+                
+                statusElement.textContent = 'Stoper: zatrzymany';
+            }
+        }
+        
+        function resetStopwatch() {
+            clearInterval(stopwatch.interval);
+            stopwatch.running = false;
+            stopwatch.elapsed = 0;
+            stopwatch.laps = [];
+            stopwatchDisplay.textContent = '00:00:00.00';
+            lapsList.innerHTML = '';
+            
+            startStopwatchBtn.disabled = false;
+            stopStopwatchBtn.disabled = true;
+            lapStopwatchBtn.disabled = true;
+            
+            statusElement.textContent = '';
+        }
+        
+        function updateStopwatch() {
+            const elapsed = Date.now() - stopwatch.startTime;
+            const hours = Math.floor(elapsed / (1000 * 60 * 60));
+            const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+            const milliseconds = Math.floor((elapsed % 1000) / 10);
+            
+            stopwatchDisplay.textContent = 
+                `${hours.toString().padStart(2, '0')}:` +
+                `${minutes.toString().padStart(2, '0')}:` +
+                `${seconds.toString().padStart(2, '0')}.` +
+                `${milliseconds.toString().padStart(2, '0')}`;
+        }
+        
+        function recordLap() {
+            if (stopwatch.running) {
+                const elapsed = Date.now() - stopwatch.startTime;
+                const hours = Math.floor(elapsed / (1000 * 60 * 60));
+                const minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+                const milliseconds = Math.floor((elapsed % 1000) / 10);
+                
+                const lapTime = 
+                    `${hours.toString().padStart(2, '0')}:` +
+                    `${minutes.toString().padStart(2, '0')}:` +
+                    `${seconds.toString().padStart(2, '0')}.` +
+                    `${milliseconds.toString().padStart(2, '0')}`;
+                
+                stopwatch.laps.unshift({
+                    number: stopwatch.laps.length + 1,
+                    time: lapTime
+                });
+                
+                updateLapsList();
+            }
+        }
+        
+        function updateLapsList() {
+            lapsList.innerHTML = '';
+            
+            stopwatch.laps.forEach(lap => {
+                const lapItem = document.createElement('div');
+                lapItem.className = 'list-item';
+                lapItem.innerHTML = `
+                    <span>Okrążenie ${lap.number}:</span>
+                    <strong>${lap.time}</strong>
+                `;
+                lapsList.appendChild(lapItem);
+            });
+        }
+        
+        // Funkcje timera
+        function startTimer() {
+            if (!timer.running) {
+                const hours = parseInt(timerHoursInput.value) || 0;
+                const minutes = parseInt(timerMinutesInput.value) || 0;
+                const seconds = parseInt(timerSecondsInput.value) || 0;
+                
+                const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+                
+                if (totalSeconds <= 0) {
+                    showAlert('Proszę ustawić czas timera!');
+                    return;
+                }
+                
+                timer.targetTime = Date.now() + totalSeconds * 1000;
+                timer.remaining = totalSeconds;
+                
+                timer.interval = setInterval(updateTimer, 1000);
+                timer.running = true;
+                
+                startTimerBtn.disabled = true;
+                pauseTimerBtn.disabled = false;
+                
+                statusElement.textContent = 'Timer: działa...';
+                updateTimerDisplay();
+            }
+        }
+        
+        function pauseTimer() {
+            if (timer.running) {
+                clearInterval(timer.interval);
+                timer.running = false;
+                
+                startTimerBtn.disabled = false;
+                pauseTimerBtn.disabled = true;
+                
+                statusElement.textContent = 'Timer: wstrzymany';
+            }
+        }
+        
+        function resetTimer() {
+            clearInterval(timer.interval);
+            timer.running = false;
+            timer.remaining = 0;
+            
+            startTimerBtn.disabled = false;
+            pauseTimerBtn.disabled = true;
+            
+            timerDisplay.textContent = '00:00:00';
+            statusElement.textContent = '';
+        }
+        
+        function updateTimer() {
+            timer.remaining = Math.max(0, Math.floor((timer.targetTime - Date.now()) / 1000));
+            
+            if (timer.remaining <= 0) {
+                timerFinished();
+            } else {
+                updateTimerDisplay();
+            }
+        }
+        
+        function updateTimerDisplay() {
+            const hours = Math.floor(timer.remaining / 3600);
+            const minutes = Math.floor((timer.remaining % 3600) / 60);
+            const seconds = timer.remaining % 60;
+            
+            timerDisplay.textContent = 
+                `${hours.toString().padStart(2, '0')}:` +
+                `${minutes.toString().padStart(2, '0')}:` +
+                `${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        function timerFinished() {
+            clearInterval(timer.interval);
+            timer.running = false;
+            
+            playSound('bell');
+            showAlert('Timer zakończony!');
+            
+            timerDisplay.textContent = '00:00:00';
+            statusElement.textContent = 'Timer: zakończony';
+            
+            // Miganie timera
+            let flashCount = 0;
+            const flashInterval = setInterval(() => {
+                timerDisplay.style.visibility = timerDisplay.style.visibility === 'hidden' ? 'visible' : 'hidden';
+                flashCount++;
+                
+                if (flashCount >= 10) {
+                    clearInterval(flashInterval);
+                    timerDisplay.style.visibility = 'visible';
+                    stopSound('bell');
+                }
+            }, 500);
+        }
+        
+        // Funkcje dźwięku
+        function playSound(soundName) {
+            // Zatrzymaj wszystkie dźwięki
+            Object.values(sounds).forEach(sound => {
+                sound.pause();
+                sound.currentTime = 0;
+            });
+            
+            // Odtwórz wybrany dźwięk
+            if (sounds[soundName]) {
+                sounds[soundName].loop = true;
+                sounds[soundName].play().catch(e => console.log("Autoplay prevented:", e));
+            }
+        }
+        
+        function stopSound(soundName) {
+            if (sounds[soundName]) {
+                sounds[soundName].pause();
+                sounds[soundName].currentTime = 0;
+            }
+        }
+        
+        // Funkcje Stargate
+        function toggleStargate() {
+            stargateActive = !stargateActive;
+            
+            if (stargateActive) {
+                stargateOverlay.style.display = 'block';
+                playSound('stargate');
+                stargateBtn.innerHTML = '<i class="fas fa-times"></i> Wyłącz Stargate';
+                showAlert('Portal Stargate aktywowany!');
+            } else {
+                stargateOverlay.style.display = 'none';
+                stopSound('stargate');
+                stargateBtn.innerHTML = '<i class="fas fa-star"></i> Aktywuj Stargate';
+            }
+        }
+        
+        // Pomocnicze funkcje
+        function showAlert(message) {
+            const alert = document.createElement('div');
+            alert.textContent = message;
+            alert.style.position = 'fixed';
+            alert.style.bottom = '20px';
+            alert.style.left = '50%';
+            alert.style.transform = 'translateX(-50%)';
+            alert.style.backgroundColor = 'var(--panel-color)';
+            alert.style.color = 'var(--text-color)';
+            alert.style.padding = '12px 24px';
+            alert.style.borderRadius = '8px';
+            alert.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.3)';
+            alert.style.zIndex = '1000';
+            alert.style.animation = 'fadeIn 0.3s';
+            alert.style.border = '1px solid var(--highlight-color)';
+            
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.style.animation = 'fadeOut 0.3s';
+                setTimeout(() => {
+                    document.body.removeChild(alert);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
