@@ -6,7 +6,6 @@
   <title>Moje Projekty</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Prosty styl kart projektów */
     .projects-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(250px,1fr));
@@ -49,21 +48,27 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const GITHUB_USER = 'Darin0v0';             // ← wpisz swoją nazwę użytkownika
-      const GITHUB_REPO = 'Darin0v0.github.io';   // ← wpisz swoją nazwę repozytorium
-      const PROJECTS_PATH = 'projects';           // ← katalog, w którym masz foldery projektów
+      const GITHUB_USER = 'Darin0v0';
+      const GITHUB_REPO = 'Darin0v0.github.io';
+      const PROJECTS_PATH = 'projects';
+
+      // Tutaj wpisz wszystkie foldery, które **chcesz ukryć**:
+      const BLACKLIST = [
+        'FolderDoUkrycia1',
+        'FolderDoUkrycia2',
+        // dodaj kolejne
+      ];
 
       const projectsContainer = document.getElementById('projectsContainer');
 
       async function fetchProjectsList() {
         const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${PROJECTS_PATH}`;
         try {
-          const resp = await fetch(url);
+          const resp = await fetch(url, { headers: { "Accept": "application/vnd.github+json" } });
           if (!resp.ok) {
             throw new Error(`GitHub API error: ${resp.status}`);
           }
           const data = await resp.json();
-          // filtruj tylko foldery (type === "dir")
           const dirs = data.filter(item => item.type === 'dir');
           return dirs.map(d => d.name);
         } catch (err) {
@@ -81,11 +86,10 @@
         title.textContent = folderName.replace(/-/g, ' ');
         card.appendChild(title);
 
-        // opcjonalny podgląd obrazu „prew.jpg”
         const img = document.createElement('img');
         img.src = `./${PROJECTS_PATH}/${folderName}/prew.jpg`;
         img.alt = folderName;
-        img.onerror = () => { img.remove(); };  // usuń jeśli obrazka nie ma
+        img.onerror = () => { img.remove(); };
         card.appendChild(img);
 
         const demoLink = document.createElement('a');
@@ -107,11 +111,13 @@
 
       async function initProjects() {
         const folders = await fetchProjectsList();
-        if (folders.length === 0) {
-          projectsContainer.innerHTML = `<p>Brak projektów.</p>`;
+        // filtruj foldery — usuń te z blacklisty
+        const visibleFolders = folders.filter(folderName => !BLACKLIST.includes(folderName));
+        if (visibleFolders.length === 0) {
+          projectsContainer.innerHTML = `<p>Brak projektów do pokazania.</p>`;
           return;
         }
-        folders.forEach(folder => {
+        visibleFolders.forEach(folder => {
           const card = createProjectCard(folder);
           projectsContainer.appendChild(card);
         });
