@@ -3,26 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Darin0v0 | Elite Portfolio</title>
+  <title>Darin0v0 | Elite Developer</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --primary-glow: rgba(99, 102, 241, 0.3);
-      --dark-bg: #0a0a0a;
-      --dark-bg-2: #111111;
-      --card-bg: rgba(30, 30, 30, 0.7);
-      --card-border: rgba(255, 255, 255, 0.1);
-      --text: #ffffff;
-      --text-secondary: #a1a1aa;
-      --text-tertiary: #71717a;
+      --primary: #8b5cf6;
+      --primary-dark: #7c3aed;
+      --primary-glow: rgba(139, 92, 246, 0.4);
       --accent: #06b6d4;
-      --accent-2: #10b981;
-      --accent-3: #f59e0b;
-      --gradient-1: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
-      --gradient-2: linear-gradient(135deg, #06b6d4 0%, #10b981 50%, #84cc16 100%);
+      --accent-glow: rgba(6, 182, 212, 0.4);
+      --gold: #fbbf24;
+      --platinum: #e5e7eb;
+      --dark-bg: #050505;
+      --dark-bg-2: #0a0a0a;
+      --dark-bg-3: #111111;
+      --card-bg: rgba(20, 20, 20, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #ffffff;
+      --text-secondary: #d1d5db;
+      --text-tertiary: #9ca3af;
+      --gradient-1: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 50%, #10b981 100%);
+      --gradient-2: linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%);
+      --gradient-gold: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      --gradient-platinum: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
     }
     
     * {
@@ -43,31 +47,46 @@
       min-height: 100vh;
       overflow-x: hidden;
       background-image: 
-        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 20%),
-        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 20%),
-        radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+        radial-gradient(circle at 5% 10%, rgba(139, 92, 246, 0.08) 0%, transparent 30%),
+        radial-gradient(circle at 95% 5%, rgba(6, 182, 212, 0.08) 0%, transparent 30%),
+        radial-gradient(circle at 50% 80%, rgba(251, 191, 36, 0.05) 0%, transparent 40%),
+        linear-gradient(to bottom, var(--dark-bg), var(--dark-bg-2));
     }
     
     /* Custom Scrollbar */
     ::-webkit-scrollbar {
-      width: 8px;
+      width: 10px;
     }
     
     ::-webkit-scrollbar-track {
-      background: var(--dark-bg);
+      background: var(--dark-bg-2);
     }
     
     ::-webkit-scrollbar-thumb {
-      background: var(--primary);
+      background: var(--gradient-1);
       border-radius: 10px;
     }
     
-    /* Particles Background */
-    #particles-js {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
+    /* Glass Morphism Effect */
+    .glass {
+      background: rgba(20, 20, 20, 0.7);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+    }
+    
+    .glass-intense {
+      background: rgba(15, 15, 15, 0.8);
+      backdrop-filter: blur(30px);
+      border: 1px solid var(--card-border);
+    }
+    
+    /* Glow Effects */
+    .glow-primary {
+      box-shadow: 0 0 30px var(--primary-glow);
+    }
+    
+    .glow-accent {
+      box-shadow: 0 0 30px var(--accent-glow);
     }
     
     .container {
@@ -84,15 +103,15 @@
       width: 100%;
       z-index: 1000;
       padding: 1.5rem 0;
-      background: rgba(10, 10, 10, 0.8);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--card-border);
-      transition: all 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
     
     .header-scrolled {
       padding: 1rem 0;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      background: rgba(5, 5, 5, 0.9);
+      backdrop-filter: blur(30px);
+      border-bottom: 1px solid var(--card-border);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
     
     .header-content {
@@ -104,48 +123,70 @@
     .logo {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 15px;
     }
     
     .logo-icon {
-      width: 45px;
-      height: 45px;
+      width: 50px;
+      height: 50px;
       background: var(--gradient-1);
-      border-radius: 12px;
+      border-radius: 15px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 20px var(--primary-glow);
+      box-shadow: 0 0 30px var(--primary-glow);
       animation: float 6s ease-in-out infinite;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .logo-icon::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+      transform: rotate(45deg);
+      animation: shine 3s infinite;
+    }
+    
+    @keyframes shine {
+      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
     }
     
     @keyframes float {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-10px); }
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      33% { transform: translateY(-10px) rotate(2deg); }
+      66% { transform: translateY(5px) rotate(-2deg); }
     }
     
     .logo-text {
-      font-size: 1.8rem;
-      font-weight: 800;
+      font-size: 2rem;
+      font-weight: 900;
       background: var(--gradient-1);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      text-shadow: 0 0 30px var(--primary-glow);
     }
     
     nav ul {
       display: flex;
       list-style: none;
-      gap: 2.5rem;
+      gap: 3rem;
     }
     
     nav a {
       color: var(--text-secondary);
       text-decoration: none;
-      font-weight: 500;
+      font-weight: 600;
       transition: all 0.3s;
       position: relative;
       padding: 8px 0;
+      font-size: 1.1rem;
     }
     
     nav a:hover, nav a.active {
@@ -160,7 +201,7 @@
       width: 0;
       height: 2px;
       background: var(--gradient-1);
-      transition: width 0.3s ease;
+      transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
     
     nav a:hover::after, nav a.active::after {
@@ -174,10 +215,21 @@
       align-items: center;
       position: relative;
       padding: 8rem 0 4rem;
+      overflow: hidden;
+    }
+    
+    .hero-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.1;
     }
     
     .hero-content {
-      max-width: 800px;
+      max-width: 900px;
       position: relative;
       z-index: 2;
     }
@@ -185,53 +237,46 @@
     .hero-badge {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      background: rgba(99, 102, 241, 0.1);
-      color: var(--primary);
-      padding: 8px 16px;
+      gap: 10px;
+      background: var(--gradient-1);
+      color: white;
+      padding: 10px 20px;
       border-radius: 50px;
       font-size: 0.9rem;
-      font-weight: 500;
+      font-weight: 600;
       margin-bottom: 2rem;
-      border: 1px solid rgba(99, 102, 241, 0.2);
-      backdrop-filter: blur(10px);
-    }
-    
-    .hero-badge::before {
-      content: '';
-      width: 8px;
-      height: 8px;
-      background: var(--primary);
-      border-radius: 50%;
+      box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
       animation: pulse 2s infinite;
     }
     
     @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
     }
     
     .hero h1 {
-      font-size: 4rem;
+      font-size: 5rem;
       font-weight: 900;
       line-height: 1.1;
       margin-bottom: 1.5rem;
-      background: linear-gradient(to right, #ffffff, var(--primary), var(--accent));
+      background: linear-gradient(to right, #ffffff, var(--primary), var(--accent), var(--gold));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      text-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
     }
     
     .hero p {
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       color: var(--text-secondary);
       margin-bottom: 2.5rem;
-      max-width: 600px;
+      max-width: 700px;
+      line-height: 1.8;
     }
     
     .hero-stats {
       display: flex;
-      gap: 3rem;
+      gap: 4rem;
       margin-top: 3rem;
     }
     
@@ -240,75 +285,80 @@
     }
     
     .stat-value {
-      font-size: 2.5rem;
+      font-size: 3rem;
       font-weight: 800;
       background: var(--gradient-1);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
       line-height: 1;
+      text-shadow: 0 0 20px var(--primary-glow);
     }
     
     .stat-label {
-      font-size: 0.9rem;
+      font-size: 1rem;
       color: var(--text-tertiary);
       margin-top: 0.5rem;
+      font-weight: 500;
     }
     
     /* Projects Section */
     .projects-section {
-      padding: 6rem 0;
+      padding: 8rem 0;
       position: relative;
     }
     
     .section-header {
       text-align: center;
-      margin-bottom: 4rem;
+      margin-bottom: 5rem;
     }
     
     .section-badge {
       display: inline-block;
       background: var(--gradient-2);
       color: white;
-      padding: 6px 16px;
+      padding: 8px 20px;
       border-radius: 50px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
+      box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
     }
     
     .section-title {
-      font-size: 3rem;
-      font-weight: 800;
-      margin-bottom: 1rem;
-      background: linear-gradient(to right, #ffffff, var(--accent));
+      font-size: 4rem;
+      font-weight: 900;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(to right, #ffffff, var(--accent), var(--gold));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
+      text-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
     }
     
     .section-subtitle {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       color: var(--text-secondary);
-      max-width: 600px;
+      max-width: 700px;
       margin: 0 auto;
+      line-height: 1.7;
     }
     
     .projects-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      gap: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 2.5rem;
     }
     
     .project-card {
       background: var(--card-bg);
-      border-radius: 20px;
+      border-radius: 25px;
       overflow: hidden;
-      transition: all 0.4s ease;
+      transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       border: 1px solid var(--card-border);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(20px);
       position: relative;
       transform-style: preserve-3d;
       perspective: 1000px;
@@ -323,15 +373,15 @@
       height: 1px;
       background: var(--gradient-1);
       transform: scaleX(0);
-      transition: transform 0.4s ease;
+      transition: transform 0.6s ease;
     }
     
     .project-card:hover {
-      transform: translateY(-10px) rotateX(5deg);
+      transform: translateY(-15px) rotateX(5deg) scale(1.02);
       box-shadow: 
-        0 20px 40px rgba(0, 0, 0, 0.4),
-        0 0 0 1px rgba(99, 102, 241, 0.1),
-        0 0 50px rgba(99, 102, 241, 0.1);
+        0 25px 50px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(139, 92, 246, 0.2),
+        0 0 80px rgba(139, 92, 246, 0.2);
     }
     
     .project-card:hover::before {
@@ -340,7 +390,7 @@
     
     .project-image-container {
       position: relative;
-      height: 250px;
+      height: 280px;
       overflow: hidden;
     }
     
@@ -348,11 +398,11 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.6s ease;
+      transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
     
     .project-card:hover .project-image {
-      transform: scale(1.05);
+      transform: scale(1.1);
     }
     
     .project-overlay {
@@ -361,12 +411,12 @@
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(to bottom, transparent, rgba(10, 10, 10, 0.9));
+      background: linear-gradient(to bottom, transparent, rgba(5, 5, 5, 0.9));
       display: flex;
       align-items: flex-end;
-      padding: 2rem;
+      padding: 2.5rem;
       opacity: 0;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.5s ease;
     }
     
     .project-card:hover .project-overlay {
@@ -376,53 +426,58 @@
     .project-tech {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
     }
     
     .tech-tag {
-      background: rgba(99, 102, 241, 0.15);
+      background: rgba(139, 92, 246, 0.2);
       color: var(--primary);
-      padding: 6px 12px;
+      padding: 8px 16px;
       border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      font-size: 0.8rem;
+      font-weight: 600;
+      border: 1px solid rgba(139, 92, 246, 0.3);
       backdrop-filter: blur(10px);
     }
     
     .project-content {
-      padding: 2rem;
+      padding: 2.5rem;
     }
     
     .project-card h3 {
-      font-size: 1.5rem;
-      font-weight: 700;
+      font-size: 1.8rem;
+      font-weight: 800;
       margin-bottom: 1rem;
       color: var(--text);
+      background: linear-gradient(to right, #ffffff, var(--primary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
     
     .project-card p {
       color: var(--text-secondary);
-      margin-bottom: 1.5rem;
-      line-height: 1.6;
+      margin-bottom: 2rem;
+      line-height: 1.7;
+      font-size: 1.1rem;
     }
     
     .project-links {
       display: flex;
-      gap: 1rem;
+      gap: 1.5rem;
     }
     
     .project-link {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
       color: var(--text);
       text-decoration: none;
-      font-weight: 500;
-      padding: 12px 24px;
-      border-radius: 12px;
-      transition: all 0.3s ease;
+      font-weight: 600;
+      padding: 14px 28px;
+      border-radius: 15px;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       flex: 1;
       text-align: center;
       position: relative;
@@ -436,8 +491,8 @@
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-      transition: left 0.5s;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.6s;
     }
     
     .project-link:hover::before {
@@ -446,12 +501,12 @@
     
     .project-link.demo {
       background: var(--gradient-1);
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+      box-shadow: 0 5px 20px rgba(139, 92, 246, 0.4);
     }
     
     .project-link.demo:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
     }
     
     .project-link.source {
@@ -462,25 +517,27 @@
     .project-link.source:hover {
       background: rgba(255, 255, 255, 0.05);
       border-color: var(--primary);
+      box-shadow: 0 5px 20px rgba(139, 92, 246, 0.3);
     }
     
     /* Footer */
     footer {
       background: var(--dark-bg-2);
-      padding: 4rem 0 2rem;
+      padding: 5rem 0 2rem;
       border-top: 1px solid var(--card-border);
+      position: relative;
     }
     
     .footer-content {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 3rem;
-      margin-bottom: 3rem;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 4rem;
+      margin-bottom: 4rem;
     }
     
     .footer-section h3 {
-      font-size: 1.3rem;
-      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      margin-bottom: 2rem;
       color: var(--text);
       position: relative;
       display: inline-block;
@@ -489,75 +546,107 @@
     .footer-section h3::after {
       content: '';
       position: absolute;
-      bottom: -8px;
+      bottom: -10px;
       left: 0;
-      width: 40px;
-      height: 2px;
+      width: 50px;
+      height: 3px;
       background: var(--gradient-1);
+      border-radius: 3px;
     }
     
     .footer-section p, .footer-section a {
       color: var(--text-secondary);
-      margin-bottom: 0.8rem;
+      margin-bottom: 1rem;
       display: block;
       text-decoration: none;
-      transition: color 0.3s;
+      transition: all 0.3s;
+      font-size: 1.1rem;
     }
     
     .footer-section a:hover {
       color: var(--primary);
+      transform: translateX(5px);
     }
     
     .social-links {
       display: flex;
-      gap: 1rem;
-      margin-top: 1.5rem;
+      gap: 1.5rem;
+      margin-top: 2rem;
     }
     
     .social-link {
-      width: 45px;
-      height: 45px;
-      border-radius: 12px;
+      width: 55px;
+      height: 55px;
+      border-radius: 15px;
       background: var(--card-bg);
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--text);
       text-decoration: none;
-      transition: all 0.3s;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       border: 1px solid var(--card-border);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .social-link::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--gradient-1);
+      opacity: 0;
+      transition: opacity 0.3s;
     }
     
     .social-link:hover {
-      background: var(--gradient-1);
-      transform: translateY(-3px);
-      box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
+    }
+    
+    .social-link:hover::before {
+      opacity: 1;
+    }
+    
+    .social-link i {
+      position: relative;
+      z-index: 1;
+      transition: all 0.3s;
+    }
+    
+    .social-link:hover i {
+      color: white;
+      transform: scale(1.2);
     }
     
     .footer-bottom {
       text-align: center;
-      padding-top: 2rem;
+      padding-top: 3rem;
       border-top: 1px solid var(--card-border);
       color: var(--text-tertiary);
-      font-size: 0.9rem;
+      font-size: 1rem;
     }
     
     /* Loading and Empty States */
     .loading {
       text-align: center;
-      padding: 4rem;
+      padding: 5rem;
       color: var(--text-secondary);
       grid-column: 1 / -1;
     }
     
     .loading-spinner {
-      width: 60px;
-      height: 60px;
-      border: 3px solid rgba(99, 102, 241, 0.2);
-      border-left: 3px solid var(--primary);
+      width: 70px;
+      height: 70px;
+      border: 4px solid rgba(139, 92, 246, 0.2);
+      border-left: 4px solid var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 1.5rem;
+      margin: 0 auto 2rem;
+      box-shadow: 0 0 20px var(--primary-glow);
     }
     
     @keyframes spin {
@@ -567,26 +656,30 @@
     
     .empty-state {
       text-align: center;
-      padding: 5rem 2rem;
+      padding: 6rem 2rem;
       color: var(--text-secondary);
       grid-column: 1 / -1;
     }
     
     .empty-state i {
-      font-size: 4rem;
-      margin-bottom: 1.5rem;
+      font-size: 5rem;
+      margin-bottom: 2rem;
       color: var(--text-tertiary);
       opacity: 0.5;
     }
     
     /* Responsive Design */
-    @media (max-width: 1024px) {
+    @media (max-width: 1200px) {
       .hero h1 {
+        font-size: 4rem;
+      }
+      
+      .section-title {
         font-size: 3.2rem;
       }
       
       .projects-grid {
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
       }
     }
     
@@ -597,11 +690,11 @@
       
       .header-content {
         flex-direction: column;
-        gap: 1rem;
+        gap: 1.5rem;
       }
       
       nav ul {
-        gap: 1.5rem;
+        gap: 2rem;
       }
       
       .hero {
@@ -610,19 +703,20 @@
       }
       
       .hero h1 {
-        font-size: 2.5rem;
+        font-size: 3rem;
       }
       
       .hero p {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
       }
       
       .hero-stats {
         justify-content: center;
+        flex-wrap: wrap;
       }
       
       .section-title {
-        font-size: 2.2rem;
+        font-size: 2.5rem;
       }
       
       .projects-grid {
@@ -640,38 +734,44 @@
       }
       
       .hero h1 {
-        font-size: 2rem;
+        font-size: 2.5rem;
       }
       
       .hero-stats {
         flex-direction: column;
-        gap: 1.5rem;
+        gap: 2rem;
       }
       
       .section-title {
-        font-size: 1.8rem;
+        font-size: 2rem;
+      }
+      
+      .projects-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Particles Background -->
-  <div id="particles-js"></div>
+  <!-- Animated Background -->
+  <div class="hero-bg">
+    <canvas id="gradient-canvas"></canvas>
+  </div>
   
   <header id="header">
     <div class="container">
       <div class="header-content">
         <div class="logo">
           <div class="logo-icon">
-            <i class="fas fa-code"></i>
+            <i class="fas fa-crown"></i>
           </div>
           <div class="logo-text">Darin0v0</div>
         </div>
         <nav>
           <ul>
-            <li><a href="#home" class="active">Home</a></li>
-            <li><a href="#projects">Projekty</a></li>
-            <li><a href="#about">O mnie</a></li>
+            <li><a href="#home" class="active">Strona Główna</a></li>
+            <li><a href="#projects">Portfolio</a></li>
+            <li><a href="#about">Umiejętności</a></li>
             <li><a href="#contact">Kontakt</a></li>
           </ul>
         </nav>
@@ -683,19 +783,19 @@
     <div class="container">
       <div class="hero-content">
         <div class="hero-badge">
-          <i class="fas fa-star"></i>
-          Premium Developer Portfolio
+          <i class="fas fa-gem"></i>
+          Elite Full-Stack Developer
         </div>
-        <h1>Tworzenie <span class="gradient-text">Nowoczesnych</span> Rozwiązań</h1>
-        <p>Przekształcam pomysły w funkcjonalne, nowoczesne aplikacje webowe. Specjalizuję się w tworzeniu responsywnych interfejsów i wydajnych rozwiązań backendowych.</p>
+        <h1>Tworzenie Cyfrowej <span class="gradient-text">Doskonałości</span></h1>
+        <p>Przekształcam wizjonerskie pomysły w premium doświadczenia cyfrowe. Specjalizuję się w zaawansowanych aplikacjach webowych, skalowalnych architekturach i immersyjnych interfejsach, które definiują nowoczesne standardy.</p>
         <div class="hero-stats">
           <div class="hero-stat">
             <div class="stat-value" id="projectsCount">0</div>
-            <div class="stat-label">Ukończonych Projektów</div>
+            <div class="stat-label">Premium Projektów</div>
           </div>
           <div class="hero-stat">
-            <div class="stat-value">10+</div>
-            <div class="stat-label">Technologii</div>
+            <div class="stat-value">15+</div>
+            <div class="stat-label">Zaawansowanych Technologii</div>
           </div>
           <div class="hero-stat">
             <div class="stat-value">100%</div>
@@ -709,15 +809,18 @@
   <section class="projects-section" id="projects">
     <div class="container">
       <div class="section-header">
-        <div class="section-badge">Portfolio</div>
-        <h2 class="section-title">Moje Projekty</h2>
-        <p class="section-subtitle">Odkryj moje najnowsze realizacje - od koncepcji do wdrożenia</p>
+        <div class="section-badge">
+          <i class="fas fa-star"></i>
+          Kolekcja Mistrzostwa
+        </div>
+        <h2 class="section-title">Projekty Sygnowane</h2>
+        <p class="section-subtitle">Starannie wyselekcjonowane premium rozwiązania cyfrowe prezentujące innowacyjność, kunszt wykonania i doskonałość techniczną</p>
       </div>
       
       <div id="projectsContainer" class="projects-grid">
         <div class="loading">
           <div class="loading-spinner"></div>
-          <p>Ładowanie projektów...</p>
+          <p>Ładowanie Projektów...</p>
         </div>
       </div>
     </div>
@@ -734,15 +837,15 @@
         </div>
         
         <div class="footer-section">
-          <h3>Szybkie Linki</h3>
+          <h3>Nawigacja</h3>
           <a href="#home">Strona Główna</a>
-          <a href="#projects">Projekty</a>
-          <a href="#about">O mnie</a>
+          <a href="#projects">Portfolio</a>
+          <a href="#about">Umiejętności</a>
           <a href="#contact">Kontakt</a>
         </div>
         
         <div class="footer-section">
-          <h3>Śledź Mnie</h3>
+          <h3>Sieć</h3>
           <div class="social-links">
             <a href="https://github.com/Darin0v0" class="social-link" target="_blank">
               <i class="fab fa-github"></i>
@@ -751,24 +854,21 @@
               <i class="fab fa-linkedin-in"></i>
             </a>
             <a href="#" class="social-link">
-              <i class="fab fa-twitter"></i>
+              <i class="fab fa-dribbble"></i>
             </a>
             <a href="#" class="social-link">
-              <i class="fab fa-dribbble"></i>
+              <i class="fab fa-behance"></i>
             </a>
           </div>
         </div>
       </div>
       
       <div class="footer-bottom">
-        <p>&copy; 2023 Darin0v0. Wszystkie prawa zastrzeżone. | Zaprojektowane z <i class="fas fa-heart" style="color: #ef4444;"></i></p>
+        <p>&copy; 2023 Darin0v0. Wszelkie Prawa Zastrzeżone. | Stworzone z <i class="fas fa-gem" style="color: var(--gold);"></i> dla Cyfrowej Doskonałości</p>
       </div>
     </div>
   </footer>
 
-  <!-- Particles.js -->
-  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-  
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const GITHUB_USER = 'Darin0v0';
@@ -779,41 +879,33 @@
       const projectsCount = document.getElementById('projectsCount');
       const header = document.getElementById('header');
 
-      // Initialize Particles.js
-      particlesJS('particles-js', {
-        particles: {
-          number: { value: 80, density: { enable: true, value_area: 800 } },
-          color: { value: "#6366f1" },
-          shape: { type: "circle" },
-          opacity: { value: 0.5, random: true },
-          size: { value: 3, random: true },
-          line_linked: {
-            enable: true,
-            distance: 150,
-            color: "#6366f1",
-            opacity: 0.2,
-            width: 1
-          },
-          move: {
-            enable: true,
-            speed: 2,
-            direction: "none",
-            random: true,
-            straight: false,
-            out_mode: "out",
-            bounce: false
-          }
-        },
-        interactivity: {
-          detect_on: "canvas",
-          events: {
-            onhover: { enable: true, mode: "repulse" },
-            onclick: { enable: true, mode: "push" },
-            resize: true
-          }
-        },
-        retina_detect: true
-      });
+      // Create gradient background
+      const canvas = document.getElementById('gradient-canvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        function drawGradient() {
+          const gradient = ctx.createRadialGradient(
+            canvas.width * 0.3, canvas.height * 0.3, 0,
+            canvas.width * 0.3, canvas.height * 0.3, canvas.width * 0.8
+          );
+          gradient.addColorStop(0, 'rgba(139, 92, 246, 0.1)');
+          gradient.addColorStop(0.5, 'rgba(6, 182, 212, 0.05)');
+          gradient.addColorStop(1, 'transparent');
+          
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        drawGradient();
+        window.addEventListener('resize', () => {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          drawGradient();
+        });
+      }
 
       // Header scroll effect
       window.addEventListener('scroll', () => {
@@ -841,9 +933,9 @@
       // Project data
       const projectData = {
         'Serwis_Samochodowy_1': {
-          title: 'Serwis Samochodowy',
-          description: 'Kompleksowa strona internetowa serwisu samochodowego z systemem rezerwacji online, wyceną usług i panelem klienta.',
-          technologies: ['HTML5', 'CSS3', 'JavaScript', 'PHP', 'MySQL'],
+          title: 'Premium Serwis Samochodowy',
+          description: 'Elitarna platforma serwisu samochodowego z zaawansowanym systemem rezerwacji, diagnostyką w czasie rzeczywistym i premium funkcjami zarządzania klientami.',
+          technologies: ['React', 'Node.js', 'MongoDB', 'TypeScript', 'Tailwind'],
           category: 'web'
         }
         // Add more projects here as needed
@@ -869,8 +961,8 @@
       function createProjectCard(folderName) {
         const project = projectData[folderName] || {
           title: folderName.replace(/[-_]/g, ' '),
-          description: `Nowoczesna aplikacja ${folderName.replace(/[-_]/g, ' ')} - zobacz demo lub kod źródłowy.`,
-          technologies: ['HTML5', 'CSS3', 'JavaScript'],
+          description: `Wyjątkowe rozwiązanie ${folderName.replace(/[-_]/g, ' ')} prezentujące premium design i najnowocześniejszą funkcjonalność.`,
+          technologies: ['React', 'TypeScript', 'Node.js', 'MongoDB'],
           category: 'web'
         };
 
@@ -884,12 +976,12 @@
         const sourceUrl = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/projects/Portfolio/${folderName}`;
 
         const card = document.createElement('div');
-        card.className = 'project-card';
+        card.className = 'project-card glass';
         
         card.innerHTML = `
           <div class="project-image-container">
             <img class="project-image" src="${imagePaths[0]}" alt="${project.title}" 
-                 onerror="this.onerror=()=>{this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUxZTFlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzdGMTcxYSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPiR7cHJvamVjdC50aXRsZX08L3RleHQ+PC9zdmc+'};">
+                 onerror="this.onerror=()=>{this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDUwIiBoZWlnaHQ9IjI4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTQxNDE0Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPiR7cHJvamVjdC50aXRsZX08L3RleHQ+PC9zdmc+'};">
             <div class="project-overlay">
               <div class="project-tech">
                 ${project.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
@@ -901,7 +993,7 @@
             <p>${project.description}</p>
             <div class="project-links">
               <a href="${demoUrl}" class="project-link demo" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-external-link-alt"></i> LIVE DEMO
+                <i class="fas fa-external-link-alt"></i> PODGLĄD NA ŻYWO
               </a>
               <a href="${sourceUrl}" class="project-link source" target="_blank" rel="noopener noreferrer">
                 <i class="fab fa-github"></i> KOD ŹRÓDŁOWY
@@ -921,9 +1013,9 @@
         if (folders.length === 0) {
           projectsContainer.innerHTML = `
             <div class="empty-state">
-              <i class="fas fa-folder-open"></i>
-              <h3>Brak projektów do pokazania</h3>
-              <p>Dodaj swoje projekty do folderu projects/Portfolio w repozytorium GitHub.</p>
+              <i class="fas fa-gem"></i>
+              <h3>Przygotowanie Portfolio</h3>
+              <p>Kolekcja mistrzowskich projektów jest w przygotowaniu. Sprawdź ponownie wkrótce, aby zobaczyć wyjątkowe realizacje.</p>
             </div>
           `;
           return;
@@ -935,7 +1027,7 @@
         });
         
         // Animate projects count
-        animateValue(projectsCount, 0, folders.length, 1500);
+        animateValue(projectsCount, 0, folders.length, 2000);
       }
 
       // Animate counter
