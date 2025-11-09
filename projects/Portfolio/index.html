@@ -4,47 +4,272 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Moje Projekty — Portfolio</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    :root {
+      --primary-color: #2563eb;
+      --primary-dark: #1d4ed8;
+      --secondary-color: #7c3aed;
+      --dark-bg: #0f172a;
+      --card-bg: #1e293b;
+      --text-light: #f8fafc;
+      --text-gray: #cbd5e1;
+      --border-color: #334155;
+      --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--dark-bg);
+      color: var(--text-light);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      padding: 3rem 1rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="%23ffffff10"><polygon points="0,0 1000,50 1000,100 0,100"></polygon></svg>');
+      background-size: cover;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.9);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    main {
+      padding: 3rem 1rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .filter-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .filter-btn {
+      background: var(--card-bg);
+      color: var(--text-light);
+      border: 1px solid var(--border-color);
+      padding: 8px 16px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: var(--transition);
+      font-size: 0.9rem;
+    }
+
+    .filter-btn:hover {
+      background: var(--primary-color);
+    }
+
+    .filter-btn.active {
+      background: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
     .projects-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px,1fr));
-      gap: 20px;
-      padding: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 2rem;
     }
+
     .project-card {
-      border: 1px solid #444;
-      padding: 16px;
-      background: #111;
-      color: #eee;
-      text-align: center;
+      background: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
+
+    .project-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    .project-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      background-color: #2d3748;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-gray);
+    }
+
+    .project-image i {
+      font-size: 3rem;
+      opacity: 0.5;
+    }
+
+    .project-content {
+      padding: 1.5rem;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
     .project-card h3 {
-      margin: 0 0 12px;
+      font-size: 1.4rem;
+      margin-bottom: 0.8rem;
+      color: var(--text-light);
     }
-    .project-card a {
-      color: #0af;
+
+    .project-card p {
+      color: var(--text-gray);
+      margin-bottom: 1.5rem;
+      flex-grow: 1;
+    }
+
+    .project-links {
+      display: flex;
+      gap: 12px;
+    }
+
+    .project-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary-color);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
       text-decoration: none;
-      margin: 0 8px;
-      display: inline-block;
+      font-weight: 500;
+      transition: var(--transition);
+      flex: 1;
+      justify-content: center;
     }
-    .project-card img {
-      max-width: 100%;
-      height: auto;
-      margin-bottom: 12px;
+
+    .project-link:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .project-link.source {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-light);
+    }
+
+    .project-link.source:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .loading, .error, .empty {
+      text-align: center;
+      padding: 3rem;
+      grid-column: 1 / -1;
+    }
+
+    .loading i {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--primary-color);
+    }
+
+    .error {
+      color: #f87171;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      background: var(--card-bg);
+      margin-top: 3rem;
+      color: var(--text-gray);
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2.2rem;
+      }
+      
+      .projects-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+      
+      .project-links {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>Moje Projekty — Portfolio</h1>
-    <p>Kliknij kartę, by zobaczyć demo lub kod źródłowy.</p>
+    <div class="header-content">
+      <h1>Moje Projekty</h1>
+      <p class="subtitle">Przeglądaj moje portfolio projektów. Kliknij kartę, aby zobaczyć demo lub kod źródłowy.</p>
+    </div>
   </header>
+  
   <main>
+    <div class="filter-container">
+      <button class="filter-btn active" data-filter="all">Wszystkie</button>
+      <button class="filter-btn" data-filter="web">Web Development</button>
+      <button class="filter-btn" data-filter="design">Design</button>
+      <button class="filter-btn" data-filter="javascript">JavaScript</button>
+    </div>
+    
     <div id="projectsContainer" class="projects-grid">
-      <!-- Projekty zostaną dodane dynamicznie -->
+      <div class="loading">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Ładowanie projektów...</p>
+      </div>
     </div>
   </main>
+
+  <footer>
+    <p>&copy; 2023 Moje Portfolio. Wszystkie prawa zastrzeżone.</p>
+  </footer>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -53,65 +278,176 @@
       const PROJECTS_PATH = 'projects/Portfolio';
 
       const projectsContainer = document.getElementById('projectsContainer');
+      const filterButtons = document.querySelectorAll('.filter-btn');
 
-      async function fetchProjectsList() {
-        const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${PROJECTS_PATH}`;
-        try {
-          const resp = await fetch(url, { headers: { "Accept": "application/vnd.github+json" } });
-          if (!resp.ok) {
-            throw new Error(`GitHub API error: ${resp.status}`);
-          }
-          const data = await resp.json();
-          const dirs = data.filter(item => item.type === 'dir');
-          return dirs.map(d => d.name);
-        } catch (err) {
-          console.error('Błąd pobierania listy projektów:', err);
-          projectsContainer.innerHTML = `<p>Nie udało się wczytać projektów.</p>`;
-          return [];
+      // Przykładowe projekty (zastąp rzeczywistymi danymi z GitHub)
+      const sampleProjects = [
+        {
+          name: "Kalkulator Budżetu",
+          description: "Aplikacja do zarządzania budżetem osobistym z wykresami i statystykami.",
+          category: "javascript",
+          demoUrl: "#",
+          sourceUrl: "#",
+          image: "./projects/Portfolio/budget-calculator/prew.jpg"
+        },
+        {
+          name: "Panel Administracyjny",
+          description: "Nowoczesny panel administracyjny z dashboardem i zarządzaniem użytkownikami.",
+          category: "web",
+          demoUrl: "#",
+          sourceUrl: "#",
+          image: "./projects/Portfolio/admin-panel/prew.jpg"
+        },
+        {
+          name: "Galeria Zdjęć",
+          description: "Responsywna galeria zdjęć z filtrowaniem i lightboxem.",
+          category: "design",
+          demoUrl: "#",
+          sourceUrl: "#",
+          image: "./projects/Portfolio/photo-gallery/prew.jpg"
+        },
+        {
+          name: "Aplikacja Pogodowa",
+          description: "Aplikacja pokazująca aktualną pogodę i prognozę na 5 dni.",
+          category: "javascript",
+          demoUrl: "#",
+          sourceUrl: "#",
+          image: "./projects/Portfolio/weather-app/prew.jpg"
+        },
+        {
+          name: "Sklep Internetowy",
+          description: "Pełnofunkcjonalny sklep internetowy z koszykiem i płatnościami.",
+          category: "web",
+          demoUrl: "#",
+          sourceUrl: "#",
+          image: "./projects/Portfolio/ecommerce/prew.jpg"
+        },
+        {
+          name: "Landing Page",
+          description: "Nowoczesna strona landing page z animacjami i formularzem kontaktowym.",
+          category: "design",
+          demoUrl: "#",
+          sourceUrl: "#",
+          image: "./projects/Portfolio/landing-page/prew.jpg"
         }
+      ];
+
+      // Obsługa filtrów
+      filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const filter = button.getAttribute('data-filter');
+          
+          // Aktualizacja aktywnych przycisków
+          filterButtons.forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+          
+          // Filtrowanie projektów
+          filterProjects(filter);
+        });
+      });
+
+      function filterProjects(filter) {
+        const projectCards = document.querySelectorAll('.project-card');
+        
+        projectCards.forEach(card => {
+          if (filter === 'all' || card.getAttribute('data-category') === filter) {
+            card.style.display = 'flex';
+          } else {
+            card.style.display = 'none';
+          }
+        });
       }
 
-      function createProjectCard(folderName) {
+      function createProjectCard(project) {
         const card = document.createElement('div');
         card.className = 'project-card';
+        card.setAttribute('data-category', project.category);
+
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'project-image';
+        
+        const img = document.createElement('img');
+        img.src = project.image;
+        img.alt = project.name;
+        img.onerror = () => {
+          img.remove();
+          const icon = document.createElement('i');
+          icon.className = 'fas fa-code';
+          imageContainer.appendChild(icon);
+        };
+        imageContainer.appendChild(img);
+        card.appendChild(imageContainer);
+
+        const content = document.createElement('div');
+        content.className = 'project-content';
 
         const title = document.createElement('h3');
-        title.textContent = folderName.replace(/[-_]/g, ' ');
-        card.appendChild(title);
+        title.textContent = project.name;
+        content.appendChild(title);
 
-        const img = document.createElement('img');
-        img.src = `./projects/Portfolio/${folderName}/prew.jpg`;
-        img.alt = folderName;
-        img.onerror = () => { img.remove(); };
-        card.appendChild(img);
+        const description = document.createElement('p');
+        description.textContent = project.description;
+        content.appendChild(description);
+
+        const links = document.createElement('div');
+        links.className = 'project-links';
 
         const demoLink = document.createElement('a');
-        demoLink.href = `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/`;
+        demoLink.href = project.demoUrl;
+        demoLink.className = 'project-link';
         demoLink.target = '_blank';
         demoLink.rel = 'noopener noreferrer';
-        demoLink.textContent = 'LIVE DEMO';
-        card.appendChild(demoLink);
+        demoLink.innerHTML = '<i class="fas fa-external-link-alt"></i> LIVE DEMO';
+        links.appendChild(demoLink);
 
         const sourceLink = document.createElement('a');
-        sourceLink.href = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/projects/Portfolio/${folderName}`;
+        sourceLink.href = project.sourceUrl;
+        sourceLink.className = 'project-link source';
         sourceLink.target = '_blank';
         sourceLink.rel = 'noopener noreferrer';
-        sourceLink.textContent = 'SOURCE CODE';
-        card.appendChild(sourceLink);
+        sourceLink.innerHTML = '<i class="fab fa-github"></i> KOD ŹRÓDŁOWY';
+        links.appendChild(sourceLink);
+
+        content.appendChild(links);
+        card.appendChild(content);
 
         return card;
       }
 
       async function initProjects() {
-        const folders = await fetchProjectsList();
-        if (folders.length === 0) {
-          projectsContainer.innerHTML = `<p>Brak projektów do pokazania.</p>`;
-          return;
+        try {
+          // W rzeczywistej implementacji pobieraj dane z GitHub API
+          // const folders = await fetchProjectsList();
+          
+          // Tymczasowo używamy przykładowych danych
+          const projects = sampleProjects;
+          
+          if (projects.length === 0) {
+            projectsContainer.innerHTML = `
+              <div class="empty">
+                <i class="fas fa-folder-open"></i>
+                <h3>Brak projektów do pokazania</h3>
+                <p>Sprawdź później lub skontaktuj się ze mną.</p>
+              </div>
+            `;
+            return;
+          }
+          
+          projectsContainer.innerHTML = '';
+          projects.forEach(project => {
+            const card = createProjectCard(project);
+            projectsContainer.appendChild(card);
+          });
+        } catch (err) {
+          console.error('Błąd pobierania projektów:', err);
+          projectsContainer.innerHTML = `
+            <div class="error">
+              <i class="fas fa-exclamation-triangle"></i>
+              <h3>Nie udało się wczytać projektów</h3>
+              <p>Sprawdź połączenie z internetem i spróbuj ponownie.</p>
+            </div>
+          `;
         }
-        folders.forEach(folder => {
-          const card = createProjectCard(folder);
-          projectsContainer.appendChild(card);
-        });
       }
 
       initProjects();
