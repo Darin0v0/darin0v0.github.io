@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Moje Projekty</title>
+  <title>Moje Projekty — Portfolio</title>
   <link rel="stylesheet" href="style.css">
   <style>
     .projects-grid {
@@ -37,7 +37,7 @@
 </head>
 <body>
   <header>
-    <h1>Moje Projekty</h1>
+    <h1>Moje Projekty — Portfolio</h1>
     <p>Kliknij kartę, by zobaczyć demo lub kod źródłowy.</p>
   </header>
   <main>
@@ -50,14 +50,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const GITHUB_USER = 'Darin0v0';
       const GITHUB_REPO = 'Darin0v0.github.io';
-      const PROJECTS_PATH = 'projects';
-
-      // Tutaj wpisz wszystkie foldery, które **chcesz ukryć**:
-      const BLACKLIST = [
-        'FolderDoUkrycia1',
-        'FolderDoUkrycia2',
-        // dodaj kolejne
-      ];
+      const PROJECTS_PATH = 'projects/Portfolio';
 
       const projectsContainer = document.getElementById('projectsContainer');
 
@@ -83,24 +76,24 @@
         card.className = 'project-card';
 
         const title = document.createElement('h3');
-        title.textContent = folderName.replace(/-/g, ' ');
+        title.textContent = folderName.replace(/[-_]/g, ' ');
         card.appendChild(title);
 
         const img = document.createElement('img');
-        img.src = `./${PROJECTS_PATH}/${folderName}/prew.jpg`;
+        img.src = `./projects/Portfolio/${folderName}/prew.jpg`;
         img.alt = folderName;
         img.onerror = () => { img.remove(); };
         card.appendChild(img);
 
         const demoLink = document.createElement('a');
-        demoLink.href = `https://${GITHUB_USER}.github.io/${PROJECTS_PATH}/${folderName}/`;
+        demoLink.href = `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/`;
         demoLink.target = '_blank';
         demoLink.rel = 'noopener noreferrer';
         demoLink.textContent = 'LIVE DEMO';
         card.appendChild(demoLink);
 
         const sourceLink = document.createElement('a');
-        sourceLink.href = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/${PROJECTS_PATH}/${folderName}`;
+        sourceLink.href = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/projects/Portfolio/${folderName}`;
         sourceLink.target = '_blank';
         sourceLink.rel = 'noopener noreferrer';
         sourceLink.textContent = 'SOURCE CODE';
@@ -111,13 +104,11 @@
 
       async function initProjects() {
         const folders = await fetchProjectsList();
-        // filtruj foldery — usuń te z blacklisty
-        const visibleFolders = folders.filter(folderName => !BLACKLIST.includes(folderName));
-        if (visibleFolders.length === 0) {
+        if (folders.length === 0) {
           projectsContainer.innerHTML = `<p>Brak projektów do pokazania.</p>`;
           return;
         }
-        visibleFolders.forEach(folder => {
+        folders.forEach(folder => {
           const card = createProjectCard(folder);
           projectsContainer.appendChild(card);
         });
