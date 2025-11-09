@@ -1,711 +1,688 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfolio | Moje Projekty Programistyczne</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    :root {
-      --primary: #4361ee;
-      --primary-dark: #3a56d4;
-      --secondary: #7209b7;
-      --accent: #f72585;
-      --dark: #121826;
-      --dark-light: #1f2937;
-      --light: #f8fafc;
-      --gray: #94a3b8;
-      --success: #10b981;
-      --border-radius: 12px;
-      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Projektów | Darin0v0</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --text: #f8fafc;
+            --text-light: #cbd5e1;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    html {
-      scroll-behavior: smooth;
-    }
+        body {
+            background-color: var(--dark);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 20%);
+        }
 
-    body {
-      background-color: var(--dark);
-      color: var(--light);
-      line-height: 1.6;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
 
-    /* Header Styles */
-    header {
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      padding: 4rem 1rem 6rem;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
+        /* Header Styles */
+        header {
+            padding: 4rem 0 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-    header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="%23ffffff08"><polygon points="0,0 1000,50 1000,100 0,100"></polygon></svg>');
-      background-size: cover;
-    }
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gradient);
+            opacity: 0.1;
+            z-index: -1;
+        }
 
-    .header-content {
-      position: relative;
-      z-index: 1;
-      max-width: 800px;
-      margin: 0 auto;
-    }
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
 
-    h1 {
-      font-size: 3.2rem;
-      margin-bottom: 1.5rem;
-      font-weight: 800;
-      background: linear-gradient(to right, #fff, #e0e7ff);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      line-height: 1.2;
-    }
+        .logo i {
+            font-size: 2rem;
+        }
 
-    .subtitle {
-      font-size: 1.3rem;
-      color: rgba(255, 255, 255, 0.9);
-      max-width: 600px;
-      margin: 0 auto 2rem;
-      font-weight: 300;
-    }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 800;
+        }
 
-    .stats {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      margin-top: 2rem;
-      flex-wrap: wrap;
-    }
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
 
-    .stat-item {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      padding: 1rem 1.5rem;
-      border-radius: var(--border-radius);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
 
-    .stat-number {
-      font-size: 2rem;
-      font-weight: 700;
-      display: block;
-    }
+        .stat {
+            background: var(--card-bg);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-    .stat-label {
-      font-size: 0.9rem;
-      opacity: 0.8;
-    }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
 
-    /* Main Content */
-    main {
-      padding: 0 1rem 4rem;
-      max-width: 1200px;
-      margin: -3rem auto 0;
-      position: relative;
-      z-index: 2;
-    }
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
 
-    /* Filter Styles */
-    .filter-container {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 3rem;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
+        /* Filter Styles */
+        .filter-container {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
 
-    .filter-btn {
-      background: var(--dark-light);
-      color: var(--light);
-      border: 1px solid var(--dark-light);
-      padding: 10px 20px;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: var(--transition);
-      font-size: 0.95rem;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+        .filter-btn {
+            background: var(--card-bg);
+            color: var(--text);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
 
-    .filter-btn:hover {
-      background: rgba(67, 97, 238, 0.2);
-      border-color: var(--primary);
-      transform: translateY(-2px);
-    }
+        .filter-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+            transform: translateY(-2px);
+        }
 
-    .filter-btn.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      box-shadow: 0 5px 15px rgba(67, 97, 238, 0.4);
-    }
+        .filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
 
-    /* Projects Grid */
-    .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 2rem;
-    }
+        /* Projects Grid */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            padding: 2rem 0;
+        }
 
-    .project-card {
-      background: var(--dark-light);
-      border-radius: var(--border-radius);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      transition: var(--transition);
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
+        .project-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-    .project-card:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-      border-color: rgba(67, 97, 238, 0.3);
-    }
+        .project-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+        }
 
-    .project-image {
-      width: 100%;
-      height: 220px;
-      object-fit: cover;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--light);
-      position: relative;
-      overflow: hidden;
-    }
+        .project-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(45deg, #1e293b, #334155);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-    .project-image::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.7));
-    }
+        .project-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
 
-    .project-image i {
-      font-size: 3.5rem;
-      opacity: 0.7;
-      z-index: 1;
-    }
+        .project-card:hover .project-image img {
+            transform: scale(1.05);
+        }
 
-    .project-badge {
-      position: absolute;
-      top: 15px;
-      right: 15px;
-      background: var(--accent);
-      color: white;
-      padding: 5px 12px;
-      border-radius: 50px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      z-index: 2;
-    }
+        .project-image .placeholder {
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.2);
+        }
 
-    .project-content {
-      padding: 1.8rem;
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-    }
+        .project-content {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
-    .project-card h3 {
-      font-size: 1.5rem;
-      margin-bottom: 0.8rem;
-      color: var(--light);
-      font-weight: 600;
-    }
+        .project-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.8rem;
+            color: var(--text);
+        }
 
-    .project-card p {
-      color: var(--gray);
-      margin-bottom: 1.5rem;
-      flex-grow: 1;
-      line-height: 1.7;
-    }
+        .project-card p {
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
 
-    .project-tech {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 1.5rem;
-    }
+        .project-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
 
-    .tech-tag {
-      background: rgba(67, 97, 238, 0.15);
-      color: var(--primary);
-      padding: 5px 12px;
-      border-radius: 50px;
-      font-size: 0.8rem;
-      font-weight: 500;
-    }
+        .project-tech {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
 
-    .project-links {
-      display: flex;
-      gap: 12px;
-    }
+        .tech-tag {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
 
-    .project-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--primary);
-      color: white;
-      padding: 10px 20px;
-      border-radius: var(--border-radius);
-      text-decoration: none;
-      font-weight: 600;
-      transition: var(--transition);
-      flex: 1;
-      justify-content: center;
-    }
+        .project-links {
+            display: flex;
+            gap: 12px;
+        }
 
-    .project-link:hover {
-      background: var(--primary-dark);
-      transform: translateY(-3px);
-      box-shadow: 0 7px 15px rgba(67, 97, 238, 0.4);
-    }
+        .project-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            flex: 1;
+            justify-content: center;
+        }
 
-    .project-link.source {
-      background: transparent;
-      border: 1px solid var(--gray);
-      color: var(--light);
-    }
+        .project-link:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
 
-    .project-link.source:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--primary);
-    }
+        .project-link.source {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text);
+        }
 
-    /* Status Messages */
-    .loading, .error, .empty {
-      text-align: center;
-      padding: 4rem 2rem;
-      grid-column: 1 / -1;
-    }
+        .project-link.source:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--primary);
+        }
 
-    .loading i {
-      font-size: 3rem;
-      margin-bottom: 1.5rem;
-      color: var(--primary);
-    }
+        /* Status Messages */
+        .loading, .error, .empty {
+            text-align: center;
+            padding: 4rem 2rem;
+            grid-column: 1 / -1;
+        }
 
-    .error {
-      color: #f87171;
-    }
+        .loading i {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
 
-    .empty {
-      color: var(--gray);
-    }
+        .error {
+            color: #f87171;
+        }
 
-    /* Footer */
-    footer {
-      text-align: center;
-      padding: 3rem 1rem;
-      background: var(--dark-light);
-      margin-top: 4rem;
-      color: var(--gray);
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-    }
+        .empty {
+            color: var(--text-light);
+        }
 
-    .footer-content {
-      max-width: 800px;
-      margin: 0 auto;
-    }
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 1rem;
+            margin-top: 4rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
 
-    .social-links {
-      display: flex;
-      justify-content: center;
-      gap: 1.5rem;
-      margin: 1.5rem 0;
-    }
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
 
-    .social-link {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: var(--dark);
-      color: var(--light);
-      text-decoration: none;
-      transition: var(--transition);
-    }
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            color: var(--text);
+            text-decoration: none;
+            transition: var(--transition);
+        }
 
-    .social-link:hover {
-      background: var(--primary);
-      transform: translateY(-3px);
-    }
+        .social-link:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
 
-    .copyright {
-      margin-top: 1.5rem;
-      font-size: 0.9rem;
-      opacity: 0.7;
-    }
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                gap: 1rem;
+            }
+            
+            .stat {
+                padding: 0.8rem 1.2rem;
+            }
+        }
 
-    /* Animations */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .project-links {
+                flex-direction: column;
+            }
+            
+            .filter-container {
+                gap: 5px;
+            }
+            
+            .filter-btn {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+        }
 
-    .project-card {
-      animation: fadeIn 0.5s ease forwards;
-    }
+        /* Animation for cards */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      h1 {
-        font-size: 2.5rem;
-      }
-      
-      .projects-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .stats {
-        gap: 1rem;
-      }
-      
-      .stat-item {
-        padding: 0.8rem 1.2rem;
-      }
-      
-      .stat-number {
-        font-size: 1.7rem;
-      }
-    }
+        .project-card {
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
+        }
 
-    @media (max-width: 480px) {
-      h1 {
-        font-size: 2rem;
-      }
-      
-      .subtitle {
-        font-size: 1.1rem;
-      }
-      
-      .project-links {
-        flex-direction: column;
-      }
-      
-      header {
-        padding: 3rem 1rem 5rem;
-      }
-    }
-  </style>
+        .project-card:nth-child(1) { animation-delay: 0.1s; }
+        .project-card:nth-child(2) { animation-delay: 0.2s; }
+        .project-card:nth-child(3) { animation-delay: 0.3s; }
+        .project-card:nth-child(4) { animation-delay: 0.4s; }
+        .project-card:nth-child(5) { animation-delay: 0.5s; }
+        .project-card:nth-child(6) { animation-delay: 0.6s; }
+    </style>
 </head>
 <body>
-  <header>
-    <div class="header-content">
-      <h1>Moje Portfolio Projektów</h1>
-      <p class="subtitle">Przeglądaj moje projekty programistyczne. Każdy projekt to połączenie kreatywności, technologii i najlepszych praktyk.</p>
-      
-      <div class="stats">
-        <div class="stat-item">
-          <span class="stat-number">12+</span>
-          <span class="stat-label">Ukończonych Projektów</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number">5</span>
-          <span class="stat-label">Technologii</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number">3</span>
-          <span class="stat-label">Lata Doświadczenia</span>
-        </div>
-      </div>
-    </div>
-  </header>
-  
-  <main>
-    <div class="filter-container">
-      <button class="filter-btn active" data-filter="all">
-        <i class="fas fa-th-large"></i> Wszystkie
-      </button>
-      <button class="filter-btn" data-filter="web">
-        <i class="fas fa-globe"></i> Web Development
-      </button>
-      <button class="filter-btn" data-filter="design">
-        <i class="fas fa-palette"></i> Design
-      </button>
-      <button class="filter-btn" data-filter="javascript">
-        <i class="fab fa-js-square"></i> JavaScript
-      </button>
-      <button class="filter-btn" data-filter="react">
-        <i class="fab fa-react"></i> React
-      </button>
-    </div>
-    
-    <div id="projectsContainer" class="projects-grid">
-      <div class="loading">
-        <i class="fas fa-spinner fa-spin"></i>
-        <h3>Ładowanie projektów</h3>
-        <p>Proszę czekać, trwa wczytywanie danych...</p>
-      </div>
-    </div>
-  </main>
-
-  <footer>
-    <div class="footer-content">
-      <h3>Skontaktuj się ze mną</h3>
-      <div class="social-links">
-        <a href="#" class="social-link">
-          <i class="fab fa-github"></i>
-        </a>
-        <a href="#" class="social-link">
-          <i class="fab fa-linkedin-in"></i>
-        </a>
-        <a href="#" class="social-link">
-          <i class="fas fa-envelope"></i>
-        </a>
-        <a href="#" class="social-link">
-          <i class="fab fa-twitter"></i>
-        </a>
-      </div>
-      <p class="copyright">&copy; 2023 Moje Portfolio. Wszystkie prawa zastrzeżone.</p>
-    </div>
-  </footer>
-
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const GITHUB_USER = 'Darin0v0';
-      const GITHUB_REPO = 'Darin0v0.github.io';
-      const PROJECTS_PATH = 'projects/Portfolio';
-
-      const projectsContainer = document.getElementById('projectsContainer');
-      const filterButtons = document.querySelectorAll('.filter-btn');
-
-      // Przykładowe projekty (w rzeczywistej implementacji pobierane z GitHub)
-      const sampleProjects = [
-        {
-          name: "Kalkulator Budżetu",
-          description: "Zaawansowana aplikacja do zarządzania budżetem osobistym z wykresami, statystykami i planowaniem wydatków.",
-          category: "javascript",
-          demoUrl: "#",
-          sourceUrl: "#",
-          image: "./projects/Portfolio/budget-calculator/prew.jpg",
-          technologies: ["JavaScript", "Chart.js", "LocalStorage"],
-          status: "Ukończony"
-        },
-        {
-          name: "Panel Administracyjny",
-          description: "Nowoczesny panel administracyjny z dashboardem, zarządzaniem użytkownikami i zaawansowanymi statystykami.",
-          category: "react",
-          demoUrl: "#",
-          sourceUrl: "#",
-          image: "./projects/Portfolio/admin-panel/prew.jpg",
-          technologies: ["React", "Node.js", "MongoDB"],
-          status: "W trakcie"
-        },
-        {
-          name: "Galeria Zdjęć",
-          description: "Responsywna galeria zdjęć z filtrowaniem, wyszukiwaniem i efektownym lightboxem.",
-          category: "design",
-          demoUrl: "#",
-          sourceUrl: "#",
-          image: "./projects/Portfolio/photo-gallery/prew.jpg",
-          technologies: ["HTML5", "CSS3", "JavaScript"],
-          status: "Ukończony"
-        },
-        {
-          name: "Aplikacja Pogodowa",
-          description: "Aplikacja pokazująca aktualną pogodę i prognozę na 5 dni z mapami i alertami pogodowymi.",
-          category: "javascript",
-          demoUrl: "#",
-          sourceUrl: "#",
-          image: "./projects/Portfolio/weather-app/prew.jpg",
-          technologies: ["API", "JavaScript", "CSS Grid"],
-          status: "Ukończony"
-        },
-        {
-          name: "Sklep Internetowy",
-          description: "Pełnofunkcjonalny sklep internetowy z koszykiem, płatnościami i panelem administracyjnym.",
-          category: "web",
-          demoUrl: "#",
-          sourceUrl: "#",
-          image: "./projects/Portfolio/ecommerce/prew.jpg",
-          technologies: ["PHP", "MySQL", "Stripe API"],
-          status: "Ukończony"
-        },
-        {
-          name: "Landing Page",
-          description: "Nowoczesna strona landing page z animacjami, formularzem kontaktowym i optymalizacją SEO.",
-          category: "design",
-          demoUrl: "#",
-          sourceUrl: "#",
-          image: "./projects/Portfolio/landing-page/prew.jpg",
-          technologies: ["HTML5", "CSS3", "GSAP"],
-          status: "Ukończony"
-        }
-      ];
-
-      // Obsługa filtrów
-      filterButtons.forEach(button => {
-        button.addEventListener('click', () => {
-          const filter = button.getAttribute('data-filter');
-          
-          // Aktualizacja aktywnych przycisków
-          filterButtons.forEach(btn => btn.classList.remove('active'));
-          button.classList.add('active');
-          
-          // Filtrowanie projektów
-          filterProjects(filter);
-        });
-      });
-
-      function filterProjects(filter) {
-        const projectCards = document.querySelectorAll('.project-card');
-        
-        projectCards.forEach((card, index) => {
-          if (filter === 'all' || card.getAttribute('data-category') === filter) {
-            card.style.display = 'flex';
-            // Dodanie opóźnienia dla efektu kaskadowego
-            card.style.animationDelay = `${index * 0.1}s`;
-          } else {
-            card.style.display = 'none';
-          }
-        });
-      }
-
-      function createProjectCard(project) {
-        const card = document.createElement('div');
-        card.className = 'project-card';
-        card.setAttribute('data-category', project.category);
-
-        const imageContainer = document.createElement('div');
-        imageContainer.className = 'project-image';
-        
-        const img = document.createElement('img');
-        img.src = project.image;
-        img.alt = project.name;
-        img.onerror = () => {
-          img.remove();
-          const icon = document.createElement('i');
-          icon.className = 'fas fa-code';
-          imageContainer.appendChild(icon);
-        };
-        imageContainer.appendChild(img);
-        
-        const badge = document.createElement('div');
-        badge.className = 'project-badge';
-        badge.textContent = project.status;
-        imageContainer.appendChild(badge);
-        
-        card.appendChild(imageContainer);
-
-        const content = document.createElement('div');
-        content.className = 'project-content';
-
-        const title = document.createElement('h3');
-        title.textContent = project.name;
-        content.appendChild(title);
-
-        const description = document.createElement('p');
-        description.textContent = project.description;
-        content.appendChild(description);
-
-        const techContainer = document.createElement('div');
-        techContainer.className = 'project-tech';
-        
-        project.technologies.forEach(tech => {
-          const techTag = document.createElement('span');
-          techTag.className = 'tech-tag';
-          techTag.textContent = tech;
-          techContainer.appendChild(techTag);
-        });
-        
-        content.appendChild(techContainer);
-
-        const links = document.createElement('div');
-        links.className = 'project-links';
-
-        const demoLink = document.createElement('a');
-        demoLink.href = project.demoUrl;
-        demoLink.className = 'project-link';
-        demoLink.target = '_blank';
-        demoLink.rel = 'noopener noreferrer';
-        demoLink.innerHTML = '<i class="fas fa-external-link-alt"></i> LIVE DEMO';
-        links.appendChild(demoLink);
-
-        const sourceLink = document.createElement('a');
-        sourceLink.href = project.sourceUrl;
-        sourceLink.className = 'project-link source';
-        sourceLink.target = '_blank';
-        sourceLink.rel = 'noopener noreferrer';
-        sourceLink.innerHTML = '<i class="fab fa-github"></i> KOD ŹRÓDŁOWY';
-        links.appendChild(sourceLink);
-
-        content.appendChild(links);
-        card.appendChild(content);
-
-        return card;
-      }
-
-      async function initProjects() {
-        try {
-          // Symulacja ładowania
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          
-          // W rzeczywistej implementacji pobieraj dane z GitHub API
-          // const folders = await fetchProjectsList();
-          
-          // Tymczasowo używamy przykładowych danych
-          const projects = sampleProjects;
-          
-          if (projects.length === 0) {
-            projectsContainer.innerHTML = `
-              <div class="empty">
-                <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 1.5rem;"></i>
-                <h3>Brak projektów do pokazania</h3>
-                <p>Sprawdź później lub skontaktuj się ze mną.</p>
-              </div>
-            `;
-            return;
-          }
-          
-          projectsContainer.innerHTML = '';
-          projects.forEach((project, index) => {
-            const card = createProjectCard(project);
-            card.style.animationDelay = `${index * 0.1}s`;
-            projectsContainer.appendChild(card);
-          });
-        } catch (err) {
-          console.error('Błąd pobierania projektów:', err);
-          projectsContainer.innerHTML = `
-            <div class="error">
-              <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1.5rem;"></i>
-              <h3>Nie udało się wczytać projektów</h3>
-              <p>Sprawdź połączenie z internetem i spróbuj ponownie.</p>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-code"></i>
+                <span>Darin0v0</span>
             </div>
-          `;
-        }
-      }
+            <h1>Moje Portfolio Projektów</h1>
+            <p class="subtitle">Przeglądaj moje projekty programistyczne. Każda karta zawiera link do demo oraz kodu źródłowego na GitHub.</p>
+            
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number" id="projectsCount">0</div>
+                    <div class="stat-label">Projektów</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">5+</div>
+                    <div class="stat-label">Technologii</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Gotowe do użycia</div>
+                </div>
+            </div>
+        </header>
+        
+        <main>
+            <div class="filter-container">
+                <button class="filter-btn active" data-filter="all">Wszystkie</button>
+                <button class="filter-btn" data-filter="web">Web Dev</button>
+                <button class="filter-btn" data-filter="javascript">JavaScript</button>
+                <button class="filter-btn" data-filter="html-css">HTML/CSS</button>
+                <button class="filter-btn" data-filter="react">React</button>
+            </div>
+            
+            <div id="projectsContainer" class="projects-grid">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <h3>Ładowanie projektów z GitHub...</h3>
+                    <p>Pobieranie listy projektów z repozytorium Darin0v0</p>
+                </div>
+            </div>
+        </main>
 
-      initProjects();
-    });
-  </script>
+        <footer>
+            <div class="social-links">
+                <a href="https://github.com/Darin0v0" class="social-link" target="_blank">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="#" class="social-link">
+                    <i class="fab fa-linkedin"></i>
+                </a>
+                <a href="#" class="social-link">
+                    <i class="fas fa-envelope"></i>
+                </a>
+            </div>
+            <p>&copy; 2023 Darin0v0. Wszystkie prawa zastrzeżone.</p>
+            <p>Stworzone z <i class="fas fa-heart" style="color: #ef4444;"></i> i <i class="fas fa-coffee"></i></p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const GITHUB_USER = 'Darin0v0';
+            const GITHUB_REPO = 'Darin0v0.github.io';
+            const PROJECTS_PATH = 'projects/Portfolio';
+
+            const projectsContainer = document.getElementById('projectsContainer');
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            const projectsCount = document.getElementById('projectsCount');
+
+            // Obsługa filtrów
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const filter = button.getAttribute('data-filter');
+                    
+                    // Aktualizacja aktywnych przycisków
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    // Filtrowanie projektów
+                    filterProjects(filter);
+                });
+            });
+
+            function filterProjects(filter) {
+                const projectCards = document.querySelectorAll('.project-card');
+                
+                projectCards.forEach(card => {
+                    if (filter === 'all' || card.getAttribute('data-category') === filter) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            }
+
+            async function fetchProjectsList() {
+                const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${PROJECTS_PATH}`;
+                try {
+                    const resp = await fetch(url, { 
+                        headers: { 
+                            "Accept": "application/vnd.github+json",
+                            "User-Agent": "Portfolio-App"
+                        } 
+                    });
+                    
+                    if (!resp.ok) {
+                        throw new Error(`GitHub API error: ${resp.status}`);
+                    }
+                    
+                    const data = await resp.json();
+                    const dirs = data.filter(item => item.type === 'dir');
+                    return dirs.map(d => d.name);
+                } catch (err) {
+                    console.error('Błąd pobierania listy projektów:', err);
+                    throw err;
+                }
+            }
+
+            function createProjectCard(folderName, index) {
+                const card = document.createElement('div');
+                card.className = 'project-card';
+                card.setAttribute('data-category', getCategory(folderName, index));
+                
+                // Losowe technologie dla przykładu
+                const techStack = getRandomTechStack();
+
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'project-image';
+                
+                const img = document.createElement('img');
+                img.src = `./projects/Portfolio/${folderName}/prew.jpg`;
+                img.alt = folderName;
+                img.onerror = () => {
+                    img.remove();
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'placeholder';
+                    placeholder.innerHTML = '<i class="fas fa-code"></i>';
+                    imageContainer.appendChild(placeholder);
+                };
+                imageContainer.appendChild(img);
+                card.appendChild(imageContainer);
+
+                const content = document.createElement('div');
+                content.className = 'project-content';
+
+                const title = document.createElement('h3');
+                title.textContent = formatProjectName(folderName);
+                content.appendChild(title);
+
+                const description = document.createElement('p');
+                description.textContent = getProjectDescription(folderName);
+                content.appendChild(description);
+
+                const meta = document.createElement('div');
+                meta.className = 'project-meta';
+                meta.innerHTML = `
+                    <span><i class="far fa-calendar"></i> ${getRandomDate()}</span>
+                    <span><i class="far fa-folder"></i> ${getRandomSize()}</span>
+                `;
+                content.appendChild(meta);
+
+                const techContainer = document.createElement('div');
+                techContainer.className = 'project-tech';
+                techStack.forEach(tech => {
+                    const techTag = document.createElement('span');
+                    techTag.className = 'tech-tag';
+                    techTag.textContent = tech;
+                    techContainer.appendChild(techTag);
+                });
+                content.appendChild(techContainer);
+
+                const links = document.createElement('div');
+                links.className = 'project-links';
+
+                const demoLink = document.createElement('a');
+                demoLink.href = `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/`;
+                demoLink.className = 'project-link';
+                demoLink.target = '_blank';
+                demoLink.rel = 'noopener noreferrer';
+                demoLink.innerHTML = '<i class="fas fa-external-link-alt"></i> LIVE DEMO';
+                links.appendChild(demoLink);
+
+                const sourceLink = document.createElement('a');
+                sourceLink.href = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/projects/Portfolio/${folderName}`;
+                sourceLink.className = 'project-link source';
+                sourceLink.target = '_blank';
+                sourceLink.rel = 'noopener noreferrer';
+                sourceLink.innerHTML = '<i class="fab fa-github"></i> KOD ŹRÓDŁOWY';
+                links.appendChild(sourceLink);
+
+                content.appendChild(links);
+                card.appendChild(content);
+
+                return card;
+            }
+
+            // Pomocnicze funkcje
+            function formatProjectName(folderName) {
+                return folderName
+                    .replace(/[-_]/g, ' ')
+                    .replace(/(?:^|\s)\S/g, a => a.toUpperCase());
+            }
+
+            function getProjectDescription(folderName) {
+                const descriptions = [
+                    "Innowacyjna aplikacja internetowa z nowoczesnym interfejsem użytkownika.",
+                    "Projekt pełnofunkcjonalnej strony z responsywnym designem.",
+                    "Aplikacja wykorzystująca najnowsze technologie webowe.",
+                    "Interaktywny projekt z zaawansowanymi funkcjonalnościami.",
+                    "Strona zoptymalizowana pod kątem wydajności i SEO.",
+                    "Projekt z czystym kodem i nowoczesnymi praktykami programistycznymi."
+                ];
+                return descriptions[Math.floor(Math.random() * descriptions.length)];
+            }
+
+            function getCategory(folderName, index) {
+                const categories = ['web', 'javascript', 'html-css', 'react'];
+                return categories[index % categories.length];
+            }
+
+            function getRandomTechStack() {
+                const allTech = ['HTML5', 'CSS3', 'JavaScript', 'React', 'Node.js', 'SASS', 'Bootstrap', 'Git', 'REST API', 'Webpack'];
+                const count = Math.floor(Math.random() * 3) + 2; // 2-4 technologie
+                const shuffled = [...allTech].sort(() => 0.5 - Math.random());
+                return shuffled.slice(0, count);
+            }
+
+            function getRandomDate() {
+                const start = new Date(2022, 0, 1);
+                const end = new Date();
+                const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+                return date.toLocaleDateString('pl-PL');
+            }
+
+            function getRandomSize() {
+                const sizes = ['12.5 KB', '34.2 KB', '87.1 KB', '156 KB', '210 KB', '512 KB'];
+                return sizes[Math.floor(Math.random() * sizes.length)];
+            }
+
+            async function initProjects() {
+                try {
+                    const folders = await fetchProjectsList();
+                    
+                    if (folders.length === 0) {
+                        projectsContainer.innerHTML = `
+                            <div class="empty">
+                                <i class="fas fa-folder-open"></i>
+                                <h3>Brak projektów do pokazania</h3>
+                                <p>Sprawdź później lub skontaktuj się ze mną.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // Aktualizacja licznika projektów
+                    projectsCount.textContent = folders.length;
+                    
+                    projectsContainer.innerHTML = '';
+                    folders.forEach((folder, index) => {
+                        const card = createProjectCard(folder, index);
+                        projectsContainer.appendChild(card);
+                    });
+                } catch (err) {
+                    console.error('Błąd pobierania projektów:', err);
+                    projectsContainer.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <h3>Nie udało się wczytać projektów</h3>
+                            <p>Sprawdź połączenie z internetem i spróbuj ponownie.</p>
+                            <p style="margin-top: 1rem; font-size: 0.9rem;">Szczegóły błędu: ${err.message}</p>
+                        </div>
+                    `;
+                }
+            }
+
+            initProjects();
+        });
+    </script>
 </body>
 </html>
