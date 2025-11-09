@@ -3,32 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Darin0v0 | Elite Developer</title>
+  <title>Darin0v0 | Portfolio</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary: #8b5cf6;
-      --primary-dark: #7c3aed;
-      --primary-glow: rgba(139, 92, 246, 0.4);
-      --accent: #06b6d4;
-      --accent-glow: rgba(6, 182, 212, 0.4);
-      --gold: #fbbf24;
-      --platinum: #e5e7eb;
-      --dark-bg: #050505;
-      --dark-bg-2: #0a0a0a;
-      --dark-bg-3: #111111;
-      --card-bg: rgba(20, 20, 20, 0.7);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --text: #ffffff;
-      --text-secondary: #d1d5db;
-      --text-tertiary: #9ca3af;
-      --gradient-1: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 50%, #10b981 100%);
-      --gradient-2: linear-gradient(135deg, #f59e0b 0%, #ef4444 50%, #ec4899 100%);
-      --gradient-gold: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-      --gradient-platinum: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
-    }
-    
+    /* Reset i podstawowe style */
     * {
       margin: 0;
       padding: 0;
@@ -36,82 +15,28 @@
       font-family: 'Inter', sans-serif;
     }
     
-    html {
-      scroll-behavior: smooth;
-    }
-    
     body {
-      background-color: var(--dark-bg);
-      color: var(--text);
+      background: #0a0a0a;
+      color: #ffffff;
       line-height: 1.6;
-      min-height: 100vh;
       overflow-x: hidden;
-      background-image: 
-        radial-gradient(circle at 5% 10%, rgba(139, 92, 246, 0.08) 0%, transparent 30%),
-        radial-gradient(circle at 95% 5%, rgba(6, 182, 212, 0.08) 0%, transparent 30%),
-        radial-gradient(circle at 50% 80%, rgba(251, 191, 36, 0.05) 0%, transparent 40%),
-        linear-gradient(to bottom, var(--dark-bg), var(--dark-bg-2));
-    }
-    
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 10px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: var(--dark-bg-2);
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: var(--gradient-1);
-      border-radius: 10px;
-    }
-    
-    /* Glass Morphism Effect */
-    .glass {
-      background: rgba(20, 20, 20, 0.7);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--card-border);
-    }
-    
-    .glass-intense {
-      background: rgba(15, 15, 15, 0.8);
-      backdrop-filter: blur(30px);
-      border: 1px solid var(--card-border);
-    }
-    
-    /* Glow Effects */
-    .glow-primary {
-      box-shadow: 0 0 30px var(--primary-glow);
-    }
-    
-    .glow-accent {
-      box-shadow: 0 0 30px var(--accent-glow);
     }
     
     .container {
-      max-width: 1400px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 0 2rem;
+      padding: 0 20px;
     }
     
     /* Header */
     header {
       position: fixed;
       top: 0;
-      left: 0;
       width: 100%;
+      background: rgba(10, 10, 10, 0.95);
+      padding: 20px 0;
       z-index: 1000;
-      padding: 1.5rem 0;
-      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-    
-    .header-scrolled {
-      padding: 1rem 0;
-      background: rgba(5, 5, 5, 0.9);
-      backdrop-filter: blur(30px);
-      border-bottom: 1px solid var(--card-border);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      border-bottom: 1px solid #333;
     }
     
     .header-content {
@@ -121,91 +46,26 @@
     }
     
     .logo {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    
-    .logo-icon {
-      width: 50px;
-      height: 50px;
-      background: var(--gradient-1);
-      border-radius: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 30px var(--primary-glow);
-      animation: float 6s ease-in-out infinite;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .logo-icon::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-      transform: rotate(45deg);
-      animation: shine 3s infinite;
-    }
-    
-    @keyframes shine {
-      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-    }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      33% { transform: translateY(-10px) rotate(2deg); }
-      66% { transform: translateY(5px) rotate(-2deg); }
-    }
-    
-    .logo-text {
-      font-size: 2rem;
-      font-weight: 900;
-      background: var(--gradient-1);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 0 30px var(--primary-glow);
+      font-size: 24px;
+      font-weight: 800;
+      color: #8b5cf6;
     }
     
     nav ul {
       display: flex;
       list-style: none;
-      gap: 3rem;
+      gap: 30px;
     }
     
     nav a {
-      color: var(--text-secondary);
+      color: #ccc;
       text-decoration: none;
-      font-weight: 600;
-      transition: all 0.3s;
-      position: relative;
-      padding: 8px 0;
-      font-size: 1.1rem;
+      font-weight: 500;
+      transition: color 0.3s;
     }
     
-    nav a:hover, nav a.active {
-      color: var(--text);
-    }
-    
-    nav a::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background: var(--gradient-1);
-      transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    }
-    
-    nav a:hover::after, nav a.active::after {
-      width: 100%;
+    nav a:hover {
+      color: #8b5cf6;
     }
     
     /* Hero Section */
@@ -213,440 +73,259 @@
       min-height: 100vh;
       display: flex;
       align-items: center;
-      position: relative;
-      padding: 8rem 0 4rem;
-      overflow: hidden;
-    }
-    
-    .hero-bg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: -1;
-      opacity: 0.1;
+      padding: 100px 0 50px;
+      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
     }
     
     .hero-content {
-      max-width: 900px;
-      position: relative;
-      z-index: 2;
+      max-width: 800px;
     }
     
     .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--gradient-1);
+      display: inline-block;
+      background: #8b5cf6;
       color: white;
-      padding: 10px 20px;
-      border-radius: 50px;
-      font-size: 0.9rem;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
       font-weight: 600;
-      margin-bottom: 2rem;
-      box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+      margin-bottom: 20px;
     }
     
     .hero h1 {
-      font-size: 5rem;
-      font-weight: 900;
-      line-height: 1.1;
-      margin-bottom: 1.5rem;
-      background: linear-gradient(to right, #ffffff, var(--primary), var(--accent), var(--gold));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 0 30px rgba(139, 92, 246, 0.3);
+      font-size: 48px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      line-height: 1.2;
     }
     
     .hero p {
-      font-size: 1.4rem;
-      color: var(--text-secondary);
-      margin-bottom: 2.5rem;
-      max-width: 700px;
-      line-height: 1.8;
+      font-size: 18px;
+      color: #ccc;
+      margin-bottom: 30px;
+      line-height: 1.6;
     }
     
     .hero-stats {
       display: flex;
-      gap: 4rem;
-      margin-top: 3rem;
-    }
-    
-    .hero-stat {
-      text-align: center;
+      gap: 40px;
+      margin-top: 40px;
     }
     
     .stat-value {
-      font-size: 3rem;
+      font-size: 36px;
       font-weight: 800;
-      background: var(--gradient-1);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      line-height: 1;
-      text-shadow: 0 0 20px var(--primary-glow);
+      color: #8b5cf6;
     }
     
     .stat-label {
-      font-size: 1rem;
-      color: var(--text-tertiary);
-      margin-top: 0.5rem;
-      font-weight: 500;
+      font-size: 14px;
+      color: #999;
+      margin-top: 5px;
     }
     
     /* Projects Section */
     .projects-section {
-      padding: 8rem 0;
-      position: relative;
+      padding: 80px 0;
+      background: #111;
     }
     
     .section-header {
       text-align: center;
-      margin-bottom: 5rem;
-    }
-    
-    .section-badge {
-      display: inline-block;
-      background: var(--gradient-2);
-      color: white;
-      padding: 8px 20px;
-      border-radius: 50px;
-      font-size: 0.9rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
+      margin-bottom: 50px;
     }
     
     .section-title {
-      font-size: 4rem;
-      font-weight: 900;
-      margin-bottom: 1.5rem;
-      background: linear-gradient(to right, #ffffff, var(--accent), var(--gold));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 15px;
     }
     
     .section-subtitle {
-      font-size: 1.3rem;
-      color: var(--text-secondary);
-      max-width: 700px;
+      font-size: 18px;
+      color: #ccc;
+      max-width: 600px;
       margin: 0 auto;
-      line-height: 1.7;
     }
     
     .projects-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-      gap: 2.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 30px;
     }
     
     .project-card {
-      background: var(--card-bg);
-      border-radius: 25px;
+      background: #1a1a1a;
+      border-radius: 15px;
       overflow: hidden;
-      transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      border: 1px solid var(--card-border);
-      backdrop-filter: blur(20px);
-      position: relative;
-      transform-style: preserve-3d;
-      perspective: 1000px;
-    }
-    
-    .project-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--gradient-1);
-      transform: scaleX(0);
-      transition: transform 0.6s ease;
+      border: 1px solid #333;
+      transition: transform 0.3s ease;
     }
     
     .project-card:hover {
-      transform: translateY(-15px) rotateX(5deg) scale(1.02);
-      box-shadow: 
-        0 25px 50px rgba(0, 0, 0, 0.5),
-        0 0 0 1px rgba(139, 92, 246, 0.2),
-        0 0 80px rgba(139, 92, 246, 0.2);
-    }
-    
-    .project-card:hover::before {
-      transform: scaleX(1);
+      transform: translateY(-5px);
     }
     
     .project-image-container {
-      position: relative;
-      height: 280px;
+      height: 200px;
       overflow: hidden;
+      background: #2a2a2a;
     }
     
     .project-image {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
     
-    .project-card:hover .project-image {
-      transform: scale(1.1);
+    .project-content {
+      padding: 25px;
     }
     
-    .project-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(to bottom, transparent, rgba(5, 5, 5, 0.9));
-      display: flex;
-      align-items: flex-end;
-      padding: 2.5rem;
-      opacity: 0;
-      transition: opacity 0.5s ease;
+    .project-card h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #fff;
     }
     
-    .project-card:hover .project-overlay {
-      opacity: 1;
+    .project-card p {
+      color: #ccc;
+      margin-bottom: 20px;
+      line-height: 1.5;
     }
     
     .project-tech {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
+      margin-bottom: 20px;
     }
     
     .tech-tag {
-      background: rgba(139, 92, 246, 0.2);
-      color: var(--primary);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
+      background: rgba(139, 92, 246, 0.1);
+      color: #8b5cf6;
+      padding: 5px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
       border: 1px solid rgba(139, 92, 246, 0.3);
-      backdrop-filter: blur(10px);
-    }
-    
-    .project-content {
-      padding: 2.5rem;
-    }
-    
-    .project-card h3 {
-      font-size: 1.8rem;
-      font-weight: 800;
-      margin-bottom: 1rem;
-      color: var(--text);
-      background: linear-gradient(to right, #ffffff, var(--primary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-    }
-    
-    .project-card p {
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-      line-height: 1.7;
-      font-size: 1.1rem;
     }
     
     .project-links {
       display: flex;
-      gap: 1.5rem;
+      gap: 10px;
     }
     
     .project-link {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 10px;
-      color: var(--text);
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
       text-decoration: none;
       font-weight: 600;
-      padding: 14px 28px;
-      border-radius: 15px;
-      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      transition: all 0.3s;
       flex: 1;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .project-link::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.6s;
-    }
-    
-    .project-link:hover::before {
-      left: 100%;
+      justify-content: center;
     }
     
     .project-link.demo {
-      background: var(--gradient-1);
-      box-shadow: 0 5px 20px rgba(139, 92, 246, 0.4);
-    }
-    
-    .project-link.demo:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
+      background: #8b5cf6;
+      color: white;
     }
     
     .project-link.source {
       background: transparent;
-      border: 1px solid var(--card-border);
+      color: #ccc;
+      border: 1px solid #333;
     }
     
-    .project-link.source:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--primary);
-      box-shadow: 0 5px 20px rgba(139, 92, 246, 0.3);
+    .project-link:hover {
+      transform: translateY(-2px);
     }
     
     /* Footer */
     footer {
-      background: var(--dark-bg-2);
-      padding: 5rem 0 2rem;
-      border-top: 1px solid var(--card-border);
-      position: relative;
+      background: #0a0a0a;
+      padding: 50px 0 20px;
+      border-top: 1px solid #333;
     }
     
     .footer-content {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 4rem;
-      margin-bottom: 4rem;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 40px;
+      margin-bottom: 40px;
     }
     
     .footer-section h3 {
-      font-size: 1.5rem;
-      margin-bottom: 2rem;
-      color: var(--text);
-      position: relative;
-      display: inline-block;
-    }
-    
-    .footer-section h3::after {
-      content: '';
-      position: absolute;
-      bottom: -10px;
-      left: 0;
-      width: 50px;
-      height: 3px;
-      background: var(--gradient-1);
-      border-radius: 3px;
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #fff;
     }
     
     .footer-section p, .footer-section a {
-      color: var(--text-secondary);
-      margin-bottom: 1rem;
+      color: #ccc;
+      margin-bottom: 10px;
       display: block;
       text-decoration: none;
-      transition: all 0.3s;
-      font-size: 1.1rem;
     }
     
     .footer-section a:hover {
-      color: var(--primary);
-      transform: translateX(5px);
+      color: #8b5cf6;
     }
     
     .social-links {
       display: flex;
-      gap: 1.5rem;
-      margin-top: 2rem;
+      gap: 15px;
+      margin-top: 20px;
     }
     
     .social-link {
-      width: 55px;
-      height: 55px;
-      border-radius: 15px;
-      background: var(--card-bg);
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #1a1a1a;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--text);
+      color: #ccc;
       text-decoration: none;
-      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      border: 1px solid var(--card-border);
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .social-link::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--gradient-1);
-      opacity: 0;
-      transition: opacity 0.3s;
+      transition: all 0.3s;
+      border: 1px solid #333;
     }
     
     .social-link:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
-    }
-    
-    .social-link:hover::before {
-      opacity: 1;
-    }
-    
-    .social-link i {
-      position: relative;
-      z-index: 1;
-      transition: all 0.3s;
-    }
-    
-    .social-link:hover i {
+      background: #8b5cf6;
       color: white;
-      transform: scale(1.2);
+      transform: translateY(-2px);
     }
     
     .footer-bottom {
       text-align: center;
-      padding-top: 3rem;
-      border-top: 1px solid var(--card-border);
-      color: var(--text-tertiary);
-      font-size: 1rem;
+      padding-top: 30px;
+      border-top: 1px solid #333;
+      color: #666;
+      font-size: 14px;
     }
     
-    /* Loading and Empty States */
+    /* Loading State */
     .loading {
       text-align: center;
-      padding: 5rem;
-      color: var(--text-secondary);
+      padding: 60px;
+      color: #ccc;
       grid-column: 1 / -1;
     }
     
     .loading-spinner {
-      width: 70px;
-      height: 70px;
-      border: 4px solid rgba(139, 92, 246, 0.2);
-      border-left: 4px solid var(--primary);
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(139, 92, 246, 0.2);
+      border-left: 3px solid #8b5cf6;
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 2rem;
-      box-shadow: 0 0 20px var(--primary-glow);
+      margin: 0 auto 20px;
     }
     
     @keyframes spin {
@@ -654,69 +333,15 @@
       100% { transform: rotate(360deg); }
     }
     
-    .empty-state {
-      text-align: center;
-      padding: 6rem 2rem;
-      color: var(--text-secondary);
-      grid-column: 1 / -1;
-    }
-    
-    .empty-state i {
-      font-size: 5rem;
-      margin-bottom: 2rem;
-      color: var(--text-tertiary);
-      opacity: 0.5;
-    }
-    
-    /* Responsive Design */
-    @media (max-width: 1200px) {
-      .hero h1 {
-        font-size: 4rem;
-      }
-      
-      .section-title {
-        font-size: 3.2rem;
-      }
-      
-      .projects-grid {
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      }
-    }
-    
+    /* Responsywność */
     @media (max-width: 768px) {
-      .container {
-        padding: 0 1.5rem;
-      }
-      
-      .header-content {
-        flex-direction: column;
-        gap: 1.5rem;
-      }
-      
-      nav ul {
-        gap: 2rem;
-      }
-      
-      .hero {
-        padding: 7rem 0 3rem;
-        text-align: center;
-      }
-      
       .hero h1 {
-        font-size: 3rem;
-      }
-      
-      .hero p {
-        font-size: 1.2rem;
+        font-size: 36px;
       }
       
       .hero-stats {
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-      
-      .section-title {
-        font-size: 2.5rem;
+        flex-direction: column;
+        gap: 20px;
       }
       
       .projects-grid {
@@ -726,52 +351,36 @@
       .project-links {
         flex-direction: column;
       }
+      
+      nav ul {
+        gap: 20px;
+      }
     }
     
     @media (max-width: 480px) {
-      .container {
-        padding: 0 1rem;
-      }
-      
       .hero h1 {
-        font-size: 2.5rem;
-      }
-      
-      .hero-stats {
-        flex-direction: column;
-        gap: 2rem;
+        font-size: 28px;
       }
       
       .section-title {
-        font-size: 2rem;
+        font-size: 28px;
       }
       
-      .projects-grid {
-        grid-template-columns: 1fr;
+      .container {
+        padding: 0 15px;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Animated Background -->
-  <div class="hero-bg">
-    <canvas id="gradient-canvas"></canvas>
-  </div>
-  
-  <header id="header">
+  <header>
     <div class="container">
       <div class="header-content">
-        <div class="logo">
-          <div class="logo-icon">
-            <i class="fas fa-crown"></i>
-          </div>
-          <div class="logo-text">Darin0v0</div>
-        </div>
+        <div class="logo">Darin0v0</div>
         <nav>
           <ul>
-            <li><a href="#home" class="active">Strona Główna</a></li>
+            <li><a href="#home">Strona Główna</a></li>
             <li><a href="#projects">Portfolio</a></li>
-            <li><a href="#about">Umiejętności</a></li>
             <li><a href="#contact">Kontakt</a></li>
           </ul>
         </nav>
@@ -783,19 +392,19 @@
     <div class="container">
       <div class="hero-content">
         <div class="hero-badge">
-          <i class="fas fa-gem"></i>
-          Elite Full-Stack Developer
+          <i class="fas fa-code"></i>
+          Full-Stack Developer
         </div>
-        <h1>Tworzenie Cyfrowej <span class="gradient-text">Doskonałości</span></h1>
-        <p>Przekształcam wizjonerskie pomysły w premium doświadczenia cyfrowe. Specjalizuję się w zaawansowanych aplikacjach webowych, skalowalnych architekturach i immersyjnych interfejsach, które definiują nowoczesne standardy.</p>
+        <h1>Tworzenie Nowoczesnych Rozwiązań</h1>
+        <p>Specjalizuję się w tworzeniu zaawansowanych aplikacji webowych i responsywnych interfejsów. Każdy projekt to połączenie najnowszych technologii z doskonałym designem.</p>
         <div class="hero-stats">
           <div class="hero-stat">
             <div class="stat-value" id="projectsCount">0</div>
-            <div class="stat-label">Premium Projektów</div>
+            <div class="stat-label">Ukończonych Projektów</div>
           </div>
           <div class="hero-stat">
-            <div class="stat-value">15+</div>
-            <div class="stat-label">Zaawansowanych Technologii</div>
+            <div class="stat-value">10+</div>
+            <div class="stat-label">Technologii</div>
           </div>
           <div class="hero-stat">
             <div class="stat-value">100%</div>
@@ -809,18 +418,14 @@
   <section class="projects-section" id="projects">
     <div class="container">
       <div class="section-header">
-        <div class="section-badge">
-          <i class="fas fa-star"></i>
-          Kolekcja Mistrzostwa
-        </div>
-        <h2 class="section-title">Projekty Sygnowane</h2>
-        <p class="section-subtitle">Starannie wyselekcjonowane premium rozwiązania cyfrowe prezentujące innowacyjność, kunszt wykonania i doskonałość techniczną</p>
+        <h2 class="section-title">Moje Projekty</h2>
+        <p class="section-subtitle">Przeglądaj moje najnowsze realizacje - od koncepcji do wdrożenia</p>
       </div>
       
       <div id="projectsContainer" class="projects-grid">
         <div class="loading">
           <div class="loading-spinner"></div>
-          <p>Ładowanie Projektów...</p>
+          <p>Ładowanie projektów...</p>
         </div>
       </div>
     </div>
@@ -840,31 +445,27 @@
           <h3>Nawigacja</h3>
           <a href="#home">Strona Główna</a>
           <a href="#projects">Portfolio</a>
-          <a href="#about">Umiejętności</a>
           <a href="#contact">Kontakt</a>
         </div>
         
         <div class="footer-section">
-          <h3>Sieć</h3>
+          <h3>Social Media</h3>
           <div class="social-links">
             <a href="https://github.com/Darin0v0" class="social-link" target="_blank">
               <i class="fab fa-github"></i>
             </a>
             <a href="#" class="social-link">
-              <i class="fab fa-linkedin-in"></i>
+              <i class="fab fa-linkedin"></i>
             </a>
             <a href="#" class="social-link">
-              <i class="fab fa-dribbble"></i>
-            </a>
-            <a href="#" class="social-link">
-              <i class="fab fa-behance"></i>
+              <i class="fab fa-twitter"></i>
             </a>
           </div>
         </div>
       </div>
       
       <div class="footer-bottom">
-        <p>&copy; 2023 Darin0v0. Wszelkie Prawa Zastrzeżone. | Stworzone z <i class="fas fa-gem" style="color: var(--gold);"></i> dla Cyfrowej Doskonałości</p>
+        <p>&copy; 2023 Darin0v0. Wszelkie prawa zastrzeżone.</p>
       </div>
     </div>
   </footer>
@@ -877,68 +478,15 @@
 
       const projectsContainer = document.getElementById('projectsContainer');
       const projectsCount = document.getElementById('projectsCount');
-      const header = document.getElementById('header');
-
-      // Create gradient background
-      const canvas = document.getElementById('gradient-canvas');
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        
-        function drawGradient() {
-          const gradient = ctx.createRadialGradient(
-            canvas.width * 0.3, canvas.height * 0.3, 0,
-            canvas.width * 0.3, canvas.height * 0.3, canvas.width * 0.8
-          );
-          gradient.addColorStop(0, 'rgba(139, 92, 246, 0.1)');
-          gradient.addColorStop(0.5, 'rgba(6, 182, 212, 0.05)');
-          gradient.addColorStop(1, 'transparent');
-          
-          ctx.fillStyle = gradient;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-        
-        drawGradient();
-        window.addEventListener('resize', () => {
-          canvas.width = window.innerWidth;
-          canvas.height = window.innerHeight;
-          drawGradient();
-        });
-      }
-
-      // Header scroll effect
-      window.addEventListener('scroll', () => {
-        if (window.scrollY > 100) {
-          header.classList.add('header-scrolled');
-        } else {
-          header.classList.remove('header-scrolled');
-        }
-      });
-
-      // Smooth scrolling for navigation links
-      document.querySelectorAll('nav a').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-          e.preventDefault();
-          const targetId = this.getAttribute('href');
-          const targetElement = document.querySelector(targetId);
-          
-          window.scrollTo({
-            top: targetElement.offsetTop - 80,
-            behavior: 'smooth'
-          });
-        });
-      });
 
       // Project data
       const projectData = {
         'Serwis_Samochodowy_1': {
-          title: 'Premium Serwis Samochodowy',
-          description: 'Elitarna platforma serwisu samochodowego z zaawansowanym systemem rezerwacji, diagnostyką w czasie rzeczywistym i premium funkcjami zarządzania klientami.',
-          technologies: ['React', 'Node.js', 'MongoDB', 'TypeScript', 'Tailwind'],
+          title: 'Serwis Samochodowy',
+          description: 'Kompleksowa strona serwisu samochodowego z systemem rezerwacji online i zarządzaniem klientami.',
+          technologies: ['HTML', 'CSS', 'JavaScript', 'PHP'],
           category: 'web'
         }
-        // Add more projects here as needed
       };
 
       async function fetchProjectsList() {
@@ -953,7 +501,6 @@
           return dirs.map(d => d.name);
         } catch (err) {
           console.error('Błąd pobierania listy projektów:', err);
-          // Fallback to manual project list
           return ['Serwis_Samochodowy_1'];
         }
       }
@@ -961,42 +508,39 @@
       function createProjectCard(folderName) {
         const project = projectData[folderName] || {
           title: folderName.replace(/[-_]/g, ' '),
-          description: `Wyjątkowe rozwiązanie ${folderName.replace(/[-_]/g, ' ')} prezentujące premium design i najnowocześniejszą funkcjonalność.`,
-          technologies: ['React', 'TypeScript', 'Node.js', 'MongoDB'],
+          description: `Projekt ${folderName.replace(/[-_]/g, ' ')} - nowoczesna aplikacja webowa.`,
+          technologies: ['HTML', 'CSS', 'JavaScript'],
           category: 'web'
         };
 
         const imagePaths = [
           `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/prew.jpg`,
-          `./projects/Portfolio/${folderName}/prew.jpg`,
-          `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/projects/Portfolio/${folderName}/prew.jpg`
+          `./projects/Portfolio/${folderName}/prew.jpg`
         ];
 
         const demoUrl = `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/`;
         const sourceUrl = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/projects/Portfolio/${folderName}`;
 
         const card = document.createElement('div');
-        card.className = 'project-card glass';
+        card.className = 'project-card';
         
         card.innerHTML = `
           <div class="project-image-container">
             <img class="project-image" src="${imagePaths[0]}" alt="${project.title}" 
-                 onerror="this.onerror=()=>{this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDUwIiBoZWlnaHQ9IjI4MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMTQxNDE0Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzljYTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPiR7cHJvamVjdC50aXRsZX08L3RleHQ+PC9zdmc+'};">
-            <div class="project-overlay">
-              <div class="project-tech">
-                ${project.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
-              </div>
-            </div>
+                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWExYTFhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5OSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+JHtwcm9qZWN0LnRpdGxlfTwvdGV4dD48L3N2Zz4=';">
           </div>
           <div class="project-content">
             <h3>${project.title}</h3>
             <p>${project.description}</p>
+            <div class="project-tech">
+              ${project.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+            </div>
             <div class="project-links">
-              <a href="${demoUrl}" class="project-link demo" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-external-link-alt"></i> PODGLĄD NA ŻYWO
+              <a href="${demoUrl}" class="project-link demo" target="_blank">
+                <i class="fas fa-external-link-alt"></i> Demo
               </a>
-              <a href="${sourceUrl}" class="project-link source" target="_blank" rel="noopener noreferrer">
-                <i class="fab fa-github"></i> KOD ŹRÓDŁOWY
+              <a href="${sourceUrl}" class="project-link source" target="_blank">
+                <i class="fab fa-github"></i> Kod
               </a>
             </div>
           </div>
@@ -1012,10 +556,10 @@
         
         if (folders.length === 0) {
           projectsContainer.innerHTML = `
-            <div class="empty-state">
-              <i class="fas fa-gem"></i>
-              <h3>Przygotowanie Portfolio</h3>
-              <p>Kolekcja mistrzowskich projektów jest w przygotowaniu. Sprawdź ponownie wkrótce, aby zobaczyć wyjątkowe realizacje.</p>
+            <div class="loading">
+              <i class="fas fa-folder-open" style="font-size: 48px; margin-bottom: 20px;"></i>
+              <h3>Brak projektów</h3>
+              <p>Dodaj projekty do folderu GitHub.</p>
             </div>
           `;
           return;
@@ -1026,22 +570,8 @@
           projectsContainer.appendChild(card);
         });
         
-        // Animate projects count
-        animateValue(projectsCount, 0, folders.length, 2000);
-      }
-
-      // Animate counter
-      function animateValue(element, start, end, duration) {
-        let startTimestamp = null;
-        const step = (timestamp) => {
-          if (!startTimestamp) startTimestamp = timestamp;
-          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-          element.innerHTML = Math.floor(progress * (end - start) + start);
-          if (progress < 1) {
-            window.requestAnimationFrame(step);
-          }
-        };
-        window.requestAnimationFrame(step);
+        // Update projects count
+        projectsCount.textContent = folders.length;
       }
 
       initProjects();
