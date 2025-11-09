@@ -630,9 +630,12 @@
         const title = folderName.replace(/[-_]/g, ' ');
         const technologies = projectTechnologies[folderName] || ['HTML', 'CSS', 'JavaScript'];
         
+        // Ścieżka do obrazka prew.jpg w folderze projektu
+        const imagePath = `./projects/Portfolio/${folderName}/prew.jpg`;
+        
         card.innerHTML = `
           <div class="project-image-container">
-            <img class="project-image" src="./projects/Portfolio/${folderName}/prew.jpg" alt="${title}" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUyOTNiIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2NiZDVlMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkJyYWsga29udGEgPC90ZXh0Pjwvc3ZnPg=='">
+            <img class="project-image" src="${imagePath}" alt="${title}" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUyOTNiIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2NiZDVlMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkJyYWsga29udGEgPC90ZXh0Pjwvc3ZnPg=='">
             <div class="project-category">${category.toUpperCase()}</div>
           </div>
           <div class="project-content">
