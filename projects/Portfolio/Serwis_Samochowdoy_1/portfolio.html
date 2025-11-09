@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio - AutoElite Premium Serwis Samochodowy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+       <!-- Nawigacja -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-car"></i>
+                </div>
+                AutoElite
+            </a>
+            
+            <button class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Strona Główna</a></li>
+                <li><a href="cennik.html" class="nav-link">Cennik</a></li>
+                <li><a href="portfolio.html" class="nav-link active">Portfolio</a></li>
+                <li><a href="kontakt.html" class="nav-link">Kontakt</a></li>
+            </ul>
+            
+            <a href="kontakt.html" class="nav-cta">
+                <i class="fas fa-calendar-check"></i>
+                Umów Wizytę
+            </a>
+        </div>
+    </nav>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button class="theme-btn">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <!-- Nagłówek strony -->
+    <section class="page-header">
+        <div class="container">
+            <h1>Nasze Realizacje</h1>
+            <p>Zobacz przykłady naszych prac i przekonaj się o jakości świadczonych usług.</p>
+        </div>
+    </section>
+
+    <!-- Portfolio -->
+    <section class="portfolio">
+        <div class="container">
+            <!-- Filtry -->
+            <div class="portfolio-filters fade-in">
+                <button class="filter-btn active" data-filter="all">Wszystkie</button>
+                <button class="filter-btn" data-filter="diagnostyka">Diagnostyka</button>
+                <button class="filter-btn" data-filter="silnik">Naprawy Silników</button>
+                <button class="filter-btn" data-filter="serwis">Serwis</button>
+                <button class="filter-btn" data-filter="elektryka">Elektryka</button>
+            </div>
+
+            <!-- Galeria -->
+            <div class="portfolio-grid">
+                <!-- Projekt 1 -->
+                <div class="portfolio-item fade-in" data-category="silnik">
+                    <div class="portfolio-image">
+                        <img src="https://images.unsplash.com/photo-1603712610494-90b31dca275f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80" alt="Naprawa silnika BMW">
+                        <div class="portfolio-overlay">
+                            <div class="portfolio-content">
+                                <h3>Regeneracja Silnika</h3>
+                                <p>BMW Serii 5 • 2018</p>
+                                <span class="portfolio-category">Naprawy Silników</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portfolio-info">
+                        <h4>BMW 520d - Regeneracja</h4>
+                        <p>Kompleksowa regeneracja silnika wysokoprężnego po awarii turbosprężarki.</p>
+                        <div class="portfolio-details">
+                            <span><i class="fas fa-clock"></i> 3 dni</span>
+                            <span><i class="fas fa-tools"></i> Silnik</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projekt 2 -->
+                <div class="portfolio-item fade-in" data-category="diagnostyka">
+                    <div class="portfolio-image">
+                        <img src="https://images.unsplash.com/photo-1621905252507-b35492cc74b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1738&q=80" alt="Diagnostyka Audi">
+                        <div class="portfolio-overlay">
+                            <div class="portfolio-content">
+                                <h3>Diagnostyka Komputerowa</h3>
+                                <p>Audi A6 • 2020</p>
+                                <span class="portfolio-category">Diagnostyka</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portfolio-info">
+                        <h4>Audi A6 - Diagnostyka Systemów</h4>
+                        <p>Zaawansowana diagnostyka układów elektronicznych i bezpieczeństwa.</p>
+                        <div class="portfolio-details">
+                            <span><i class="fas fa-clock"></i> 2 godziny</span>
+                            <span><i class="fas fa-microchip"></i> Elektronika</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projekt 3 -->
+                <div class="portfolio-item fade-in" data-category="serwis">
+                    <div class="portfolio-image">
+                        <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80" alt="Serwis Mercedes">
+                        <div class="portfolio-overlay">
+                            <div class="portfolio-content">
+                                <h3>Kompleksowy Serwis</h3>
+                                <p>Mercedes Klasy C • 2019</p>
+                                <span class="portfolio-category">Serwis</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portfolio-info">
+                        <h4>Mercedes C200 - Pełny Serwis</h4>
+                        <p>Wymiana oleju, filtrów, płynów oraz przegląd zawieszenia i hamulców.</p>
+                        <div class="portfolio-details">
+                            <span><i class="fas fa-clock"></i> 4 godziny</span>
+                            <span><i class="fas fa-oil-can"></i> Eksploatacja</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projekt 4 -->
+                <div class="portfolio-item fade-in" data-category="elektryka">
+                    <div class="portfolio-image">
+                        <img src="https://images.unsplash.com/photo-1621905251180-73ccfd099542?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80" alt="Elektryka Volkswagen">
+                        <div class="portfolio-overlay">
+                            <div class="portfolio-content">
+                                <h3>Naprawa Instalacji</h3>
+                                <p>Volkswagen Golf • 2017</p>
+                                <span class="portfolio-category">Elektryka</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portfolio-info">
+                        <h4>VW Golf - Elektryka</h4>
+                        <p>Naprawa instalacji elektrycznej i systemu multimedialnego.</p>
+                        <div class="portfolio-details">
+                            <span><i class="fas fa-clock"></i> 1 dzień</span>
+                            <span><i class="fas fa-bolt"></i> Elektryka</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projekt 5 -->
+                <div class="portfolio-item fade-in" data-category="silnik">
+                    <div class="portfolio-image">
+                        <img src="https://images.unsplash.com/photo-1494976388531-d1058494cdd8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80" alt="Mustang engine">
+                        <div class="portfolio-overlay">
+                            <div class="portfolio-content">
+                                <h3>Optymalizacja Silnika</h3>
+                                <p>Ford Mustang • 2021</p>
+                                <span class="portfolio-category">Naprawy Silników</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portfolio-info">
+                        <h4>Ford Mustang - Chiptuning</h4>
+                        <p>Optymalizacja mocy i momentu obrotowego silnika benzynowego.</p>
+                        <div class="portfolio-details">
+                            <span><i class="fas fa-clock"></i> 6 godzin</span>
+                            <span><i class="fas fa-horse-head"></i> Moc</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projekt 6 -->
+                <div class="portfolio-item fade-in" data-category="serwis">
+                    <div class="portfolio-image">
+                        <img src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80" alt="Porsche service">
+                        <div class="portfolio-overlay">
+                            <div class="portfolio-content">
+                                <h3>Przegląd Roczny</h3>
+                                <p>Porsche 911 • 2022</p>
+                                <span class="portfolio-category">Serwis</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="portfolio-info">
+                        <h4>Porsche 911 - Przegląd</h4>
+                        <p>Kompleksowy przegląd roczny sportowego samochodu premium.</p>
+                        <div class="portfolio-details">
+                            <span><i class="fas fa-clock"></i> 1 dzień</span>
+                            <span><i class="fas fa-star"></i> Premium</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stopka -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>AutoElite Premium</h3>
+                    <p>Profesjonalny serwis samochodowy z pasją do motoryzacji.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h3>Usługi</h3>
+                    <ul class="footer-links">
+                        <li><a href="cennik.html"><i class="fas fa-chevron-right"></i> Diagnostyka</a></li>
+                        <li><a href="cennik.html"><i class="fas fa-chevron-right"></i> Naprawy Silników</a></li>
+                        <li><a href="cennik.html"><i class="fas fa-chevron-right"></i> Serwis</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Nawigacja</h3>
+                    <ul class="footer-links">
+                        <li><a href="index.html"><i class="fas fa-chevron-right"></i> Strona Główna</a></li>
+                        <li><a href="cennik.html"><i class="fas fa-chevron-right"></i> Cennik</a></li>
+                        <li><a href="portfolio.html"><i class="fas fa-chevron-right"></i> Portfolio</a></li>
+                        <li><a href="kontakt.html"><i class="fas fa-chevron-right"></i> Kontakt</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Kontakt</h3>
+                    <ul class="footer-links">
+                        <li><a href="#"><i class="fas fa-map-marker-alt"></i> ul. Premium 123, Warszawa</a></li>
+                        <li><a href="#"><i class="fas fa-phone"></i> +48 123 456 789</a></li>
+                        <li><a href="#"><i class="fas fa-envelope"></i> kontakt@autoelite.pl</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="footer-logo">
+                    <i class="fas fa-car"></i>
+                    AutoElite
+                </div>
+                <p>&copy; 2023 AutoElite Premium. Wszelkie prawa zastrzeżone.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/script.js" defer></script>
+</body>
+</html>
