@@ -148,10 +148,13 @@
       margin: 0 auto;
     }
     
+    /* Grid z 2 kafelkami w linii */
     .projects-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      grid-template-columns: repeat(2, 1fr);
       gap: 30px;
+      max-width: 1000px;
+      margin: 0 auto;
     }
     
     .project-card {
@@ -160,6 +163,9 @@
       overflow: hidden;
       border: 1px solid #333;
       transition: transform 0.3s ease;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
     }
     
     .project-card:hover {
@@ -170,6 +176,7 @@
       height: 200px;
       overflow: hidden;
       background: #2a2a2a;
+      flex-shrink: 0;
     }
     
     .project-image {
@@ -180,6 +187,9 @@
     
     .project-content {
       padding: 25px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
     }
     
     .project-card h3 {
@@ -193,6 +203,7 @@
       color: #ccc;
       margin-bottom: 20px;
       line-height: 1.5;
+      flex-grow: 1;
     }
     
     .project-tech {
@@ -215,6 +226,7 @@
     .project-links {
       display: flex;
       gap: 10px;
+      margin-top: auto;
     }
     
     .project-link {
@@ -334,6 +346,13 @@
     }
     
     /* Responsywność */
+    @media (max-width: 1024px) {
+      .projects-grid {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 800px;
+      }
+    }
+    
     @media (max-width: 768px) {
       .hero h1 {
         font-size: 36px;
@@ -346,6 +365,7 @@
       
       .projects-grid {
         grid-template-columns: 1fr;
+        max-width: 500px;
       }
       
       .project-links {
@@ -368,6 +388,10 @@
       
       .container {
         padding: 0 15px;
+      }
+      
+      .projects-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -486,6 +510,24 @@
           description: 'Kompleksowa strona serwisu samochodowego z systemem rezerwacji online i zarządzaniem klientami.',
           technologies: ['HTML', 'CSS', 'JavaScript', 'PHP'],
           category: 'web'
+        },
+        'Projekt_2': {
+          title: 'Aplikacja Webowa',
+          description: 'Nowoczesna aplikacja webowa z zaawansowanymi funkcjami i responsywnym designem.',
+          technologies: ['React', 'Node.js', 'MongoDB'],
+          category: 'web'
+        },
+        'Projekt_3': {
+          title: 'Sklep Internetowy',
+          description: 'Pełnoprawny sklep internetowy z systemem płatności i panelem administracyjnym.',
+          technologies: ['Vue.js', 'Express', 'MySQL'],
+          category: 'web'
+        },
+        'Projekt_4': {
+          title: 'Platforma Edukacyjna',
+          description: 'Interaktywna platforma do nauki online z systemem śledzenia postępów.',
+          technologies: ['Angular', 'Firebase', 'TypeScript'],
+          category: 'web'
         }
       };
 
@@ -501,7 +543,8 @@
           return dirs.map(d => d.name);
         } catch (err) {
           console.error('Błąd pobierania listy projektów:', err);
-          return ['Serwis_Samochodowy_1'];
+          // Zwracamy przykładowe projekty dla demonstracji
+          return ['Serwis_Samochodowy_1', 'Projekt_2', 'Projekt_3', 'Projekt_4'];
         }
       }
 
