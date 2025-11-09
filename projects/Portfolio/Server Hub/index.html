@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ServerHub - Serwery multimedialne</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #6c63ff;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --accent: #f97316;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --body-bg: #f1f5f9;
+            --header-bg: rgba(255, 255, 255, 0.95);
+            --footer-bg: #1e293b;
+            --shadow: rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+
+        .dark-theme {
+            --primary: #5e72e4;
+            --primary-dark: #4d62d1;
+            --secondary: #7b68ee;
+            --dark: #f1f5f9;
+            --light: #1e293b;
+            --gray: #94a3b8;
+            --accent: #fb923c;
+            --card-bg: #2d3748;
+            --text-color: #f1f5f9;
+            --body-bg: #1a202c;
+            --header-bg: rgba(26, 32, 44, 0.95);
+            --footer-bg: #0f141c;
+            --shadow: rgba(0, 0, 0, 0.25);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: var(--transition);
+        }
+        
+        body {
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text-color);
+            line-height: 1.6;
+            background-color: var(--body-bg);
+            overflow-x: hidden;
+        }
+        
+        h1, h2, h3, h4, h5 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            line-height: 1.3;
+            color: var(--text-color);
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Header & Navigation */
+        header {
+            background-color: var(--header-bg);
+            box-shadow: 0 2px 10px var(--shadow);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 0;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 0.5rem;
+            color: var(--secondary);
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            align-items: center;
+        }
+        
+        .nav-links li {
+            margin-left: 2rem;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 600;
+            font-size: 1rem;
+            transition: color 0.3s;
+            position: relative;
+        }
+        
+        .nav-links a:after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background-color: var(--primary);
+            transition: width 0.3s;
+        }
+        
+        .nav-links a:hover:after {
+            width: 100%;
+        }
+        
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-color);
+            margin-left: 1rem;
+            padding: 0.5rem;
+            border-radius: 50%;
+            background: var(--body-bg);
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 100%;
+            background: var(--primary-dark);
+            transition: var(--transition);
+            z-index: -1;
+            border-radius: 50px;
+        }
+        
+        .btn:hover:before {
+            width: 100%;
+        }
+        
+        .btn-accent {
+            background: var(--accent);
+        }
+        
+        .btn-accent:before {
+            background: #ea580c;
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 10rem 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+        
+        .hero:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23ffffff' fill-opacity='0.1' d='M0,128L48,117.3C96,107,192,85,288,112C384,139,480,213,576,224C672,235,768,181,864,160C960,139,1056,149,1152,144C1248,139,1344,117,1392,106.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: center bottom;
+        }
+        
+        .hero-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+        }
+        
+        .hero-text {
+            flex: 1;
+            padding-right: 2rem;
+            animation: fadeIn 1s ease;
+        }
+        
+        .hero-heading {
+            font-size: 3.2rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+        
+        .hero-heading span {
+            color: #ffd166;
+            display: block;
+        }
+        
+        .hero-desc {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+            max-width: 90%;
+        }
+        
+        .location-tag {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.7rem 1.5rem;
+            border-radius: 50px;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+        }
+        
+        .location-tag i {
+            margin-right: 0.5rem;
+            color: #ffd166;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .hero-image {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .hero-image img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transform: perspective(800px) rotateY(10deg);
+        }
+        
+        /* Features Section */
+        .features {
+            padding: 6rem 0;
+            background-color: var(--body-bg);
+        }
+        
+        .section-heading {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .section-heading h2 {
+            font-size: 2.5rem;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-heading h2:after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 3px;
+            background: var(--primary);
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .section-heading p {
+            font-size: 1.2rem;
+            color: var(--gray);
+            max-width: 700px;
+            margin: 1.5rem auto 0;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 10px 30px var(--shadow);
+            transition: var(--transition);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 0;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+            transition: var(--transition);
+        }
+        
+        .feature-card:hover:before {
+            height: 100%;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px var(--shadow);
+        }
+        
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: white;
+            font-size: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .feature-card p {
+            color: var(--gray);
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Services Section */
+        .services {
+            padding: 6rem 0;
+            background: var(--body-bg);
+        }
+        
+        .services-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2.5rem;
+        }
+        
+        .service-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px var(--shadow);
+            transition: var(--transition);
+            position: relative;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px var(--shadow);
+        }
+        
+        .service-img {
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .service-img:before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath fill='%23ffffff' fill-opacity='0.1' d='M0,0L100,0L100,100L0,100Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+        }
+        
+        .service-content {
+            padding: 2.5rem 2rem;
+        }
+        
+        .service-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+        }
+        
+        .service-content p {
+            color: var(--gray);
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Fedora Section */
+        .fedora-section {
+            padding: 8rem 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .fedora-section:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23ffffff' fill-opacity='0.1' d='M0,128L48,117.3C96,107,192,85,288,112C384,139,480,213,576,224C672,235,768,181,864,160C960,139,1056,149,1152,144C1248,139,1344,117,1392,106.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: center bottom;
+        }
+        
+        .fedora-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 3rem;
+            position: relative;
+        }
+        
+        .fedora-text {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .fedora-text h2 {
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+        
+        .fedora-text p {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+        
+        .fedora-image {
+            flex: 1;
+            position: relative;
+        }
+        
+        .fedora-image img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: perspective(800px) rotateY(-10deg);
+        }
+        
+        /* Pricing Section */
+        .pricing {
+            padding: 6rem 0;
+            background-color: var(--body-bg);
+            text-align: center;
+        }
+        
+        .pricing-text {
+            max-width: 800px;
+            margin: 0 auto 3rem;
+        }
+        
+        .pricing-text h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .pricing-text p {
+            font-size: 1.2rem;
+            color: var(--gray);
+            margin-bottom: 2rem;
+        }
+        
+        .contact-form {
+            background: var(--card-bg);
+            padding: 3.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px var(--shadow);
+            max-width: 650px;
+            margin: 0 auto;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .contact-form:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+        }
+        
+        .form-group {
+            margin-bottom: 1.8rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 1px solid var(--gray);
+            border-radius: 8px;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 1rem;
+            background: var(--card-bg);
+            color: var(--text-color);
+            transition: var(--transition);
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .phone-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        /* CTA Section */
+        .cta {
+            padding: 8rem 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23ffffff' fill-opacity='0.1' d='M0,128L48,117.3C96,107,192,85,288,112C384,139,480,213,576,224C672,235,768,181,864,160C960,139,1056,149,1152,144C1248,139,1344,117,1392,106.7L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            background-position: center bottom;
+        }
+        
+        .cta h2 {
+            font-size: 2.8rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cta p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 2.5rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .btn-light {
+            background: white;
+            color: var(--primary);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .btn-light:before {
+            background: #f0f0f0;
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--footer-bg);
+            color: white;
+            padding: 5rem 0 2rem;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+        
+        .footer-column h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: white;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .footer-column h3:after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 2px;
+            background: var(--primary);
+            bottom: -8px;
+            left: 0;
+        }
+        
+        .footer-column p, .footer-column a {
+            opacity: 0.8;
+            color: white;
+            margin-bottom: 0.8rem;
+            display: block;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .footer-column a:hover {
+            opacity: 1;
+            color: var(--primary);
+            padding-left: 5px;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .social-links a {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        
+        .social-links a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 2.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+        
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) perspective(800px) rotateY(10deg); }
+            50% { transform: translateY(-15px) perspective(800px) rotateY(10deg); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .hero-content, .fedora-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .hero-text, .fedora-text {
+                padding-right: 0;
+                margin-bottom: 3rem;
+                text-align: center;
+            }
+            
+            .hero-buttons {
+                justify-content: center;
+            }
+            
+            .hero-heading {
+                font-size: 2.8rem;
+            }
+            
+            .fedora-text h2,
+            .fedora-text p {
+                text-align: center;
+            }
+            
+            .hero-image img,
+            .fedora-image img {
+                transform: none;
+            }
+            
+            .phone-fields {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero-heading {
+                font-size: 2.3rem;
+            }
+            
+            .section-heading h2 {
+                font-size: 2rem;
+            }
+            
+            .fedora-text h2 {
+                font-size: 2rem;
+            }
+            
+            .hero-desc {
+                max-width: 100%;
+            }
+            
+            .contact-form {
+                padding: 2rem;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+            }
+        }
+        
+        /* Mobile menu */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 70px);
+                background: var(--card-bg);
+                flex-direction: column;
+                padding: 2rem;
+                transition: var(--transition);
+                box-shadow: 0 10px 30px var(--shadow);
+            }
+            
+            .nav-links.active {
+                left: 0;
+            }
+            
+            .nav-links li {
+                margin: 1.5rem 0;
+            }
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Form status message */
+        .form-status {
+            display: none;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .form-status.success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .form-status.error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+        }
+
+        /* Notification system */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateX(100%);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .notification.success {
+            background-color: #10b981;
+        }
+        
+        .notification.error {
+            background-color: #ef4444;
+        }
+        
+        .notification.info {
+            background-color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header & Navigation -->
+    <header>
+        <div class="container">
+            <nav>
+                <a href="#" class="logo">
+                    <i class="fas fa-server"></i>
+                   ServerHub
+                </a>
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="#features">Oferta</a></li>
+                    <li><a href="#services">Usługi</a></li>
+                    <li><a href="#fedora">Server</a></li>
+                    <li><a href="#pricing">Kontakt</a></li>
+                    <li>
+                        <button class="theme-toggle" id="themeToggle">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </li>
+                    <li><a href="#contact" class="btn">Zapytaj o wycenę</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Notification system -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-heading">Wydajne serwery <span>multimedialne</span> </h1>
+                    <p class="hero-desc">Specjalistyczne rozwiązania do Strumieniowania wideo 4K dla wymagających klientów. Oferujemy konfiguracje dopasowane do indywidualnych wymagań.</p>
+                    <div class="location-tag">
+                        <i class="fas fa-map-marker-alt"></i> Usługi dostępne na terenie Rzeszowa i okolic
+                    </div>
+                    <div class="hero-buttons">
+                        <a href="#services" class="btn">Odkryj usługi</a>
+                        <a href="#contact" class="btn btn-accent">Skontaktuj się</a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fflathub.org%2Fapi%2FappOgImage%2Forg.jellyfin.JellyfinServer%3Flocale%3Den&f=1&nofb=1&ipt=c814cde80056ebedce1db0568bc722779eb97bef006452c122b78c9ba1155815" alt="Server Visualization">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-heading">
+                <h2>Dlaczego warto wybrać Jellifin?</h2>
+                <p>Oferujemy rozwiązania dopasowane do indywidualnych potrzeb każdego klienta</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Optymalizacja pod 4K</h3>
+                    <p>Nasze serwery zapewniają płynne odtwarzanie wideo w rozdzielczości 4K i wyższej.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Bezpieczeństwo</h3>
+                    <p>Gwarantujemy ochronę Twoich danych dzięki zaawansowanym rozwiązaniom bezpieczeństwa.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sliders-h"></i>
+                    </div>
+                    <h3>Elastyczna konfiguracja</h3>
+                    <p>Dopasowujemy specyfikację serwera do Twoich konkretnych potrzeb i wymagań.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <h3>Wysoka wydajność</h3>
+                    <p>Oferujemy najwyższą wydajność dzięki nowoczesnemu sprzętowi i optymalizacji.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3>Szybkie wdrożenie</h3>
+                    <p>Gotowość do działania w ciągu 24 godzin od zatwierdzenia konfiguracji.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Skalowalność</h3>
+                    <p>Z łatwością zwiększysz moce obliczeniowe w miarę rozwoju Twoich potrzeb.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fedora Server Section -->
+    <section class="fedora-section" id="fedora">
+        <div class="container">
+            <div class="fedora-content">
+                <div class="fedora-text">
+                    <h2> Server zoptymalizowany pod wideo 4K</h2>
+                    <p>Wykorzystujemy Fedora Server z Oprogramowaniem Jellifin - nowoczesną, stabilną i wydajną platformę, którą zoptymalizowaliśmy specjalnie do streamowania wysokiej jakości wideo.</p>
+                    <p>Nasza autorska konfiguracja zapewnia maksymalną wydajność i kompatybilność z formatami 4K oraz HDR.</p>
+                    <a href="#contact" class="btn btn-light">Dowiedz się więcej</a>
+                </div>
+                <div class="fedora-image">
+                    <img src="https://jellyfin.org/assets/images/10.8-home-4a73a92bf90d1eeffa5081201ca9c7bb.png" alt="Fedora Server 4K Optimization">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Services Section -->
+    <section class="services" id="services">
+        <div class="container">
+            <div class="section-heading">
+                <h2>Nasze usługi</h2>
+                <p>Kompleksowe rozwiązania multimedialne dla wymagających klientów</p>
+            </div>
+            <div class="services-container">
+                <div class="service-card">
+                    <div class="service-img">
+                        <i class="fas fa-film"></i>
+                    </div>
+                    <div class="service-content">
+                        <h3>Hosting Wideo FHD/4K</h3>
+                        <p>Specjalistyczne serwery przystosowane do hostowania i streamowania wideo w wysokiej rozdzielczości.</p>
+                        <a href="#contact" class="btn">Dowiedz się więcej</a>
+                    </div>
+                </div>
+                <div class="service-card">
+                    <div class="service-img">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <div class="service-content">
+                        <h3>Strumieniowe Muzyki</h3>
+                        <p>Optymalizacja dla platform audio z niskimi opóźnieniami i doskonałą jakością dźwięku.</p>
+                        <a href="#contact" class="btn">Dowiedz się więcej</a>
+                    </div>
+                </div>
+                <div class="service-card">
+                    <div class="service-img">
+                        <i class="fas fa-photo-video"></i>
+                    </div>
+                    <div class="service-content">
+                        <h3>Przechowywanie Multimediów/Danych</h3>
+                        <p>Bezpieczne i wydajne przechowywanie dużych zbiorów multimedialnych z szybkim dostępem.</p>
+                        <a href="#contact" class="btn">Dowiedz się więcej</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="pricing-text">
+                <h2>Indywidualne podejście do cen</h2>
+                <p>Każdy klient jest inny, dlatego oferujemy elastyczne ceny dopasowane do konkretnych wymagań. Skontaktuj się z nami, aby otrzymać spersonalizowaną wycenę lub zadzwoń.</p>
+            </div>
+            <div class="contact-form" id="contact">
+                <h3>Skontaktuj się w sprawie wyceny</h3>
+                <div id="formStatus" class="form-status"></div>
+                
+                   <h3>Lub zadzwoń: 531 673 739</h3>
+                   <br>
+                <div id="formStatus" class="form-status"></div>
+                <form id="pricingForm">
+                    <div class="form-group">
+                        <label for="name">Imię i nazwisko</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Adres e-mail</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="phone-fields">
+                        <div class="form-group">
+                            <label for="phone1">Numer telefonu 1</label>
+                            <input type="tel" id="phone1" name="phone1" placeholder="+48 123 456 789">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone2">Numer telefonu 2 (opcjonalnie)</label>
+                            <input type="tel" id="phone2" name="phone2" placeholder="+48 987 654 321">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="service">Preferowana usługa</label>
+                        <select id="service" name="service">
+                            <option value="video">Hosting Wideo FHD/4K</option>
+                            <option value="audio">Strumieniowe Muzyki</option>
+                            <option value="storage">Przechowywanie Multimediów/Danych</option>
+                            <option value="other">Inna usługa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="requirements">Specyficzne wymagania</label>
+                        <textarea id="requirements" name="requirements" placeholder="Opisz swoje potrzeby, oczekiwaną wydajność, ilość danych itp."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-accent">Wyślij zapytanie</button>
+                    <div class="spinner" id="formSpinner"></div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>Gotowy na własny serwer multimedialny?</h2>
+            <p>Skontaktuj się z nami już dziś, a przygotujemy indywidualną ofertę dostosowaną do Twoich potrzeb.</p>
+            <a href="#contact" class="btn btn-light">Rozpocznij współpracę</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Jellifin</h3>
+                    <p>Profesjonalne serwery multimedialne oparte na Dokerach Server dla wymagających klientów. Specjalizujemy się w Strumieniu Wideo 4K.</p>
+                    
+                </div>
+                <div class="footer-column">
+                    <h3>Usługi</h3>
+                    <a href="#">Hosting Wideo FHD/4K</a>
+                    <a href="#">Strumieniowe Muzyki</a>
+                    <a href="#">Przechowywanie Multimediów/Danych</a>
+                    <a href="#">Serwery Dedykowane</a>
+                </div>
+                <div class="footer-column">
+                    <h3>Kontakt</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> Rzeszów</p>
+                    <p><i class="fas fa-phone"></i> +48 531 673 739 </p>
+                    <p><i class="fas fa-envelope"></i> 017se13ed@mozmail.com</p>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 ServerHub. Wszelkie prawa zastrzeżone.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Inicjalizacja EmailJS z Twoimi danymi
+        emailjs.init("rn4_dicMrJgXFyCqh");
+        
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+        
+        // Check for saved theme preference or respect OS preference
+        if (localStorage.getItem('theme') === 'dark' || 
+            (window.matchMedia('(prefers-color-scheme: dark)').matches && !localStorage.getItem('theme'))) {
+            document.body.classList.add('dark-theme');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-theme');
+            
+            if (document.body.classList.contains('dark-theme')) {
+                localStorage.setItem('theme', 'dark');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        });
+
+        // Mobile menu functionality
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navLinks = document.getElementById('navLinks');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            const icon = mobileMenuBtn.querySelector('i');
+            if (navLinks.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        });
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                // Close mobile menu if open
+                if (navLinks.classList.contains('active')) {
+                    navLinks.classList.remove('active');
+                    mobileMenuBtn.querySelector('i').classList.add('fa-bars');
+                    mobileMenuBtn.querySelector('i').classList.remove('fa-times');
+                }
+                
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 100,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Function to show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        // Function to show form status message
+        function showFormStatus(message, type) {
+            const statusElement = document.getElementById('formStatus');
+            statusElement.textContent = message;
+            statusElement.className = 'form-status ' + type;
+            statusElement.style.display = 'block';
+            
+            // Also show notification
+            showNotification(message, type);
+            
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                statusElement.style.opacity = '0';
+                setTimeout(() => {
+                    statusElement.style.display = 'none';
+                    statusElement.style.opacity = '1';
+                }, 1000);
+            }, 5000);
+        }
+
+        // Form submission handling with EmailJS
+        document.getElementById('pricingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Basic form validation
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone1 = document.getElementById('phone1').value;
+            
+            if (!name || !email || !phone1) {
+                showFormStatus('Proszę wypełnić wymagane pola (imię i nazwisko, adres e-mail oraz numer telefonu 1).', 'error');
+                return;
+            }
+            
+            // Show loading spinner
+            const spinner = document.getElementById('formSpinner');
+            const submitButton = this.querySelector('button[type="submit"]');
+            spinner.style.display = 'block';
+            submitButton.disabled = true;
+            
+            // Send email using EmailJS with your service and template IDs
+            emailjs.sendForm('service_7eiei0w', 'template_6st2r98', this)
+                .then(function(response) {
+                    console.log('SUCCESS!', response.status, response.text);
+                    showFormStatus('Dziękujemy za zapytanie! Skontaktujemy się z Tobą w ciągu 24 godzin w celu przygotowania indywidualnej wyceny.', 'success');
+                    document.getElementById('pricingForm').reset();
+                }, function(error) {
+                    console.log('FAILED...', error);
+                    showFormStatus('Wystąpił błąd podczas wysyłania formularza. Proszę spróbować ponownie później lub skontaktować się bezpośrednio.', 'error');
+                })
+                .finally(function() {
+                    // Hide loading spinner
+                    spinner.style.display = 'none';
+                    submitButton.disabled = false;
+                });
+        });
+
+        // Add animation on scroll
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = 1;
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe elements for animation
+        document.querySelectorAll('.feature-card, .service-card, .contact-form').forEach(el => {
+            el.style.opacity = 0;
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            observer.observe(el);
+        });
+    </script>
+</body>
+</html>
