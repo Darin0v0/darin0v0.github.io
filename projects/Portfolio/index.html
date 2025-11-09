@@ -3,26 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfolio Projektów | Darin0v0</title>
+  <title>Darin0v0 | Elite Portfolio</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-      --dark-bg: #0f172a;
-      --card-bg: #1e293b;
-      --text: #f8fafc;
-      --text-secondary: #cbd5e1;
-      --border: #334155;
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-glow: rgba(99, 102, 241, 0.3);
+      --dark-bg: #0a0a0a;
+      --dark-bg-2: #111111;
+      --card-bg: rgba(30, 30, 30, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-tertiary: #71717a;
       --accent: #06b6d4;
-      --success: #10b981;
+      --accent-2: #10b981;
+      --accent-3: #f59e0b;
+      --gradient-1: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+      --gradient-2: linear-gradient(135deg, #06b6d4 0%, #10b981 50%, #84cc16 100%);
     }
     
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Inter', sans-serif;
+    }
+    
+    html {
+      scroll-behavior: smooth;
     }
     
     body {
@@ -30,23 +41,58 @@
       color: var(--text);
       line-height: 1.6;
       min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.05) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 20%),
+        radial-gradient(circle at 50% 50%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--dark-bg);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 10px;
+    }
+    
+    /* Particles Background */
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
     }
     
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 0 1.5rem;
+      padding: 0 2rem;
     }
     
     /* Header */
     header {
-      background: linear-gradient(135deg, var(--dark-bg) 0%, #1e293b 100%);
-      padding: 2rem 0;
-      border-bottom: 1px solid var(--border);
-      position: sticky;
+      position: fixed;
       top: 0;
-      z-index: 100;
-      backdrop-filter: blur(10px);
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      padding: 1.5rem 0;
+      background: rgba(10, 10, 10, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--card-border);
+      transition: all 0.3s ease;
+    }
+    
+    .header-scrolled {
+      padding: 1rem 0;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     }
     
     .header-content {
@@ -62,22 +108,26 @@
     }
     
     .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      border-radius: 8px;
+      width: 45px;
+      height: 45px;
+      background: var(--gradient-1);
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 0 20px var(--primary-glow);
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
     }
     
     .logo-text {
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-    
-    .logo-text span {
-      background: linear-gradient(to right, var(--primary), var(--accent));
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: var(--gradient-1);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -86,211 +136,280 @@
     nav ul {
       display: flex;
       list-style: none;
-      gap: 2rem;
+      gap: 2.5rem;
     }
     
     nav a {
       color: var(--text-secondary);
       text-decoration: none;
       font-weight: 500;
-      transition: color 0.3s;
+      transition: all 0.3s;
       position: relative;
+      padding: 8px 0;
     }
     
     nav a:hover, nav a.active {
       color: var(--text);
     }
     
-    nav a.active::after {
+    nav a::after {
       content: '';
       position: absolute;
-      bottom: -8px;
+      bottom: 0;
       left: 0;
-      width: 100%;
+      width: 0;
       height: 2px;
-      background: var(--primary);
+      background: var(--gradient-1);
+      transition: width 0.3s ease;
+    }
+    
+    nav a:hover::after, nav a.active::after {
+      width: 100%;
     }
     
     /* Hero Section */
     .hero {
-      padding: 4rem 0;
-      text-align: center;
-      background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding: 8rem 0 4rem;
+    }
+    
+    .hero-content {
+      max-width: 800px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary);
+      padding: 8px 16px;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      backdrop-filter: blur(10px);
+    }
+    
+    .hero-badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--primary);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
     
     .hero h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      background: linear-gradient(to right, var(--text), var(--primary));
+      font-size: 4rem;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(to right, #ffffff, var(--primary), var(--accent));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
     }
     
     .hero p {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       color: var(--text-secondary);
-      max-width: 700px;
-      margin: 0 auto 2rem;
+      margin-bottom: 2.5rem;
+      max-width: 600px;
     }
     
-    .stats {
+    .hero-stats {
       display: flex;
-      justify-content: center;
-      gap: 2rem;
-      margin-top: 2rem;
+      gap: 3rem;
+      margin-top: 3rem;
     }
     
-    .stat {
+    .hero-stat {
       text-align: center;
     }
     
     .stat-value {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--primary);
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1;
     }
     
     .stat-label {
       font-size: 0.9rem;
-      color: var(--text-secondary);
+      color: var(--text-tertiary);
+      margin-top: 0.5rem;
     }
     
-    /* Main Content */
-    main {
-      padding: 3rem 0;
+    /* Projects Section */
+    .projects-section {
+      padding: 6rem 0;
+      position: relative;
     }
     
     .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+    
+    .section-badge {
+      display: inline-block;
+      background: var(--gradient-2);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     
     .section-title {
-      font-size: 1.8rem;
-      font-weight: 700;
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(to right, #ffffff, var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
     
-    .filter-container {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-    
-    .filter-btn {
-      background: transparent;
+    .section-subtitle {
+      font-size: 1.2rem;
       color: var(--text-secondary);
-      border: 1px solid var(--border);
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 0.9rem;
-    }
-    
-    .filter-btn:hover, .filter-btn.active {
-      background-color: var(--primary);
-      color: white;
-      border-color: var(--primary);
+      max-width: 600px;
+      margin: 0 auto;
     }
     
     .projects-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
       gap: 2rem;
     }
     
     .project-card {
-      background-color: var(--card-bg);
-      border-radius: 12px;
+      background: var(--card-bg);
+      border-radius: 20px;
       overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      height: 100%;
+      transition: all 0.4s ease;
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(10px);
+      position: relative;
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }
+    
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--gradient-1);
+      transform: scaleX(0);
+      transition: transform 0.4s ease;
     }
     
     .project-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      transform: translateY(-10px) rotateX(5deg);
+      box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(99, 102, 241, 0.1),
+        0 0 50px rgba(99, 102, 241, 0.1);
+    }
+    
+    .project-card:hover::before {
+      transform: scaleX(1);
     }
     
     .project-image-container {
       position: relative;
-      height: 200px;
+      height: 250px;
       overflow: hidden;
-      background: var(--dark-bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
     
     .project-image {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.5s ease;
+      transition: transform 0.6s ease;
     }
     
     .project-card:hover .project-image {
       transform: scale(1.05);
     }
     
-    .project-category {
+    .project-overlay {
       position: absolute;
-      top: 12px;
-      right: 12px;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(4px);
-      color: var(--text);
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      border: 1px solid var(--border);
-    }
-    
-    .project-content {
-      padding: 1.5rem;
-      flex-grow: 1;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(to bottom, transparent, rgba(10, 10, 10, 0.9));
       display: flex;
-      flex-direction: column;
+      align-items: flex-end;
+      padding: 2rem;
+      opacity: 0;
+      transition: opacity 0.4s ease;
     }
     
-    .project-card h3 {
-      font-size: 1.3rem;
-      margin-bottom: 0.5rem;
-      color: var(--text);
-    }
-    
-    .project-card p {
-      color: var(--text-secondary);
-      font-size: 0.95rem;
-      margin-bottom: 1.5rem;
-      flex-grow: 1;
+    .project-card:hover .project-overlay {
+      opacity: 1;
     }
     
     .project-tech {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-bottom: 1.5rem;
     }
     
     .tech-tag {
-      background: rgba(37, 99, 235, 0.1);
+      background: rgba(99, 102, 241, 0.15);
       color: var(--primary);
-      padding: 4px 10px;
+      padding: 6px 12px;
       border-radius: 20px;
-      font-size: 0.8rem;
-      border: 1px solid rgba(37, 99, 235, 0.2);
+      font-size: 0.75rem;
+      font-weight: 500;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      backdrop-filter: blur(10px);
+    }
+    
+    .project-content {
+      padding: 2rem;
+    }
+    
+    .project-card h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+    
+    .project-card p {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
     }
     
     .project-links {
       display: flex;
-      gap: 12px;
+      gap: 1rem;
     }
     
     .project-link {
@@ -301,54 +420,85 @@
       color: var(--text);
       text-decoration: none;
       font-weight: 500;
-      padding: 10px 16px;
-      border-radius: 6px;
+      padding: 12px 24px;
+      border-radius: 12px;
       transition: all 0.3s ease;
       flex: 1;
       text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .project-link::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transition: left 0.5s;
+    }
+    
+    .project-link:hover::before {
+      left: 100%;
     }
     
     .project-link.demo {
-      background-color: var(--primary);
+      background: var(--gradient-1);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
     }
     
     .project-link.demo:hover {
-      background-color: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
     }
     
     .project-link.source {
-      background-color: transparent;
-      border: 1px solid var(--border);
+      background: transparent;
+      border: 1px solid var(--card-border);
     }
     
     .project-link.source:hover {
-      background-color: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--primary);
     }
     
     /* Footer */
     footer {
-      background-color: var(--card-bg);
-      padding: 3rem 0 2rem;
-      margin-top: 4rem;
-      border-top: 1px solid var(--border);
+      background: var(--dark-bg-2);
+      padding: 4rem 0 2rem;
+      border-top: 1px solid var(--card-border);
     }
     
     .footer-content {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
-      margin-bottom: 2rem;
+      gap: 3rem;
+      margin-bottom: 3rem;
     }
     
     .footer-section h3 {
-      font-size: 1.2rem;
-      margin-bottom: 1rem;
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
       color: var(--text);
+      position: relative;
+      display: inline-block;
+    }
+    
+    .footer-section h3::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 40px;
+      height: 2px;
+      background: var(--gradient-1);
     }
     
     .footer-section p, .footer-section a {
       color: var(--text-secondary);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.8rem;
       display: block;
       text-decoration: none;
       transition: color 0.3s;
@@ -361,51 +511,53 @@
     .social-links {
       display: flex;
       gap: 1rem;
-      margin-top: 1rem;
+      margin-top: 1.5rem;
     }
     
     .social-link {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--dark-bg);
+      width: 45px;
+      height: 45px;
+      border-radius: 12px;
+      background: var(--card-bg);
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--text);
       text-decoration: none;
       transition: all 0.3s;
+      border: 1px solid var(--card-border);
     }
     
     .social-link:hover {
-      background: var(--primary);
+      background: var(--gradient-1);
       transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
     }
     
     .footer-bottom {
       text-align: center;
       padding-top: 2rem;
-      border-top: 1px solid var(--border);
-      color: var(--text-secondary);
+      border-top: 1px solid var(--card-border);
+      color: var(--text-tertiary);
       font-size: 0.9rem;
     }
     
     /* Loading and Empty States */
     .loading {
       text-align: center;
-      padding: 3rem;
+      padding: 4rem;
       color: var(--text-secondary);
       grid-column: 1 / -1;
     }
     
     .loading-spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid rgba(37, 99, 235, 0.2);
-      border-left: 4px solid var(--primary);
+      width: 60px;
+      height: 60px;
+      border: 3px solid rgba(99, 102, 241, 0.2);
+      border-left: 3px solid var(--primary);
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 1rem;
+      margin: 0 auto 1.5rem;
     }
     
     @keyframes spin {
@@ -415,7 +567,7 @@
     
     .empty-state {
       text-align: center;
-      padding: 4rem 2rem;
+      padding: 5rem 2rem;
       color: var(--text-secondary);
       grid-column: 1 / -1;
     }
@@ -423,52 +575,54 @@
     .empty-state i {
       font-size: 4rem;
       margin-bottom: 1.5rem;
-      color: var(--border);
-    }
-    
-    /* Image Debug Styles */
-    .image-debug {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: var(--text-secondary);
-      font-size: 0.8rem;
-      text-align: center;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 10px;
-      border-radius: 5px;
-      display: none;
-    }
-    
-    .project-image-container:hover .image-debug {
-      display: block;
+      color: var(--text-tertiary);
+      opacity: 0.5;
     }
     
     /* Responsive Design */
+    @media (max-width: 1024px) {
+      .hero h1 {
+        font-size: 3.2rem;
+      }
+      
+      .projects-grid {
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      }
+    }
+    
     @media (max-width: 768px) {
+      .container {
+        padding: 0 1.5rem;
+      }
+      
       .header-content {
         flex-direction: column;
         gap: 1rem;
       }
       
       nav ul {
-        gap: 1rem;
+        gap: 1.5rem;
+      }
+      
+      .hero {
+        padding: 7rem 0 3rem;
+        text-align: center;
       }
       
       .hero h1 {
+        font-size: 2.5rem;
+      }
+      
+      .hero p {
+        font-size: 1.1rem;
+      }
+      
+      .hero-stats {
+        justify-content: center;
+      }
+      
+      .section-title {
         font-size: 2.2rem;
-      }
-      
-      .stats {
-        flex-direction: column;
-        gap: 1rem;
-      }
-      
-      .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
       }
       
       .projects-grid {
@@ -485,73 +639,79 @@
         padding: 0 1rem;
       }
       
-      .hero {
-        padding: 2rem 0;
-      }
-      
       .hero h1 {
-        font-size: 1.8rem;
+        font-size: 2rem;
       }
       
-      .hero p {
-        font-size: 1rem;
+      .hero-stats {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      
+      .section-title {
+        font-size: 1.8rem;
       }
     }
   </style>
 </head>
 <body>
-  <header>
+  <!-- Particles Background -->
+  <div id="particles-js"></div>
+  
+  <header id="header">
     <div class="container">
       <div class="header-content">
         <div class="logo">
           <div class="logo-icon">
             <i class="fas fa-code"></i>
           </div>
-          <div class="logo-text">Darin<span>Dev</span></div>
+          <div class="logo-text">Darin0v0</div>
         </div>
         <nav>
           <ul>
-            <li><a href="#" class="active">Projekty</a></li>
-            <li><a href="#">O mnie</a></li>
-            <li><a href="#">Kontakt</a></li>
+            <li><a href="#home" class="active">Home</a></li>
+            <li><a href="#projects">Projekty</a></li>
+            <li><a href="#about">O mnie</a></li>
+            <li><a href="#contact">Kontakt</a></li>
           </ul>
         </nav>
       </div>
     </div>
   </header>
   
-  <section class="hero">
+  <section class="hero" id="home">
     <div class="container">
-      <h1>Portfolio Projektów</h1>
-      <p>Przeglądaj moje projekty programistyczne - od aplikacji webowych po rozwiązania backendowe. Każdy projekt to połączenie technologii, designu i funkcjonalności.</p>
-      <div class="stats">
-        <div class="stat">
-          <div class="stat-value" id="projectsCount">0</div>
-          <div class="stat-label">Ukończonych projektów</div>
+      <div class="hero-content">
+        <div class="hero-badge">
+          <i class="fas fa-star"></i>
+          Premium Developer Portfolio
         </div>
-        <div class="stat">
-          <div class="stat-value">5+</div>
-          <div class="stat-label">Technologii</div>
-        </div>
-        <div class="stat">
-          <div class="stat-value">100%</div>
-          <div class="stat-label">Zadowolonych klientów</div>
+        <h1>Tworzenie <span class="gradient-text">Nowoczesnych</span> Rozwiązań</h1>
+        <p>Przekształcam pomysły w funkcjonalne, nowoczesne aplikacje webowe. Specjalizuję się w tworzeniu responsywnych interfejsów i wydajnych rozwiązań backendowych.</p>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="stat-value" id="projectsCount">0</div>
+            <div class="stat-label">Ukończonych Projektów</div>
+          </div>
+          <div class="hero-stat">
+            <div class="stat-value">10+</div>
+            <div class="stat-label">Technologii</div>
+          </div>
+          <div class="hero-stat">
+            <div class="stat-value">100%</div>
+            <div class="stat-label">Zadowolonych Klientów</div>
+          </div>
         </div>
       </div>
     </div>
   </section>
   
-  <main>
+  <section class="projects-section" id="projects">
     <div class="container">
       <div class="section-header">
+        <div class="section-badge">Portfolio</div>
         <h2 class="section-title">Moje Projekty</h2>
-        <div class="filter-container">
-          <button class="filter-btn active" data-filter="all">Wszystkie</button>
-          <button class="filter-btn" data-filter="web">Strony WWW</button>
-          <button class="filter-btn" data-filter="app">Aplikacje</button>
-          <button class="filter-btn" data-filter="game">Gry</button>
-          <button class="filter-btn" data-filter="tool">Narzędzia</button>
-        </div>
+        <p class="section-subtitle">Odkryj moje najnowsze realizacje - od koncepcji do wdrożenia</p>
       </div>
       
       <div id="projectsContainer" class="projects-grid">
@@ -561,9 +721,9 @@
         </div>
       </div>
     </div>
-  </main>
+  </section>
   
-  <footer>
+  <footer id="contact">
     <div class="container">
       <div class="footer-content">
         <div class="footer-section">
@@ -574,29 +734,41 @@
         </div>
         
         <div class="footer-section">
-          <h3>Linki</h3>
-          <a href="#">Strona główna</a>
-          <a href="#">O mnie</a>
-          <a href="#">Projekty</a>
-          <a href="#">Blog</a>
+          <h3>Szybkie Linki</h3>
+          <a href="#home">Strona Główna</a>
+          <a href="#projects">Projekty</a>
+          <a href="#about">O mnie</a>
+          <a href="#contact">Kontakt</a>
         </div>
         
         <div class="footer-section">
-          <h3>Śledź mnie</h3>
+          <h3>Śledź Mnie</h3>
           <div class="social-links">
-            <a href="https://github.com/Darin0v0" class="social-link" target="_blank"><i class="fab fa-github"></i></a>
-            <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
-            <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+            <a href="https://github.com/Darin0v0" class="social-link" target="_blank">
+              <i class="fab fa-github"></i>
+            </a>
+            <a href="#" class="social-link">
+              <i class="fab fa-linkedin-in"></i>
+            </a>
+            <a href="#" class="social-link">
+              <i class="fab fa-twitter"></i>
+            </a>
+            <a href="#" class="social-link">
+              <i class="fab fa-dribbble"></i>
+            </a>
           </div>
         </div>
       </div>
       
       <div class="footer-bottom">
-        <p>&copy; 2023 DarinDev. Wszystkie prawa zastrzeżone.</p>
+        <p>&copy; 2023 Darin0v0. Wszystkie prawa zastrzeżone. | Zaprojektowane z <i class="fas fa-heart" style="color: #ef4444;"></i></p>
       </div>
     </div>
   </footer>
 
+  <!-- Particles.js -->
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const GITHUB_USER = 'Darin0v0';
@@ -604,25 +776,77 @@
       const PROJECTS_PATH = 'projects/Portfolio';
 
       const projectsContainer = document.getElementById('projectsContainer');
-      const filterButtons = document.querySelectorAll('.filter-btn');
       const projectsCount = document.getElementById('projectsCount');
+      const header = document.getElementById('header');
 
-      // Mapa kategorii dla projektów
-      const projectCategories = {
-        'Serwis_Samochodowy_1': 'web'
-        // Dodaj tutaj kolejne projekty i ich kategorie
-      };
+      // Initialize Particles.js
+      particlesJS('particles-js', {
+        particles: {
+          number: { value: 80, density: { enable: true, value_area: 800 } },
+          color: { value: "#6366f1" },
+          shape: { type: "circle" },
+          opacity: { value: 0.5, random: true },
+          size: { value: 3, random: true },
+          line_linked: {
+            enable: true,
+            distance: 150,
+            color: "#6366f1",
+            opacity: 0.2,
+            width: 1
+          },
+          move: {
+            enable: true,
+            speed: 2,
+            direction: "none",
+            random: true,
+            straight: false,
+            out_mode: "out",
+            bounce: false
+          }
+        },
+        interactivity: {
+          detect_on: "canvas",
+          events: {
+            onhover: { enable: true, mode: "repulse" },
+            onclick: { enable: true, mode: "push" },
+            resize: true
+          }
+        },
+        retina_detect: true
+      });
 
-      // Mapa technologii dla projektów
-      const projectTechnologies = {
-        'Serwis_Samochodowy_1': ['HTML', 'CSS', 'JavaScript']
-        // Dodaj tutaj kolejne projekty i ich technologie
-      };
+      // Header scroll effect
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 100) {
+          header.classList.add('header-scrolled');
+        } else {
+          header.classList.remove('header-scrolled');
+        }
+      });
 
-      // Mapa opisów dla projektów
-      const projectDescriptions = {
-        'Serwis_Samochodowy_1': 'Profesjonalna strona internetowa serwisu samochodowego z systemem rezerwacji terminów i wyceną usług.'
-        // Dodaj tutaj opisy dla kolejnych projektów
+      // Smooth scrolling for navigation links
+      document.querySelectorAll('nav a').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+          e.preventDefault();
+          const targetId = this.getAttribute('href');
+          const targetElement = document.querySelector(targetId);
+          
+          window.scrollTo({
+            top: targetElement.offsetTop - 80,
+            behavior: 'smooth'
+          });
+        });
+      });
+
+      // Project data
+      const projectData = {
+        'Serwis_Samochodowy_1': {
+          title: 'Serwis Samochodowy',
+          description: 'Kompleksowa strona internetowa serwisu samochodowego z systemem rezerwacji online, wyceną usług i panelem klienta.',
+          technologies: ['HTML5', 'CSS3', 'JavaScript', 'PHP', 'MySQL'],
+          category: 'web'
+        }
+        // Add more projects here as needed
       };
 
       async function fetchProjectsList() {
@@ -637,54 +861,44 @@
           return dirs.map(d => d.name);
         } catch (err) {
           console.error('Błąd pobierania listy projektów:', err);
-          // Jeśli API nie działa, użyj ręcznej listy projektów
+          // Fallback to manual project list
           return ['Serwis_Samochodowy_1'];
         }
       }
 
       function createProjectCard(folderName) {
+        const project = projectData[folderName] || {
+          title: folderName.replace(/[-_]/g, ' '),
+          description: `Nowoczesna aplikacja ${folderName.replace(/[-_]/g, ' ')} - zobacz demo lub kod źródłowy.`,
+          technologies: ['HTML5', 'CSS3', 'JavaScript'],
+          category: 'web'
+        };
+
+        const imagePaths = [
+          `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/prew.jpg`,
+          `./projects/Portfolio/${folderName}/prew.jpg`,
+          `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/projects/Portfolio/${folderName}/prew.jpg`
+        ];
+
+        const demoUrl = `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/`;
+        const sourceUrl = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/projects/Portfolio/${folderName}`;
+
         const card = document.createElement('div');
         card.className = 'project-card';
         
-        // Przypisz kategorię na podstawie nazwy folderu lub domyślnie 'web'
-        const category = projectCategories[folderName] || 'web';
-        card.dataset.category = category;
-        
-        const title = folderName.replace(/[-_]/g, ' ');
-        const technologies = projectTechnologies[folderName] || ['HTML', 'CSS', 'JavaScript'];
-        const description = projectDescriptions[folderName] || `Projekt ${title} - zobacz demo lub kod źródłowy. Kliknij poniższe przyciski, aby zobaczyć szczegóły.`;
-        
-        // RÓŻNE MOŻLIWE ŚCIEŻKI DO OBRAZKA - wybierze pierwszą działającą
-        const possibleImagePaths = [
-          `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/prew.jpg`,
-          `./projects/Portfolio/${folderName}/prew.jpg`,
-          `projects/Portfolio/${folderName}/prew.jpg`,
-          `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/projects/Portfolio/${folderName}/prew.jpg`
-        ];
-        
-        const demoUrl = `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/`;
-        const sourceUrl = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/projects/Portfolio/${folderName}`;
-        
         card.innerHTML = `
           <div class="project-image-container">
-            <img class="project-image" 
-                 src="${possibleImagePaths[0]}" 
-                 alt="${title}"
-                 onerror="
-                   console.log('Błąd ładowania obrazka:', this.src);
-                   this.onerror=() => {
-                     this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUyOTNiIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2NiZDVlMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPiR7dGl0bGV9PC90ZXh0Pjwvc3ZnPg==';
-                   };
-                 ">
-            <div class="image-debug">Ścieżka: ${possibleImagePaths[0]}</div>
-            <div class="project-category">${category.toUpperCase()}</div>
+            <img class="project-image" src="${imagePaths[0]}" alt="${project.title}" 
+                 onerror="this.onerror=()=>{this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUxZTFlIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNiIgZmlsbD0iIzdGMTcxYSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPiR7cHJvamVjdC50aXRsZX08L3RleHQ+PC9zdmc+'};">
+            <div class="project-overlay">
+              <div class="project-tech">
+                ${project.technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
+              </div>
+            </div>
           </div>
           <div class="project-content">
-            <h3>${title}</h3>
-            <p>${description}</p>
-            <div class="project-tech">
-              ${technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
-            </div>
+            <h3>${project.title}</h3>
+            <p>${project.description}</p>
             <div class="project-links">
               <a href="${demoUrl}" class="project-link demo" target="_blank" rel="noopener noreferrer">
                 <i class="fas fa-external-link-alt"></i> LIVE DEMO
@@ -696,47 +910,7 @@
           </div>
         `;
 
-        // Funkcja do próbowania różnych ścieżek obrazków
-        const tryNextImagePath = (img, paths, currentIndex = 0) => {
-          if (currentIndex >= paths.length) return;
-          
-          img.src = paths[currentIndex];
-          img.onerror = () => {
-            console.log(`Ścieżka ${paths[currentIndex]} nie działa, próbuję następną...`);
-            tryNextImagePath(img, paths, currentIndex + 1);
-          };
-        };
-
-        // Spróbuj różnych ścieżek obrazków
-        const img = card.querySelector('.project-image');
-        setTimeout(() => {
-          if (img.naturalWidth === 0) {
-            tryNextImagePath(img, possibleImagePaths, 1);
-          }
-        }, 1000);
-
         return card;
-      }
-
-      function filterProjects(category) {
-        const cards = projectsContainer.querySelectorAll('.project-card');
-        let visibleCount = 0;
-        
-        cards.forEach(card => {
-          if (category === 'all' || card.dataset.category === category) {
-            card.style.display = 'flex';
-            visibleCount++;
-          } else {
-            card.style.display = 'none';
-          }
-        });
-        
-        // Aktualizuj licznik widocznych projektów
-        if (category === 'all') {
-          projectsCount.textContent = cards.length;
-        } else {
-          projectsCount.textContent = visibleCount;
-        }
       }
 
       async function initProjects() {
@@ -760,17 +934,22 @@
           projectsContainer.appendChild(card);
         });
         
-        // Aktualizuj licznik projektów
-        projectsCount.textContent = folders.length;
-        
-        // Dodaj obsługę filtrów
-        filterButtons.forEach(button => {
-          button.addEventListener('click', () => {
-            filterButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            filterProjects(button.dataset.filter);
-          });
-        });
+        // Animate projects count
+        animateValue(projectsCount, 0, folders.length, 1500);
+      }
+
+      // Animate counter
+      function animateValue(element, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+          if (!startTimestamp) startTimestamp = timestamp;
+          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+          element.innerHTML = Math.floor(progress * (end - start) + start);
+          if (progress < 1) {
+            window.requestAnimationFrame(step);
+          }
+        };
+        window.requestAnimationFrame(step);
       }
 
       initProjects();
