@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>AutoSerwis</title>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta content="" name="keywords">
+    <meta content="" name="description">
+
+    <!-- Favicon -->
+    <link href="img/favicon.ico" rel="icon">
+
+    <!-- Google Web Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700&family=Ubuntu:wght@400;500&display=swap" rel="stylesheet"> 
+
+    <!-- Icon Font Stylesheet -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Libraries Stylesheet -->
+    <link href="lib/animate/animate.min.css" rel="stylesheet">
+    <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+    <link href="lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
+
+    <!-- Customized Bootstrap Stylesheet -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Template Stylesheet -->
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+    body{
+        background-color:#fefefe;
+    }
+    </style>
+</head>
+
+<body>
+    <!-- Spinner Start -->
+    <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+    <!-- Spinner End -->
+
+
+    <!-- Topbar Start -->
+    <div class="container-fluid bg-light p-0">
+        <div class="row gx-0 d-none d-lg-flex">
+            <div class="col-lg-7 px-5 text-start">
+                <div class="h-100 d-inline-flex align-items-center py-3 me-4">
+                    <small class="fa fa-map-marker-alt text-primary me-2"></small>
+                    <small>Błażowa, Pułaskiego 35 </small>
+                </div>
+                <div class="h-100 d-inline-flex align-items-center py-3">
+                    <small class="far fa-clock text-primary me-2"></small>
+                    <small>Pon - Sob : 17.00 - 20.00</small>
+                </div>
+            </div>
+            <div class="col-lg-5 px-5 text-end">
+                <div class="h-100 d-inline-flex align-items-center py-3 me-4">
+                    <small class="fa fa-phone-alt text-primary me-2"></small>
+                    <small>+693 249 955</small>
+                </div>
+                <div class="h-100 d-inline-flex align-items-center">
+                    <a class="btn btn-sm-square bg-white text-primary me-1" href="https://www.facebook.com/profile.php?id=61567279591591"><i class="fab fa-facebook-f"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Topbar End -->
+
+
+    <!-- Navbar Start -->
+        <nav class="navbar navbar-expand-lg bg-white navbar-light shadow sticky-top p-0">
+        <a href="index.html" class="navbar-brand d-flex align-items-center px-4 px-lg-5">
+            <h2 class="m-0 text-primary"><i class="fa fa-car me-3"></i>Auto Serwis , Wulkanizacja </h2>
+        </a>
+        <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <div class="navbar-nav ms-auto p-4 p-lg-0">
+                <a href="index.html" class="nav-item nav-link active">Strona Główna</a>
+                <a href="about.html" class="nav-item nav-link">Portfolio</a>
+                <a href="service.html" class="nav-item nav-link">Usługi i Ceny</a>
+                <a href="contact.html" class=" nav-item nav-link ">Kontakt</a>
+            </div>
+         
+        </div>
+    </nav>
+    <!-- Navbar End -->
+
+
+    <!-- Carousel Start -->
+    <div class="container-fluid p-0 mb-5" >
+        <div id="header-carousel" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img class="w-100" src="https://images.pexels.com/photos/4488637/pexels-photo-4488637.jpeg"  alt="Image">
+                    <div class="carousel-caption d-flex align-items-center">
+                        <div class="container">
+                            <div class="row align-items-center justify-content-center justify-content-lg-start">
+                                <div class="col-10 col-lg-7 text-center text-lg-start">
+                                <h1 class="display-3 text-white mb-4 pb-3 animated slideInDown">Twój samochód zasługuje na najlepszą opiekę!</h1>
+                                <a href="contact.html" class="btn btn-primary py-3 px-5 animated slideInDown">
+                                    Umów się już teraz <i class="fa fa-arrow-right ms-3"></i>
+                                </a>
+                                </div>
+                                <div class="col-lg-5 d-none d-lg-flex animated zoomIn">
+                                    <img class="img-fluid" src="img/carousel-2.png" alt="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="carousel-item">
+                    <img class="w-100" src="https://images.pexels.com/photos/4480507/pexels-photo-4480507.jpeg" alt="Image">
+                    <div class="carousel-caption d-flex align-items-center">
+                        <div class="container">
+                            <div class="row align-items-center justify-content-center justify-content-lg-start">
+                                <div class="col-10 col-lg-7 text-center text-lg-start">
+                            <h1 class="display-3 text-white mb-4 pb-3 animated slideInDown">Profesjonalny serwis w świetnej cenie!</h1>
+                            <a href="service.html" class="btn btn-primary py-3 px-5 animated slideInDown">
+                                Zobacz ceny usług <i class="fa fa-arrow-right ms-3"></i>
+                            </a>
+                                </div>
+                                <div class="col-lg-5 d-none d-lg-flex animated zoomIn">
+                                    <img class="img-fluid" src="img/carousel-1.png" alt="">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#header-carousel"
+                data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#header-carousel"
+                data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        </div>
+    </div>
+        <style>
+ 
+@media (min-height: 1080px) {
+    #header-carousel .carousel-inner {
+        height: 100vh; 
+    }
+
+    #header-carousel .carousel-item {
+        height: 100vh;
+    }
+
+    #header-carousel .carousel-item img {
+        object-fit: cover; 
+        height: 100%; 
+        object-position: center center; 
+    }
+
+    .carousel-caption h1 {
+        font-size: 3rem;
+        margin-bottom: 20px;
+    }
+
+    .carousel-caption a {
+        font-size: 1.25rem;
+        padding: 12px 24px;
+    }
+}
+
+    </style>
+    <!-- Carousel End -->
+
+
+    <!-- Service Start -->
+    <div class="container-xxl py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="d-flex py-5 px-4">
+                        <i class="fa fa-certificate fa-3x text-primary flex-shrink-0"></i>
+                        <div class="ps-4">
+                            <h5 class="mb-3">Jakościowa Obsługa</h5>
+                            <p>Nasza firma zapewnia najwyższej jakości obsługę, skupiając się na zadowoleniu klienta i dostosowywaniu usług do jego indywidualnych potrzeb. Stawiamy na profesjonalizm i dokładność, oferując kompleksowe rozwiązania w każdym aspekcie naszej działalności.</p>
+                          
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+                    <div class="d-flex bg-light py-5 px-4">
+                        <i class="fa fa-users-cog fa-3x text-primary flex-shrink-0"></i>
+                        <div class="ps-4">
+                            <h5 class="mb-3">Eksperci</h5>
+                            <p>Nasze usługi są realizowane przez doświadczonych ekspertów w swojej dziedzinie. Nasi pracownicy posiadają wieloletnie doświadczenie, które pozwala im skutecznie rozwiązywać nawet najbardziej skomplikowane problemy. Dzięki ich wiedzy, możemy zapewnić najwyższą jakość i efektywność usług.</p>
+                                
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
+                    <div class="d-flex py-5 px-4">
+                        <i class="fa fa-tools fa-3x text-primary flex-shrink-0"></i>
+                        <div class="ps-4">
+                            <h5 class="mb-3">Nowoczesny Sprzęt</h5>
+                            <p>Wykorzystujemy najnowsze technologie i sprzęt, aby zapewnić najwyższą jakość naszych usług. Nasze nowoczesne urządzenia pozwalają na szybszą i dokładniejszą pracę, co przekłada się na zadowolenie naszych klientów oraz efektywność realizacji projektów.</p>                                               
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Service End -->
+
+
+    <!-- About Start -->
+    <div class="container-xxl py-5">
+        <div class="container">
+            <div class="row g-5">
+                <div class="col-lg-6 pt-4" style="min-height: 400px;">
+                    <div class="position-relative h-100 wow fadeIn" data-wow-delay="0.1s">
+                        <img class="position-absolute img-fluid w-100 h-100" src="https://images.pexels.com/photos/1388278/pexels-photo-1388278.jpeg" style="object-fit: cover;" alt="">
+                        <div class="position-absolute top-0 end-0 mt-n4 me-n4 py-4 px-5" style="background: rgba(0, 0, 0, .08); ">
+                            <h1 class="display-4 mb-0" style="color: red;">
+                                2 <span class="fs-4" >Lat</span>
+                            </h1>
+                            <h4 style="color: red;">Doświadczenia</h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <h6 class="text-primary text-uppercase">O nas </h6>
+                    <h1 class="mb-4"><span class="text-primary">AutoSerwis</span> To Najlepsze Miejsce Dla Twojego Pojazdu</h1>
+                    <p class="mb-4">Nasza firma oferuje kompleksową obsługę samochodów, bazując na kilkuletnim doświadczeniu. Zajmujemy się zarówno naprawami, jak i konserwacją pojazdów, dbając o ich bezpieczeństwo i wydajność. Dzięki indywidualnemu podejściu do każdego klienta, zapewniamy najwyższą jakość usług.</p>
+                    <div class="row g-4 mb-3 pb-3">
+                        <div class="col-12 wow fadeIn" data-wow-delay="0.1s">
+                            <div class="d-flex">
+                                <div class="bg-light d-flex flex-shrink-0 align-items-center justify-content-center mt-1" style="width: 45px; height: 45px;">
+                                    <span class="fw-bold text-secondary">01</span>
+                                </div>
+                                <div class="ps-3">
+                                    <h6>Profesjonalizm i Ekspertyza</h6>
+                                    <span>Nasi specjaliści posiadają wieloletnie doświadczenie, które gwarantuje najwyższą jakość usług</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 wow fadeIn" data-wow-delay="0.3s">
+                            <div class="d-flex">
+                                <div class="bg-light d-flex flex-shrink-0 align-items-center justify-content-center mt-1" style="width: 45px; height: 45px;">
+                                    <span class="fw-bold text-secondary">02</span>
+                                </div>
+                                <div class="ps-3">
+                                    <h6>Centrum Jakościowej Obsługi</h6>
+                                    <span>Wszystkie naprawy i usługi wykonujemy zgodnie z najwyższymi standardami jakości</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 wow fadeIn" data-wow-delay="0.5s">
+                            <div class="d-flex">
+                                <div class="bg-light d-flex flex-shrink-0 align-items-center justify-content-center mt-1" style="width: 45px; height: 45px;">
+                                    <span class="fw-bold text-secondary">03</span>
+                                </div>
+                                <div class="ps-3">
+                                    <h6>Pracownicy z Nagrodami</h6>
+                                    <span>Nasi pracownicy są uznawani za najlepszych w branży, zdobywając liczne nagrody za swoją pracę</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                   
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- About End -->
+
+
+    <!-- Fact Start -->
+    <div class="container-fluid fact bg-dark my-5 py-5">
+        <div class="container d-flex justify-content-center align-items-center">
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-6 col-lg-3 text-center wow fadeIn" data-wow-delay="0.5s">
+                    <i class="fa fa-check fa-2x text-white mb-3"></i>
+                    <h2 class="text-white mb-2" data-toggle="counter-up">2</h2>
+                    <p class="text-white mb-0">Years Experience</p>
+                </div>
+                <div class="col-md-6 col-lg-3 text-center wow fadeIn" data-wow-delay="0.1s">
+                </div>
+                <div class="col-md-6 col-lg-3 text-center wow fadeIn" data-wow-delay="0.5s">
+                    <i class="fa fa-users-cog fa-2x text-white mb-3"></i>
+                    <h2 class="text-white mb-2" data-toggle="counter-up">2</h2>
+                    <p class="text-white mb-0">Expert Technicians</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fact End -->
+
+
+    <!-- Service Start -->
+    <div class="container-xxl service py-5">
+        <div class="container">
+            <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+                <h6 class="text-primary text-uppercase"> Nasze Usługi </h6>
+                <h1 class="mb-5">Poznaj Nasze Usługi</h1>
+            </div>
+            <div class="row g-4 wow fadeInUp" data-wow-delay="0.3s">
+                <div class="col-lg-4">
+                    <div class="nav w-100 nav-pills me-4">
+                        <button class="nav-link w-100 d-flex align-items-center text-start p-4 mb-4 active" data-bs-toggle="pill" data-bs-target="#tab-pane-1" type="button">
+                            <i class="fa fa-car-side fa-2x me-3"></i>
+                            <h4 class="m-0">Test diagnostyczny</h4>
+                        </button>
+                        <button class="nav-link w-100 d-flex align-items-center text-start p-4 mb-4" data-bs-toggle="pill" data-bs-target="#tab-pane-2" type="button">
+                            <i class="fa fa-car fa-2x me-3"></i>
+                            <h4 class="m-0">Serwis silnika</h4>
+                        </button>
+                        <button class="nav-link w-100 d-flex align-items-center text-start p-4 mb-4" data-bs-toggle="pill" data-bs-target="#tab-pane-3" type="button">
+                            <i class="fa fa-cog fa-2x me-3"></i>
+                            <h4 class="m-0">Wymiana opon</h4>
+                        </button>
+                        <button class="nav-link w-100 d-flex align-items-center text-start p-4 mb-0" data-bs-toggle="pill" data-bs-target="#tab-pane-4" type="button">
+                            <i class="fa fa-oil-can fa-2x me-3"></i>
+                            <h4 class="m-0">Wymiana oleju</h4>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-8">
+                    <div class="tab-content w-100">
+                        <div class="tab-pane fade show active" id="tab-pane-1">
+                            <div class="row g-4">
+                                <div class="col-md-6" style="min-height: 350px;">
+                                    <div class="position-relative h-100">
+                                        <img class="position-absolute img-fluid w-100 h-100" src="img/service-1.jpg" style="object-fit: cover;" alt="">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h3 class="mb-3">2 lat doświadczenia w serwisie samochodowym</h3>
+                                    <p class="mb-4">Oferujemy kompleksowe usługi diagnostyczne i naprawcze. Nasz zespół składa się z ekspertów w dziedzinie samochodów, którzy zapewniają wysoką jakość usług.</p>
+                                    <p><i class="fa fa-check text-success me-3"></i>Wysokiej jakości serwis</p>
+                                    <p><i class="fa fa-check text-success me-3"></i>Profesjonalni pracownicy</p>
+                                    <p><i class="fa fa-check text-success me-3"></i>Nowoczesny sprzęt</p>
+                                    <a href="service.html" class="btn btn-primary py-3 px-5 mt-3">Dowiedz się więcej<i class="fa fa-arrow-right ms-3"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-pane-2">
+                            <div class="row g-4">
+                                <div class="col-md-6" style="min-height: 350px;">
+                                    <div class="position-relative h-100">
+                                        <img class="position-absolute img-fluid w-100 h-100" src="img/service-2.jpg" style="object-fit: cover;" alt="">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h3 class="mb-3">2 lat doświadczenia w serwisie samochodowym</h3>
+                                    <p class="mb-4">Zajmujemy się kompleksową naprawą silników. Nasz zespół dysponuje odpowiednimi narzędziami i wiedzą, aby przywrócić sprawność silnika Twojego pojazdu.</p>
+                                    <p><i class="fa fa-check text-success me-3"></i>Wysokiej jakości serwis</p>
+                                    <p><i class="fa fa-check text-success me-3"></i>Profesjonalni pracownicy</p>
+                                    <p><i class="fa fa-check text-success me-3"></i>Nowoczesny sprzęt</p>
+                                    <a href="service.html" class="btn btn-primary py-3 px-5 mt-3">Dowiedz się więcej<i class="fa fa-arrow-right ms-3"></i></a>
+                                    <br>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-pane-3">
+                            <div class="row g-4">
+                                <div class="col-md-6" style="min-height: 350px;">
+                                    <div class="position-relative h-100">
+                                        <img class="position-absolute img-fluid w-100 h-100" src="img/service-3.jpg" style="object-fit: cover;" alt="">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h3 class="mb-3">2 lat doświadczenia w serwisie samochodowym</h3>
+                                    <p class="mb-4">Zajmujemy się wymianą opon oraz serwisem układów jezdnych, zapewniając bezpieczeństwo i komfort jazdy. Nasza oferta obejmuje szeroką gamę usług związanych z oponami.</p>
+                                    <p><i class="fa fa-check text-success me-3"></i>Wysokiej jakości serwis</p>
+                                    <p><i class="fa fa-check tex Nasi pracownicy są uznawani za najlepszych w branży, zdobywając liczne nagrody za swoją pracęt-success me-3"></i>Profesjonalni pracownicy</p>
+                                    <p><i class="fa fa-check text-success me-3"></i>Nowoczesny sprzęt</p>
+                                <a href="service.html" class="btn btn-primary py-3 px-5 mt-3">Dowiedz się więcej<i class="fa fa-arrow-right ms-3"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-pane-4">
+                            <div class="row g-4">
+                                <div class="col-md-6" style="min-height: 350px;">
+                                    <div class="position-relative h-100">
+                                        <img class="position-absolute img-fluid w-100 h-100" src="img/service-4.jpg" style="object-fit: cover;" alt="">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <h3 class="mb-3">15 lat doświadczenia w serwisie samochodowym</h3>
+                                    <p class="mb-4">Oferujemy wymianę oleju, aby utrzymać silnik w dobrej kondycji. Wykonujemy również pełne przeglądy techniczne, aby zapewnić długowieczność Twojego pojazdu.</p>
+                                    <p><i class="fa fa-check text-success me-3"></i>Wysokiej jakości serwis</p>
+                                    <p><i class="fa fa-check text-success me-3"></i>Profesjonalni pracownicy</p>
+                                    <p><i class="fa fa-check text-success me-3"></i>Nowoczesny sprzęt</p>
+                                    <a href="service.html" class="btn btn-primary py-3 px-5 mt-3">Dowiedz się więcej<i class="fa fa-arrow-right ms-3"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Service End -->
+    <!-- Footer Start -->
+    <div class="container-fluid bg-dark text-light footer pt-5 mt-5 wow fadeIn" data-wow-delay="0.1s">
+        <div class="container py-5">
+            <div class="row g-5">
+                <div class="col-lg-3 col-md-6">
+                    <h4 class="text-light mb-4">Address</h4>
+                    <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>Błażowa, Pułaskiego 35</p>
+                    <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+693 249 955</p>
+                    <div class="d-flex pt-2">
+
+                        <a class="btn btn-outline-light btn-social" href="https://www.facebook.com/profile.php?id=61567279591591"><i class="fab fa-facebook-f"></i></a>
+
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h4 class="text-light mb-4">Godziny otwarcia</h4>
+                    <h6 class="text-light">Poniedziałek - piątek:</h6>
+                    <p class="mb-4">16.00-22.00</p>
+                    <h6 class="text-light">Sobota:</h6>
+                    <p class="mb-0">7.00 - 22.00</p>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h4 class="text-light mb-4">Services</h4>
+                    <a class="btn btn-link" href="service.html">Test diagnostyczny</a>
+                    <a class="btn btn-link" href="service.html">Serwis silnika</a>
+                    <a class="btn btn-link" href="service.html">Wymiana opon</a>
+                    <a class="btn btn-link" href="service.html">Wymiana oleju</a>
+                    <a class="btn btn-link" href="service.html">Czyszczenie odkurzaczem</a>                    
+                </div>
+             
+            </div>
+        </div>
+        <div class="container">
+            <div class="copyright">
+                <div class="row">
+                    <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+                        &copy; <a class="border-bottom" href="#">AutoSerwis</a>, All Right Reserved.
+
+                      
+                        Designed By <a class="border-bottom" href="https://github.com/Darin0v0">Darin0v0</a>
+                    </div>
+                    <div class="col-md-6 text-center text-md-end">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Footer End -->
+
+
+    <!-- Back to Top -->
+    <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="lib/wow/wow.min.js"></script>
+    <script src="lib/easing/easing.min.js"></script>
+    <script src="lib/waypoints/waypoints.min.js"></script>
+    <script src="lib/counterup/counterup.min.js"></script>
+    <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="lib/tempusdominus/js/moment.min.js"></script>
+    <script src="lib/tempusdominus/js/moment-timezone.min.js"></script>
+    <script src="lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"></script>
+
+    <!-- Template Javascript -->
+    <script src="js/main.js"></script>
+</body>
+
+</html>

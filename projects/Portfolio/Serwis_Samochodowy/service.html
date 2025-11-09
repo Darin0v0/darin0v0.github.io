@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>AutoSerwis</title>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="" name="keywords">
+  <meta content="" name="description">
+
+  <!-- Favicon -->
+  <link href="img/favicon.ico" rel="icon">
+
+  <!-- Google Web Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700&family=Ubuntu:wght@400;500&display=swap"
+    rel="stylesheet">
+
+  <!-- Icon Font Stylesheet -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Libraries Stylesheet -->
+  <link href="lib/animate/animate.min.css" rel="stylesheet">
+  <link href="lib/owlcarousel/assets/owl.carousel.min.css" rel="stylesheet">
+  <link href="lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css" rel="stylesheet" />
+
+  <!-- Customized Bootstrap Stylesheet -->
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Template Stylesheet -->
+  <link href="css/style.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #fefefe;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Spinner Start -->
+  <div id="spinner"
+    class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+      <span class="sr-only">Loading...</span>
+    </div>
+  </div>
+  <!-- Spinner End -->
+
+  <!-- Topbar Start -->
+  <div class="container-fluid bg-light p-0">
+    <div class="row gx-0 d-none d-lg-flex">
+      <div class="col-lg-7 px-5 text-start">
+        <div class="h-100 d-inline-flex align-items-center py-3 me-4">
+          <small class="fa fa-map-marker-alt text-primary me-2"></small>
+          <small>Błażowa, Pułaskiego 35</small>
+        </div>
+        <div class="h-100 d-inline-flex align-items-center py-3">
+          <small class="far fa-clock text-primary me-2"></small>
+          <small>Pon - Sob: 17.00 - 20.00</small>
+        </div>
+      </div>
+      <div class="col-lg-5 px-5 text-end">
+        <div class="h-100 d-inline-flex align-items-center py-3 me-4">
+          <small class="fa fa-phone-alt text-primary me-2"></small>
+          <small>+693 249 955</small>
+        </div>
+        <div class="h-100 d-inline-flex align-items-center">
+          <a class="btn btn-sm-square bg-white text-primary me-1"
+            href="https://www.facebook.com/profile.php?id=61567279591591"><i class="fab fa-facebook-f"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Topbar End -->
+
+  <!-- Navbar Start -->
+  <nav class="navbar navbar-expand-lg bg-white navbar-light shadow sticky-top p-0">
+    <a href="index.html" class="navbar-brand d-flex align-items-center px-4 px-lg-5">
+      <h2 class="m-0 text-primary"><i class="fa fa-car me-3"></i>Auto Serwis, Wulkanizacja</h2>
+    </a>
+    <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+      <div class="navbar-nav ms-auto p-4 p-lg-0">
+        <a href="index.html" class="nav-item nav-link active">Strona Główna</a>
+        <a href="about.html" class="nav-item nav-link">Portfolio</a>
+        <a href="service.html" class="nav-item nav-link">Usługi i Ceny</a>
+        <a href="contact.html" class="nav-item nav-link">Kontakt</a>
+      </div>
+    </div>
+  </nav>
+  <!-- Navbar End -->
+
+  <!-- Page Header Start -->
+  <div class="container-fluid page-header mb-5 p-0" style="background-image: url(img/carousel-bg-2.jpg);">
+    <div class="container-fluid page-header-inner py-5">
+      <div class="container text-center">
+        <h1 class="display-3 text-white mb-3 animated slideInDown">Usługi i Ceny</h1>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-center text-uppercase">
+            <li class="breadcrumb-item"><a href="index.html">Home</a></li>
+            <li class="breadcrumb-item text-white active" aria-current="page">Services</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <!-- Page Header End -->
+
+  <!-- Services List Start -->
+  <div class="container-xxl py-5">
+    <div class="container">
+      <div class="text-center wow fadeInUp" data-wow-delay="0.1s">
+        <h6 class="text-primary text-uppercase">Nasze Usługi</h6>
+        <h1 class="mb-5">Cennik</h1>
+      </div>
+
+      <!-- Usługi -->
+      <div class="row g-4">
+        <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.2s">
+          <h2>Usługi</h2>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana oleju w silniku + filtra oleju
+              <span class="badge bg-primary rounded-pill">80 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana filtra paliwa
+              <span class="badge bg-primary rounded-pill">50 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana filtra powietrza
+              <span class="badge bg-primary rounded-pill">30 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana filtra kabinowego
+              <span class="badge bg-primary rounded-pill">50 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana płynu hamulcowego
+              <span class="badge bg-primary rounded-pill">60 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana płynu chłodzącego
+              <span class="badge bg-primary rounded-pill">60 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana oleju w skrzyni biegów statycznie
+              <span class="badge bg-primary rounded-pill">70 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Inne do wyceny indywidualnej
+              <span class="badge bg-primary rounded-pill"></span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.2s">
+          <h2>Silnik</h2>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana paska napędu osprzętu (pasek klinowy)
+              <span class="badge bg-primary rounded-pill">40-60 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana rozrządu (pasek, zależy od typu silnika)
+              <span class="badge bg-primary rounded-pill">400-700 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana rozrządu (łańcuch, zależy od typu silnika)
+              <span class="badge bg-primary rounded-pill">500-1000 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana uszczelki pod głowicą
+              <span class="badge bg-primary rounded-pill">500-1000 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Regulacja zaworów
+              <span class="badge bg-primary rounded-pill">60-150 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana silnika
+              <span class="badge bg-primary rounded-pill">2000 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Odkręcenie urwanej świecy żarowej
+              <span class="badge bg-primary rounded-pill">300 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana turbosprężarki (konieczna wymiana oleju)
+              <span class="badge bg-primary rounded-pill">1000 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana pompy wody
+              <span class="badge bg-primary rounded-pill">200 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana pompy paliwa (benzyna)
+              <span class="badge bg-primary rounded-pill">80-150 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana pompy paliwa wysokiego ciśnienia
+              <span class="badge bg-primary rounded-pill">500 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana wtrysku common rail/ pompowtryskiwacza .szt
+              <span class="badge bg-primary rounded-pill">100-300 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana chłodnicy wody
+              <span class="badge bg-primary rounded-pill">250 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana uszczelki miski oleju
+              <span class="badge bg-primary rounded-pill">100-150 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana termostatu
+              <span class="badge bg-primary rounded-pill">50 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana linki sprzęgła
+              <span class="badge bg-primary rounded-pill">100 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana sondy lambda
+              <span class="badge bg-primary rounded-pill">150 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana poduszki silnika
+              <span class="badge bg-primary rounded-pill">80 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Inne do wyceny indywidualnej
+              <span class="badge bg-primary rounded-pill"></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <br>
+
+      <!-- Elektrotechnika -->
+      <div class="row g-4">
+        <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.2s">
+          <h2>Elektrotechnika</h2>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana alternatora
+              <span class="badge bg-primary rounded-pill">150-300 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana rozrusznika
+              <span class="badge bg-primary rounded-pill">150-250 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana świecy zapłonowej (1 szt.)
+              <span class="badge bg-primary rounded-pill">20 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana świecy żarowej (1 szt.)
+              <span class="badge bg-primary rounded-pill">30-90 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana cewki zapłonowej
+              <span class="badge bg-primary rounded-pill">50 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Diagnostyka komputerowa
+              <span class="badge bg-primary rounded-pill">100 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Roboczogodzina
+              <span class="badge bg-primary rounded-pill">150 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Żarówka – wymiana (1 szt.)
+              <span class="badge bg-primary rounded-pill">10-50 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana akumulatora
+              <span class="badge bg-primary rounded-pill">30-50 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana przewodów zapłonowych
+              <span class="badge bg-primary rounded-pill">30-50 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Inne do wyceny indywidualnej
+              <span class="badge bg-primary rounded-pill"></span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.2s">
+          <h2>Układ Hamulcowy</h2>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana klocków hamulcowych przód
+              <span class="badge bg-primary rounded-pill">100 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana klocków hamulcowych tył
+              <span class="badge bg-primary rounded-pill">100 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana tarcz hamulcowych + klocki
+              <span class="badge bg-primary rounded-pill">150 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana szczęk hamulcowych
+              <span class="badge bg-primary rounded-pill">150 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Regeneracja zacisków hamulcowych
+              <span class="badge bg-primary rounded-pill">200 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana przewodów hamulcowych elastycznych
+              <span class="badge bg-primary rounded-pill">100 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana linki ręcznego
+              <span class="badge bg-primary rounded-pill">150 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana pompy hamulcowej
+              <span class="badge bg-primary rounded-pill">250 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Inne do wyceny indywidualnej
+              <span class="badge bg-primary rounded-pill"></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <br>
+
+      <!-- Układ Napędowy -->
+      <div class="row g-4">
+        <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.2s">
+          <h2>Układ Napędowy</h2>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana przegubu wewnętrznego (1 szt.)
+              <span class="badge bg-primary rounded-pill">200 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana przegubu zewnętrznego (1 szt.)
+              <span class="badge bg-primary rounded-pill">130 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana osłony przegubu zewnętrznego
+              <span class="badge bg-primary rounded-pill">200 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana sprzęgła
+              <span class="badge bg-primary rounded-pill">400-800 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana skrzyni biegów
+              <span class="badge bg-primary rounded-pill">600 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Inne do wyceny indywidualnej
+              <span class="badge bg-primary rounded-pill"></span>
+            </li>
+          </ul>
+        </div>
+<!-- Klima -->
+<div class="col-lg-6 wow fadeInUp" data-wow-delay="0.2s">
+  <h2>Klimatyzacja</h2>
+  <ul class="list-group list-group-flush">
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      Serwis klimatyzacji: odessanie i oczyszczenie czynnika R134a, próżnia, kontrola szczelności, ponowne napełnienie
+      
+      <span class="badge bg-primary rounded-pill">130 zł + 25 zł / każde 100g R134a</span>
+    </li>
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      Sprawdzenie szczelności klimatyzacji
+      
+    </li>
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      Odgrzybianie – ozonowanie
+      <span class="badge bg-primary rounded-pill">50 zł</span>
+    </li>
+  </ul>
+</div>
+<BR>
+      <!-- Zawieszenie i Wulkanizacja -->
+      <div class="row g-4">
+        <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.2s">
+          <h2>Zawieszenie</h2>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana sworzni wahaczy
+              <span class="badge bg-primary rounded-pill">100 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana amortyzatora przód
+              <span class="badge bg-primary rounded-pill">100 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana amortyzatora tył
+              <span class="badge bg-primary rounded-pill">60-90 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana sprężyny zawieszenia przód
+              <span class="badge bg-primary rounded-pill">100 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana sprężyny zawieszenia tył
+              <span class="badge bg-primary rounded-pill">60-90 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana łącznika stabilizatora 1 szt
+              <span class="badge bg-primary rounded-pill">60 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana wahacza 1 szt
+              <span class="badge bg-primary rounded-pill">100 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana tulei metalowo-gumowych (kpl/str)
+              <span class="badge bg-primary rounded-pill">200 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana drążka kierowniczego
+              <span class="badge bg-primary rounded-pill">50-80 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana końcówki drążka
+              <span class="badge bg-primary rounded-pill">40-60 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana łożyska przód 1 szt
+              <span class="badge bg-primary rounded-pill">140 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana łożyska tył 1 szt
+              <span class="badge bg-primary rounded-pill">140 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana przekładni kierowniczej (maglownicy) (wspomaganie)
+              <span class="badge bg-primary rounded-pill">200-400 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Osłona przekładni kierowniczej
+              <span class="badge bg-primary rounded-pill">50 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Geometria/zbieżność komputerowa
+              <span class="badge bg-primary rounded-pill">100-200 zł</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.2s">
+          <h2>Wulkanizacja</h2>
+          <ul class="list-group list-group-flush">
+
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana i wyważenie kompletu 4 opon - felgi stalowe od 14 do 17
+              <span class="badge bg-primary rounded-pill">100 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana i wyważenie kompletu 4 opon - felgi aluminiowe od 14-18
+              <span class="badge bg-primary rounded-pill">100 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana i wyważenie kompletu 4 opon - felgi aluminiowe od 19-20
+              <span class="badge bg-primary rounded-pill">150 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Pakiety dostawcze 4x
+              <span class="badge bg-primary rounded-pill">200 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana opony z wyważeniem
+              <span class="badge bg-primary rounded-pill">25 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana opony z czujnikiem TPMS
+              <span class="badge bg-primary rounded-pill">30 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wyważenie kół stal/szt
+              <span class="badge bg-primary rounded-pill">10 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wyważenie kół alu/szt
+              <span class="badge bg-primary rounded-pill">15 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Naprawa opon + pakiet
+              <span class="badge bg-primary rounded-pill">60 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Zawór koła
+              <span class="badge bg-primary rounded-pill">5 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Słupek
+              <span class="badge bg-primary rounded-pill">10 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Programowanie czujnika TPMS
+              <span class="badge bg-primary rounded-pill">50 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Czujnik TPMS
+              <span class="badge bg-primary rounded-pill">150-200 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Inne do wyceny indywidualnej
+              <span class="badge bg-primary rounded-pill"></span>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <br>
+
+      <!-- Tłumik -->
+      <div class="row g-4">
+        <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.2s">
+          <h2>Tłumik</h2>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana tłumika środkowego
+              <span class="badge bg-primary rounded-pill">90-150 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Wymiana tłumika końcowego
+              <span class="badge bg-primary rounded-pill">60-100 zł</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              Sonda lambda
+              <span class="badge bg-primary rounded-pill">90-500 zł</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Services List End -->
+
+  <!-- Footer Start -->
+  <div class="container-fluid bg-dark text-light footer pt-5 mt-5 wow fadeIn" data-wow-delay="0.1s">
+    <div class="container py-5">
+      <div class="row g-5">
+        <div class="col-lg-3 col-md-6">
+          <h4 class="text-light mb-4">Adres</h4>
+          <p class="mb-2"><i class="fa fa-map-marker-alt me-3"></i>Błażowa, Pułaskiego 35</p>
+          <p class="mb-2"><i class="fa fa-phone-alt me-3"></i>+693 249 955</p>
+          <div class="d-flex pt-2">
+            <a class="btn btn-outline-light btn-social"
+              href="https://www.facebook.com/profile.php?id=61567279591591"><i class="fab fa-facebook-f"></i></a>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h4 class="text-light mb-4">Godziny otwarcia</h4>
+          <h6 class="text-light">Poniedziałek - piątek:</h6>
+          <p class="mb-4">16.00-22.00</p>
+          <h6 class="text-light">Sobota:</h6>
+          <p class="mb-0">7.00 - 22.00</p>
+        </div>
+        <div class="col-lg-3 col-md-6">
+          <h4 class="text-light mb-4">Usługi</h4>
+          <a class="btn btn-link" href="service.html">Test diagnostyczny</a>
+          <a class="btn btn-link" href="service.html">Serwis silnika</a>
+          <a class="btn btn-link" href="service.html">Wymiana opon</a>
+          <a class="btn btn-link" href="service.html">Wymiana oleju</a>
+          <a class="btn btn-link" href="service.html">Czyszczenie odkurzaczem</a>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="copyright">
+        <div class="row">
+          <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
+            &copy; <a class="border-bottom" href="#">AutoSerwis</a>, Wszelkie prawa zastrzeżone.
+            <br>
+                        Projekt: <a class="border-bottom" href="https://github.com/Darin0v0">Darin0v0</a>
+          </div>
+          <div class="col-md-6 text-center text-md-end">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Footer End -->
+
+  <!-- Back to Top -->
+  <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+
+  <!-- JavaScript Libraries -->
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="lib/wow/wow.min.js"></script>
+  <script src="lib/easing/easing.min.js"></script>
+  <script src="lib/waypoints/waypoints.min.js"></script>
+  <script src="lib/counterup/counterup.min.js"></script>
+  <script src="lib/owlcarousel/owl.carousel.min.js"></script>
+  <script src="lib/tempusdominus/js/moment.min.js"></script>
+  <script src="lib/tempusdominus/js/moment-timezone.min.js"></script>
+  <script src="lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"></script>
+
+  <!-- Template Javascript -->
+  <script src="js/main.js"></script>
+</body>
+
+</html>
