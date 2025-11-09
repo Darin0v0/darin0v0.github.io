@@ -561,7 +561,7 @@
         <div class="footer-section">
           <h3>Śledź mnie</h3>
           <div class="social-links">
-            <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+            <a href="https://github.com/Darin0v0" class="social-link" target="_blank"><i class="fab fa-github"></i></a>
             <a href="#" class="social-link"><i class="fab fa-linkedin-in"></i></a>
             <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
           </div>
@@ -586,14 +586,20 @@
 
       // Mapa kategorii dla projektów
       const projectCategories = {
-        // Przykładowe kategorie - dostosuj do swoich projektów
-        // 'nazwa_folderu': 'kategoria'
+        'Serwis_Samochodowy_1': 'web'
+        // Dodaj tutaj kolejne projekty i ich kategorie
       };
 
       // Mapa technologii dla projektów
       const projectTechnologies = {
-        // Przykładowe technologie - dostosuj do swoich projektów
-        // 'nazwa_folderu': ['HTML', 'CSS', 'JavaScript']
+        'Serwis_Samochodowy_1': ['HTML', 'CSS', 'JavaScript']
+        // Dodaj tutaj kolejne projekty i ich technologie
+      };
+
+      // Mapa opisów dla projektów
+      const projectDescriptions = {
+        'Serwis_Samochodowy_1': 'Profesjonalna strona internetowa serwisu samochodowego z systemem rezerwacji terminów i wyceną usług.'
+        // Dodaj tutaj opisy dla kolejnych projektów
       };
 
       async function fetchProjectsList() {
@@ -608,14 +614,8 @@
           return dirs.map(d => d.name);
         } catch (err) {
           console.error('Błąd pobierania listy projektów:', err);
-          projectsContainer.innerHTML = `
-            <div class="empty-state">
-              <i class="fas fa-exclamation-circle"></i>
-              <h3>Nie udało się wczytać projektów</h3>
-              <p>Sprawdź połączenie z internetem lub spróbuj ponownie później.</p>
-            </div>
-          `;
-          return [];
+          // Jeśli API nie działa, użyj ręcznej listy projektów
+          return ['Serwis_Samochodowy_1'];
         }
       }
 
@@ -629,26 +629,30 @@
         
         const title = folderName.replace(/[-_]/g, ' ');
         const technologies = projectTechnologies[folderName] || ['HTML', 'CSS', 'JavaScript'];
+        const description = projectDescriptions[folderName] || `Projekt ${title} - zobacz demo lub kod źródłowy. Kliknij poniższe przyciski, aby zobaczyć szczegóły.`;
         
-        // Ścieżka do obrazka prew.jpg w folderze projektu
-        const imagePath = `./projects/Portfolio/${folderName}/prew.jpg`;
+        // Ścieżki do zasobów
+        const imagePath = `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/prew.jpg`;
+        const demoUrl = `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/`;
+        const sourceUrl = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/projects/Portfolio/${folderName}`;
         
         card.innerHTML = `
           <div class="project-image-container">
-            <img class="project-image" src="${imagePath}" alt="${title}" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUyOTNiIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2NiZDVlMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkJyYWsga29udGEgPC90ZXh0Pjwvc3ZnPg=='">
+            <img class="project-image" src="${imagePath}" alt="${title}" 
+                 onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUyOTNiIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2NiZDVlMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPiR7dGl0bGV9PC90ZXh0Pjwvc3ZnPg=='">
             <div class="project-category">${category.toUpperCase()}</div>
           </div>
           <div class="project-content">
             <h3>${title}</h3>
-            <p>Projekt ${title} - zobacz demo lub kod źródłowy. Kliknij poniższe przyciski, aby zobaczyć szczegóły.</p>
+            <p>${description}</p>
             <div class="project-tech">
               ${technologies.map(tech => `<span class="tech-tag">${tech}</span>`).join('')}
             </div>
             <div class="project-links">
-              <a href="https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/" class="project-link demo" target="_blank" rel="noopener noreferrer">
+              <a href="${demoUrl}" class="project-link demo" target="_blank" rel="noopener noreferrer">
                 <i class="fas fa-external-link-alt"></i> LIVE DEMO
               </a>
-              <a href="https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/projects/Portfolio/${folderName}" class="project-link source" target="_blank" rel="noopener noreferrer">
+              <a href="${sourceUrl}" class="project-link source" target="_blank" rel="noopener noreferrer">
                 <i class="fab fa-github"></i> KOD ŹRÓDŁOWY
               </a>
             </div>
@@ -681,6 +685,9 @@
 
       async function initProjects() {
         const folders = await fetchProjectsList();
+        
+        projectsContainer.innerHTML = '';
+        
         if (folders.length === 0) {
           projectsContainer.innerHTML = `
             <div class="empty-state">
@@ -692,7 +699,6 @@
           return;
         }
         
-        projectsContainer.innerHTML = '';
         folders.forEach(folder => {
           const card = createProjectCard(folder);
           projectsContainer.appendChild(card);
