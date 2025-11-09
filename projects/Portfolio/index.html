@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio | Automatyczne Wykrywanie Projektów</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --dark: #0f172a;
+            --darker: #0a0f1c;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --glass: rgba(255, 255, 255, 0.05);
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            color: var(--light);
+            line-height: 1.6;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 4rem 2rem;
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--gray);
+            margin-bottom: 2.5rem;
+        }
+
+        /* Projects Section */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+
+        /* Grid projektów */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .project-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            transition: all 0.4s;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            border-color: var(--primary);
+        }
+
+        .project-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            transition: transform 0.5s;
+            background: linear-gradient(45deg, var(--primary-dark), var(--secondary));
+        }
+
+        .project-card:hover .project-image {
+            transform: scale(1.05);
+        }
+
+        .project-content {
+            padding: 1.5rem;
+        }
+
+        .project-title {
+            font-size: 1.4rem;
+            margin-bottom: 0.8rem;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .project-title i {
+            color: var(--primary);
+        }
+
+        .project-description {
+            color: var(--gray);
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .project-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .project-link {
+            flex: 1;
+            text-align: center;
+            padding: 0.6rem 0;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .demo-link {
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+        .code-link {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .demo-link:hover {
+            background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .code-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--darker);
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            background: var(--glass);
+            border-radius: 50%;
+            color: var(--light);
+            font-size: 1.3rem;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .social-link:hover {
+            background: var(--primary);
+            transform: translateY(-5px);
+        }
+
+        .copyright {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* Responsywność */
+        @media (max-width: 768px) {
+            .nav-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .project-links {
+                flex-direction: column;
+            }
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray);
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Placeholder dla zdjęć */
+        .image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: linear-gradient(45deg, var(--primary-dark), var(--secondary));
+            color: white;
+        }
+
+        .image-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .refresh-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .project-count {
+            color: var(--primary);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-code"></i>
+                Moje Portfolio
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Moje Projekty</h1>
+        <p>Portfolio automatycznie wykrywa <span class="project-count" id="project-count">0</span> projektów w folderze <strong>projekty/</strong></p>
+        <button class="refresh-btn" onclick="scanForProjects()">
+            <i class="fas fa-sync-alt"></i> Odśwież Listę Projektów
+        </button>
+    </section>
+
+    <!-- Projects Section -->
+    <section class="container">
+        <h2 class="section-title">Wszystkie Wykryte Projekty</h2>
+        
+        <div class="projects-grid" id="projects-container">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>Wykrywanie projektów...</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="social-links">
+                <a href="#" class="social-link"><i class="fab fa-github"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+                <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-link"><i class="fas fa-envelope"></i></a>
+            </div>
+            <p class="copyright">&copy; 2023 Moje Portfolio. Projekty wykrywane automatycznie.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Lista wszystkich wykrytych projektów
+        let allProjects = [];
+
+        // Funkcja do sprawdzania czy folder istnieje
+        async function checkFolderExists(folderName) {
+            try {
+                const response = await fetch(`./projekty/${folderName}/`, { method: 'HEAD' });
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // Funkcja do sprawdzania czy plik istnieje
+        async function checkFileExists(filePath) {
+            try {
+                const response = await fetch(filePath, { method: 'HEAD' });
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        // Funkcja do automatycznego wykrywania folderów
+        async function autoDiscoverProjects() {
+            console.log("Rozpoczynam automatyczne wykrywanie projektów...");
+            
+            // Próba 1: Sprawdź znane projekty
+            const commonProjects = [
+                'Serwis Samochodowy 1', 'Serwis Samochodowy',
+                'Portfolio', 'Sklep Internetowy', 'Blog',
+                'Aplikacja Webowa', 'Strona Firmowa', 'Landing Page'
+            ];
+
+            const discoveredProjects = [];
+
+            // Sprawdź znane projekty
+            for (const projectName of commonProjects) {
+                const folderExists = await checkFolderExists(projectName);
+                if (folderExists) {
+                    discoveredProjects.push(projectName);
+                }
+            }
+
+            // Próba 2: Sprawdź dodatkowe możliwe foldery
+            const additionalChecks = Array.from({length: 10}, (_, i) => `Projekt ${i + 1}`);
+            for (const projectName of additionalChecks) {
+                const folderExists = await checkFolderExists(projectName);
+                if (folderExists && !discoveredProjects.includes(projectName)) {
+                    discoveredProjects.push(projectName);
+                }
+            }
+
+            return discoveredProjects;
+        }
+
+        // Główna funkcja do ładowania projektów
+        async function loadProjects() {
+            const container = document.getElementById('projects-container');
+            const projectCount = document.getElementById('project-count');
+            
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Wykrywanie projektów...</p>
+                </div>
+            `;
+
+            // Automatyczne wykrywanie projektów
+            const projectFolders = await autoDiscoverProjects();
+            
+            const projects = [];
+            
+            // Sprawdzanie każdego wykrytego projektu
+            for (const projectName of projectFolders) {
+                const imagePath = `./projekty/${projectName}/prew.jpg`;
+                const demoPath = `./projekty/${projectName}/index.html`;
+                
+                const imageExists = await checkFileExists(imagePath);
+                const demoExists = await checkFileExists(demoPath);
+                
+                projects.push({
+                    name: projectName,
+                    folder: projectName,
+                    image: imageExists ? imagePath : null,
+                    demoLink: demoExists ? demoPath : null,
+                    description: getProjectDescription(projectName),
+                    hasPreview: imageExists,
+                    hasDemo: demoExists
+                });
+            }
+
+            // Aktualizuj licznik projektów
+            projectCount.textContent = projects.length;
+            
+            // Jeśli nie znaleziono projektów, pokaż przykładowe
+            if (projects.length === 0) {
+                showExampleProjects();
+                return;
+            }
+
+            renderProjects(projects);
+            allProjects = projects;
+        }
+
+        // Funkcja zwracająca opis projektu na podstawie nazwy
+        function getProjectDescription(projectName) {
+            const descriptions = {
+                'Serwis Samochodowy 1': 'Kompleksowy serwis samochodowy z systemem rezerwacji i cennikiem usług',
+                'Serwis Samochodowy': 'Strona serwisu samochodowego z informacjami o usługach i kontaktem',
+                'Portfolio': 'Strona portfolio z prezentacją projektów i umiejętności',
+                'Sklep Internetowy': 'Pełnoprawny sklep internetowy z koszykiem i systemem płatności',
+                'Blog': 'Blog personalny z systemem zarządzania treścią',
+                'Aplikacja Webowa': 'Zaawansowana aplikacja webowa z interaktywnym interfejsem',
+                'Strona Firmowa': 'Profesjonalna strona firmowa z informacjami o usługach',
+                'Landing Page': 'Strona landing page z formularzem kontaktowym i CTA'
+            };
+
+            return descriptions[projectName] || `Projekt ${projectName} - strona internetowa`;
+        }
+
+        // Funkcja do renderowania projektów
+        function renderProjects(projects) {
+            const container = document.getElementById('projects-container');
+            
+            if (projects.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--gray);">
+                        <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <h3>Nie znaleziono projektów</h3>
+                        <p>Utwórz folder <strong>projekty/</strong> i dodaj do niego foldery z projektami.</p>
+                        <p>Każdy projekt powinien zawierać plik <strong>prew.jpg</strong> i <strong>index.html</strong></p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            projects.forEach(project => {
+                const projectCard = document.createElement('div');
+                projectCard.className = 'project-card';
+                
+                projectCard.innerHTML = `
+                    <div class="project-image">
+                        ${project.image ? 
+                            `<img src="${project.image}" alt="${project.name}" 
+                                  style="width: 100%; height: 100%; object-fit: cover;"
+                                  onerror="this.style.display='none'; this.parentNode.innerHTML='<div class=\\'image-placeholder\\'><i class=\\'fas fa-folder\\'></i><span>${project.name}</span></div>';" />` : 
+                            `<div class="image-placeholder">
+                                <i class="fas fa-folder"></i>
+                                <span>${project.name}</span>
+                            </div>`
+                        }
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">
+                            <i class="fas fa-folder"></i>
+                            ${project.name}
+                        </h3>
+                        <p class="project-description">
+                            ${project.description}
+                        </p>
+                        <div class="project-status" style="margin-bottom: 1rem; font-size: 0.8rem; color: var(--gray);">
+                            <i class="fas ${project.hasPreview ? 'fa-check text-success' : 'fa-times text-warning'}"></i> Zdjęcie 
+                            <i class="fas ${project.hasDemo ? 'fa-check text-success' : 'fa-times text-warning'}" style="margin-left: 1rem;"></i> Demo
+                        </div>
+                        <div class="project-links">
+                            <a href="${project.demoLink || '#'}" 
+                               class="project-link demo-link ${!project.demoLink ? 'disabled' : ''}" 
+                               ${!project.demoLink ? 'onclick="alert(\\'Brak pliku index.html w tym projekcie\\'); return false;"' : ''}
+                               target="_blank">
+                                <i class="fas fa-external-link-alt"></i> Otwórz Projekt
+                            </a>
+                            <a href="./projekty/${project.folder}/" class="project-link code-link" target="_blank">
+                                <i class="fas fa-folder-open"></i> Zobacz Folder
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(projectCard);
+            });
+        }
+
+        // Funkcja pokazująca przykładowe projekty (gdy nie znaleziono żadnych)
+        function showExampleProjects() {
+            const container = document.getElementById('projects-container');
+            const projectCount = document.getElementById('project-count');
+            
+            projectCount.textContent = "0";
+            
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: var(--gray);">
+                    <i class="fas fa-folder-open" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                    <h3>Nie znaleziono projektów</h3>
+                    <p style="margin-bottom: 2rem;">Utwórz strukturę folderów:</p>
+                    <div style="text-align: left; background: var(--card-bg); padding: 1.5rem; border-radius: 10px; display: inline-block; margin-bottom: 2rem;">
+                        <code style="color: var(--light);">
+                            projekty/<br>
+                            ├── Serwis Samochodowy 1/<br>
+                            │   ├── prew.jpg<br>
+                            │   ├── index.html<br>
+                            │   ├── css/<br>
+                            │   └── js/<br>
+                            └── Twoj Projekt/<br>
+                                ├── prew.jpg<br>
+                                └── index.html
+                        </code>
+                    </div>
+                    <p>Następnie odśwież stronę!</p>
+                </div>
+            `;
+        }
+
+        // Główna funkcja skanowania
+        async function scanForProjects() {
+            console.log("Rozpoczynam skanowanie projektów...");
+            await loadProjects();
+        }
+
+        // Inicjalizacja po załadowaniu strony
+        document.addEventListener('DOMContentLoaded', () => {
+            scanForProjects();
+        });
+
+        // Dodaj style dla statusów
+        const style = document.createElement('style');
+        style.textContent = `
+            .text-success { color: #10b981; }
+            .text-warning { color: #f59e0b; }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
