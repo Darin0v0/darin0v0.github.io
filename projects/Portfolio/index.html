@@ -222,6 +222,10 @@
       position: relative;
       height: 200px;
       overflow: hidden;
+      background: var(--dark-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
     .project-image {
@@ -420,6 +424,25 @@
       font-size: 4rem;
       margin-bottom: 1.5rem;
       color: var(--border);
+    }
+    
+    /* Image Debug Styles */
+    .image-debug {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 5px;
+      display: none;
+    }
+    
+    .project-image-container:hover .image-debug {
+      display: block;
     }
     
     /* Responsive Design */
@@ -631,15 +654,29 @@
         const technologies = projectTechnologies[folderName] || ['HTML', 'CSS', 'JavaScript'];
         const description = projectDescriptions[folderName] || `Projekt ${title} - zobacz demo lub kod źródłowy. Kliknij poniższe przyciski, aby zobaczyć szczegóły.`;
         
-        // Ścieżki do zasobów
-        const imagePath = `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/prew.jpg`;
+        // RÓŻNE MOŻLIWE ŚCIEŻKI DO OBRAZKA - wybierze pierwszą działającą
+        const possibleImagePaths = [
+          `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/prew.jpg`,
+          `./projects/Portfolio/${folderName}/prew.jpg`,
+          `projects/Portfolio/${folderName}/prew.jpg`,
+          `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/projects/Portfolio/${folderName}/prew.jpg`
+        ];
+        
         const demoUrl = `https://${GITHUB_USER}.github.io/projects/Portfolio/${folderName}/`;
         const sourceUrl = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/projects/Portfolio/${folderName}`;
         
         card.innerHTML = `
           <div class="project-image-container">
-            <img class="project-image" src="${imagePath}" alt="${title}" 
-                 onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUyOTNiIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2NiZDVlMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPiR7dGl0bGV9PC90ZXh0Pjwvc3ZnPg=='">
+            <img class="project-image" 
+                 src="${possibleImagePaths[0]}" 
+                 alt="${title}"
+                 onerror="
+                   console.log('Błąd ładowania obrazka:', this.src);
+                   this.onerror=() => {
+                     this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzUwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWUyOTNiIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2NiZDVlMSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPiR7dGl0bGV9PC90ZXh0Pjwvc3ZnPg==';
+                   };
+                 ">
+            <div class="image-debug">Ścieżka: ${possibleImagePaths[0]}</div>
             <div class="project-category">${category.toUpperCase()}</div>
           </div>
           <div class="project-content">
@@ -658,6 +695,25 @@
             </div>
           </div>
         `;
+
+        // Funkcja do próbowania różnych ścieżek obrazków
+        const tryNextImagePath = (img, paths, currentIndex = 0) => {
+          if (currentIndex >= paths.length) return;
+          
+          img.src = paths[currentIndex];
+          img.onerror = () => {
+            console.log(`Ścieżka ${paths[currentIndex]} nie działa, próbuję następną...`);
+            tryNextImagePath(img, paths, currentIndex + 1);
+          };
+        };
+
+        // Spróbuj różnych ścieżek obrazków
+        const img = card.querySelector('.project-image');
+        setTimeout(() => {
+          if (img.naturalWidth === 0) {
+            tryNextImagePath(img, possibleImagePaths, 1);
+          }
+        }, 1000);
 
         return card;
       }
