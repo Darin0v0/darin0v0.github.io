@@ -3,89 +3,42 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CYBERSPACE_TERMINAL</title>
-  
-  <!-- Czcionki -->
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;500;700&family=Orbitron:wght@400;700&family=Michroma&family=Titillium+Web:wght@300;600&family=Exo+2:wght@300;600&display=swap" rel="stylesheet">
-  
-  <!-- Ikona -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💻</text></svg>">
-  
-  <!-- Style -->
+  <title>Darin0v0 - Portfolio</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍💻</text></svg>">
   <link rel="stylesheet" href="style.css">
-  
-  <!-- Preload audio -->
-  <link rel="preload" href="https://www.myinstants.com/media/sounds/ghost-in-the-shell-innocence-cyberbrain-conversation.mp3" as="audio">
 </head>
-<body class="theme-matrix">
-  <div class="cyber-container">
-    <header class="cyber-header">
-      <h1 class="cyber-title" data-text="Darin_0v0">Darin_0v0</h1>
-      <p class="cyber-subtitle">CYBERSPACE_TERMINAL_v4.2.1</p>
-      
-     <div class="theme-switcher">
-  <button data-theme="evangelion">EVANGELION</button>
-  <button data-theme="psycho-pass">PSYCHO-PASS</button>
-  <button data-theme="cowboy-bebop">COWBOY BEBOP</button>
-  <button data-theme="ghost-in-the-shell">GHOST IN SHELL</button>
-  <button data-theme="vinland-saga">VINLAND SAGA</button>
-  <button data-theme="perfect-blue">PERFECT BLUE</button>
-  <button data-theme="ruchomy-zamek">RUCHOMY ZAMEK</button>
-  <button data-theme="totoro">TOTORO</button>
-  <button data-theme="akira">AKIRA</button>
-  <button data-theme="death-note">DEATH NOTE</button>
-  <button data-theme="attack-on-titan">ATTACK ON TITAN</button>
-  <button data-theme="spirited-away">SPIRITED AWAY</button>
-  <button data-theme="lain">SERIAL EXPERIMENTS LAIN</button>
- <button data-theme="jujutsu-kaisen">Jujutsu Kaisen</button>
-<button data-theme="steins-gate">Steins;Gate</button>
-
-  <a href="https://fauux.neocities.org/Love" target="_blank" rel="noopener" class="lain-love-link">LoveLain</a>
-</div>
+<body>
+  <div class="container">
+    <header>
+      <h1>Darin0v0</h1>
+      <p class="subtitle">Full Stack Developer</p>
     </header>
 
-    <main class="cyber-main">
-      <div class="terminal" id="terminalOutput" aria-live="polite">
-        > SYSTEM INITIALIZED<br>
-        > WELCOME TO MY DIGITAL SPACE<br>
-        > TYPE COMMAND BELOW<br><BR>
-        > TYPE "HELP TO START"<br>
+    <div class="console">
+      <div class="console-header">
+        <span class="console-dot red"></span>
+        <span class="console-dot yellow"></span>
+        <span class="console-dot green"></span>
+        <span class="console-title">terminal</span>
       </div>
-
-      <div class="input-group">
-        <input type="text" id="repoPath" placeholder="HELP to start" class="cyber-input" aria-label="Command input">
-        <div class="button-group">
-          <button id="apiBtn" class="cyber-button">EXECUTE_QUERY</button>
-          <button id="playMusicBtn" class="cyber-button">TOGGLE_AMBIENT</button>
-        </div>
+      <div class="console-body" id="consoleOutput">
+        <div class="console-line"><span class="prompt">$</span> <span class="output">Witaj! Wpisz "help" aby zobaczyć dostępne komendy.</span></div>
       </div>
-
-      <div id="projectsContainer" class="terminal" style="display:none;" aria-live="polite">
-        <!-- Projekty będą ładowane dynamicznie -->
+      <div class="console-input-group">
+        <input type="text" class="console-input" id="consoleInput" placeholder="Wpisz komendę...">
+        <button class="console-btn" id="runBtn">Run</button>
       </div>
-    </main>
+    </div>
 
-    <footer class="cyber-footer">
-      <p>CONNECT:</p>
-      <div class="footer-links">
-        <a href="mailto:dawidmurias907@gmail.com" class="cyber-link">EMAIL</a>
-        <a href="https://github.com/Darin0v0" class="cyber-link" target="_blank" rel="noopener noreferrer">GITHUB</a>
+    <footer class="contact">
+      <p class="contact-title">Kontakt</p>
+      <div class="links">
+        <a href="mailto:dawidmurias907@gmail.com" class="link">Email</a>
+        <a href="https://github.com/Darin0v0" class="link" target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
     </footer>
   </div>
 
-  <!-- YouTube Player -->
-  <div id="player"></div>
-
-  <div class="audio-controls">
-    <div class="volume-slider">
-      <input type="range" id="volumeControl" min="0" max="100" value="50">
-      <span class="volume-value">50%</span>
-    </div>
-    <div class="audio-status">INITIALIZING...</div>
-  </div>
-
-  <!-- Script -->
   <script src="script.js"></script>
 </body>
 </html>
