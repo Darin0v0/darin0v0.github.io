@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++ Lab | Edukacyjna aplikacja do nauki programowania</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
+</head>
+<body>
+    <div class="cursor"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+    
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">C++ <span class="accent">Lab</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="#about">O aplikacji</a>
+                <a href="#features">Funkcje</a>
+                <a href="#tech">Technologie</a>
+                <a href="#setup">Start</a>
+                <a href="#demo" class="btn-nav">Demo</a>
+            </div>
+            <button class="menu-toggle">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="pulse"></span>
+                    <span>Open Source</span>
+                    <span class="version">v1.0</span>
+                </div>
+                <h1 class="hero-title">
+                    <span class="title-line">Naucz się</span>
+                    <span class="title-gradient">programowania</span>
+                    <span class="title-line">w C++</span>
+                </h1>
+                <p class="hero-desc">Nowoczesna aplikacja webowa do nauki programowania w szkole. Uczniowie piszą kod, nauczyciel widzi wszystko w czasie rzeczywistym przez Socket.IO.</p>
+                <div class="hero-actions">
+                    <a href="#setup" class="btn btn-primary">
+                        <span>Rozpocznij naukę</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    <a href="#demo" class="btn btn-outline">
+                        <span>Oglądaj demo</span>
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <span class="stat-value">100%</span>
+                        <span class="stat-label">Open Source</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">Real-time</span>
+                        <span class="stat-label">WebSocket</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">Free</span>
+                        <span class="stat-label">Brak kosztów</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="editor-container">
+                    <div class="editor-header">
+                        <div class="editor-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="editor-tabs">
+                            <div class="tab active">main.cpp</div>
+                            <div class="tab">utils.h</div>
+                        </div>
+                        <div class="editor-actions">
+                            <span class="run-btn">▶ Run</span>
+                        </div>
+                    </div>
+                    <div class="editor-body">
+                        <div class="line-numbers">
+                            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span>
+                        </div>
+                        <pre class="code-content"><code><span class="kw">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;vector&gt;</span>
+
+<span class="type">int</span> <span class="func">main</span>() {
+    <span class="type">std::vector</span>&lt;<span class="type">int</span>&gt; numbers = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>};
+    
+    <span class="kw">for</span> (<span class="type">auto</span> n : numbers) {
+        <span class="type">std::cout</span> << n << <span class="str">" "</span>;
+    }
+    
+    <span class="kw">return</span> <span class="num">0</span>;
+}</code></pre>
+                        <div class="terminal">
+                            <div class="terminal-header">Terminal</div>
+                            <div class="terminal-output">
+                                <span class="prompt">$</span> g++ main.cpp -o main
+                                <span class="success">✓ Kompilacja zakończona</span>
+                                <span class="prompt">$</span> ./main
+                                <span class="output">1 2 3</span>
+                                <span class="prompt">$</span><span class="blink">▋</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="floating-card card-1">
+                    <span class="card-icon">👨‍🎓</span>
+                    <span>12 uczniów online</span>
+                </div>
+                <div class="floating-card card-2">
+                    <span class="card-icon">👨‍🏫</span>
+                    <span>Monitorowanie</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="features-section">
+            <div class="section-header">
+                <span class="section-tag">about</span>
+                <h2>Stworzony dla szkoły</h2>
+                <p>Aplikacja idealna na lekcje informatyki</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎓</div>
+                    <h3>Dla uczniów</h3>
+                    <p>Edytor C++ z podświetlaniem składni, uruchamianie programów w jeden klik, autozapis kodu</p>
+                    <div class="feature-line"></div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Dla nauczyciela</h3>
+                    <p>Podgląd wszystkich uczniów, historia aktywności, wysyłanie wiadomości broadcast</p>
+                    <div class="feature-line"></div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>Sieć LAN</h3>
+                    <p>Działa w lokalnej sieci szkolnej, połączenie przez Socket.IO w czasie rzeczywistym</p>
+                    <div class="feature-line"></div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <h3>Backup</h3>
+                    <p>Automatyczny zapis do database.json, eksport do pliku JSON, przywracanie</p>
+                    <div class="feature-line"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="detail-section">
+            <div class="section-header">
+                <span class="section-tag">features</span>
+                <h2>Wszystko czego potrzebujesz</h2>
+            </div>
+            <div class="details-grid">
+                <div class="detail-item">
+                    <div class="detail-number">01</div>
+                    <div class="detail-content">
+                        <h3>CodeMirror Editor</h3>
+                        <p>Profesjonalny edytor z kolorowaniem składni C++, numeracją linii, automatycznym wcięciem i indywidualnymi ustawieniami</p>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-number">02</div>
+                    <div class="detail-content">
+                        <h3>Kompilacja C++</h3>
+                        <p>Uruchamianie kodu bezpośrednio w przeglądarce przez Node.js, wyniki wyświetlane w terminalu</p>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-number">03</div>
+                    <div class="detail-content">
+                        <h3>Monitoring aktywności</h3>
+                        <p>Nauczyciel widzi kto jest aktywny, co pisze w danej chwili, jakie wykonuje operacje (run, copy, paste)</p>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-number">04</div>
+                    <div class="detail-content">
+                        <h3>Broadcast wiadomości</h3>
+                        <p>Wysyłaj wiadomości do wszystkich uczniów jednocześnie, np. "czas minął", "sprawdźcie zadanie"</p>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-number">05</div>
+                    <div class="detail-content">
+                        <h3>Zarządzanie bazą</h3>
+                        <p>Usuwanie pojedynczych uczniów, czyszczenie całej bazy, eksport do pliku backup</p>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-number">06</div>
+                    <div class="detail-content">
+                        <h3>API REST</h3>
+                        <p>Pełne API do zarządzania: /api/students, /api/activities-all, /api/database/export</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tech" class="tech-section">
+            <div class="tech-content">
+                <span class="section-tag">stack</span>
+                <h2>Technologie</h2>
+                <p>Zbudowane na nowoczesnym stacku Node.js</p>
+                <ul class="tech-list">
+                    <li><span class="tech-badge">Node.js</span> Serwer i środowisko uruchomieniowe</li>
+                    <li><span class="tech-badge">Express</span> Framework webowy</li>
+                    <li><span class="tech-badge">Socket.IO</span> Komunikacja real-time</li>
+                    <li><span class="tech-badge">CodeMirror</span> Edytor kodu</li>
+                    <li><span class="tech-badge">JSON</span> Baza danych</li>
+                </ul>
+            </div>
+            <div class="tech-visual">
+                <div class="code-block">
+                    <div class="code-block-header">server.js</div>
+                    <pre><code><span class="kw">const</span> express = <span class="func">require</span>(<span class="str">'express'</span>);
+<span class="kw">const</span> http = <span class="func">require</span>(<span class="str">'http'</span>);
+<span class="kw">const</span> { Server } = <span class="func">require</span>(<span class="str">"socket.io"</span>);
+
+<span class="kw">const</span> app = <span class="func">express</span>();
+<span class="kw">const</span> server = <span class="func">http</span>.<span class="func">createServer</span>(app);
+<span class="kw">const</span> io = <span class="func">new</span> Server(server);
+
+io.<span class="func">on</span>(<span class="str">'connection'</span>, (socket) => {
+    socket.<span class="func">on</span>(<span class="str">'code-change'</span>, (data) => {
+        io.<span class="func">emit</span>(<span class="str">'code-update'</span>, data);
+    });
+});
+
+server.<span class="func">listen</span>(<span class="num">3000</span>);</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section id="setup" class="setup-section">
+            <div class="section-header">
+                <span class="section-tag">quickstart</span>
+                <h2>Jak zacząć?</h2>
+                <p>Uruchom w 3 minuty</p>
+            </div>
+            <div class="setup-steps">
+                <div class="setup-card">
+                    <div class="setup-number">01</div>
+                    <div class="setup-content">
+                        <h3>Klonowanie</h3>
+                        <p>Sklonuj repozytorium lub pobierz kod</p>
+                        <code>git clone https://github.com/...</code>
+                    </div>
+                </div>
+                <div class="setup-arrow">→</div>
+                <div class="setup-card">
+                    <div class="setup-number">02</div>
+                    <div class="setup-content">
+                        <h3>Instalacja</h3>
+                        <p>Zainstaluj zależności npm</p>
+                        <code>npm install</code>
+                    </div>
+                </div>
+                <div class="setup-arrow">→</div>
+                <div class="setup-card">
+                    <div class="setup-number">03</div>
+                    <div class="setup-content">
+                        <h3>Uruchomienie</h3>
+                        <p>Uruchom serwer i otwórz w przeglądarce</p>
+                        <code>npm start</code>
+                    </div>
+                </div>
+            </div>
+            <div class="setup-links">
+                <a href="http://localhost:3000" class="link-card">
+                    <span>🌐 localhost:3000</span>
+                </a>
+                <a href="http://localhost:3000/teacher.html" class="link-card">
+                    <span>📊 Panel nauczyciela</span>
+                </a>
+                <a href="http://localhost:3000/student.html" class="link-card">
+                    <span>📝 Panel ucznia</span>
+                </a>
+            </div>
+        </section>
+
+        <section id="demo" class="demo-section">
+            <div class="section-header">
+                <span class="section-tag">watch</span>
+                <h2>Zobacz w działaniu</h2>
+                <p>Film pokazuje jak aplikacja działa od środka</p>
+            </div>
+            <div class="video-wrapper">
+                <iframe src="https://www.youtube.com/embed/oNQ_8vIRvFE" title="C++ Lab Demo" allowfullscreen></iframe>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <span class="logo-icon">⚡</span>
+                <span>C++ Lab</span>
+            </div>
+            <p>Aplikacja edukacyjna do nauki programowania w C++</p>
+            <div class="footer-links">
+                <a href="#about">O aplikacji</a>
+                <a href="#features">Funkcje</a>
+                <a href="#setup">Start</a>
+                <a href="#demo">Demo</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
