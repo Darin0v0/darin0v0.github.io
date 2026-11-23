@@ -3,41 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Darin0v0 - Portfolio</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍💻</text></svg>">
+  <title>L A Y E R : 0 0 // DARIN0V0</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Darin0v0</h1>
-      <p class="subtitle">Full Stack Developer</p>
+  <!-- Nakładka CRT Scanlines -->
+  <div class="crt-overlay"></div>
+  <div class="noise-overlay"></div>
+
+  <main class="wired-container">
+    <!-- Górny pasek systemowy -->
+    <header class="sys-header">
+      <span class="blink">●</span> PROTOCOL_7 // NODE: <strong>DARIN0V0</strong>
+      <span class="jp-sub">「現実はどこにあるのか」</span>
     </header>
 
-    <div class="console">
-      <div class="console-header">
-        <span class="console-dot red"></span>
-        <span class="console-dot yellow"></span>
-        <span class="console-dot green"></span>
-        <span class="console-title">terminal</span>
-      </div>
-      <div class="console-body" id="consoleOutput">
-        <div class="console-line"><span class="prompt">$</span> <span class="output">Witaj! Wpisz "help" aby zobaczyć dostępne komendy.</span></div>
-      </div>
-      <div class="console-input-group">
-        <input type="text" class="console-input" id="consoleInput" placeholder="Wpisz komendę...">
-        <button class="console-btn" id="runBtn">Run</button>
-      </div>
-    </div>
+    <!-- Centralny obiekt / "Ołtarz" -->
+    <section class="core-node">
+      <div class="glitch-title" data-text="DARIN0V0">DARIN0V0</div>
+      <p class="cryptic-quote">
+        "If you aren't remembered, then you never existed."
+      </p>
 
-    <footer class="contact">
-      <p class="contact-title">Kontakt</p>
-      <div class="links">
-        <a href="mailto:dawidmurias907@gmail.com" class="link">Email</a>
-        <a href="https://github.com/Darin0v0" class="link" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <!-- Miejsce na GIF w stylu PS1 / Lain -->
+      <div class="media-frame">
+        <div class="placeholder-sigil">
+          [ 0x4C 0x41 0x49 0x4E ]<br>
+          CONNECTING TO THE WIRED...
+        </div>
       </div>
+    </section>
+
+    <!-- Rozproszone linki zamiast klasycznego menu -->
+    <nav class="scattered-links">
+      <a href="https://github.com/Darin0v0" target="_blank" class="node-link">[01] GITHUB_ARCHIVE</a>
+      <a href="#projects" class="node-link" onclick="toggleLayer('projects')">[02] MEMORY_DUMPS</a>
+      <a href="#about" class="node-link" onclick="toggleLayer('about')">[03] EGO_PROFILE</a>
+      <a href="mailto:twoj@email.com" class="node-link">[04] TRANSMIT_SIGNAL</a>
+    </nav>
+
+    <!-- Ukryte warstwy (otwierane po kliknięciu, bez przeładowania strony) -->
+    <section id="projects" class="hidden-layer">
+      <h2>// MEMORY_DUMPS [PROJECTS]</h2>
+      <ul>
+        <li><a href="#">&gt; PROJECT_ALPHA</a> — krótki opis projektu w surowym stylu.</li>
+        <li><a href="#">&gt; PROJECT_BETA</a> — eksperyment / narzędzie / skrypt.</li>
+      </ul>
+    </section>
+
+    <section id="about" class="hidden-layer">
+      <h2>// EGO_PROFILE</h2>
+      <p>
+        Status: <span class="red-text">ONLINE</span><br>
+        Location: The Wired / Poland<br>
+        Interests: Linux, Low-level, Retro-web, Cybernetics.
+      </p>
+    </section>
+
+    <!-- Stopka z klimatem starego internetu -->
+    <footer class="sys-footer">
+      <div class="marquee-box">
+        <span>+++ NO MATTER WHERE YOU GO, EVERYONE'S CONNECTED +++ PRESENT DAY, PRESENT TIME +++</span>
+      </div>
+      <p class="footer-meta">
+        UID: 000-1998-0706 // <span id="clock">00:00:00</span>
+      </p>
     </footer>
-  </div>
+  </main>
 
   <script src="script.js"></script>
 </body>
