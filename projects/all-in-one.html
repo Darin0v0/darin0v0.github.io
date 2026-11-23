@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="pl" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>darin0v0@github:~$</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Klasyczny, prosty układ w stylu OnlineGDB */
+        * {
+            font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+        }
+        .editor-box {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        .line-nums {
+            width: 3rem;
+            padding: 0.75rem 0.5rem;
+            text-align: right;
+            font-size: 0.82rem;
+            line-height: 1.45rem;
+            user-select: none;
+            overflow: hidden;
+        }
+        .code-area {
+            flex: 1;
+            padding: 0.75rem;
+            font-size: 0.82rem;
+            line-height: 1.45rem;
+            border: none;
+            outline: none;
+            resize: none;
+            white-space: pre;
+            overflow: auto;
+            tab-size: 4;
+            background: transparent;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(130, 130, 130, 0.25);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(130, 130, 130, 0.45);
+        }
+    </style>
+</head>
+<body class="bg-[#f5f5f5] text-[#1e1e1e] dark:bg-[#1e1e1e] dark:text-[#d4d4d4] text-xs h-screen flex flex-col overflow-hidden selection:bg-[#264f78]/40">
+
+    <!-- Komunikat statusu -->
+    <div id="toast" class="fixed bottom-3 right-3 z-50 hidden px-2.5 py-1 text-xs bg-[#252526] text-[#cccccc] border border-[#3c3c3c]"></div>
+
+    <!-- Górny pasek narzędzi (jak w OnlineGDB) -->
+    <header class="border-b border-[#d4d4d4] dark:border-[#333333] px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 shrink-0 bg-[#ebebeb] dark:bg-[#252526]">
+        <div class="flex items-center gap-3 flex-wrap">
+            <span class="font-semibold text-xs text-[#1e1e1e] dark:text-[#e0e0e0]">
+                darin0v0<span class="text-[#777777]">/ide</span>
+            </span>
+
+            <span class="text-[#bbbbbb] dark:text-[#444444]">|</span>
+
+            <!-- Przycisk uruchomienia -->
+            <button onclick="runCode()" id="btn-run" class="px-3 py-1 bg-[#2e7d32] hover:bg-[#388e3c] text-white font-medium text-xs transition-colors">
+                &#9654; Run
+            </button>
+
+            <button onclick="resetCurrentCode()" class="px-2 py-1 border border-[#cccccc] dark:border-[#3c3c3c] bg-[#f5f5f5] dark:bg-[#2d2d2d] hover:border-[#888888] text-xs text-[#444444] dark:text-[#cccccc]">
+                Reset
+            </button>
+        </div>
+
+        <!-- Prawa strona: wybór języka + panel nauki + motyw -->
+        <div class="flex items-center gap-2 flex-wrap">
+            <label for="lang-select" class="text-[11px] text-[#666666] dark:text-[#999999]">Język:</label>
+            <select id="lang-select" onchange="setLanguage(this.value)" class="px-2 py-1 text-xs bg-[#ffffff] dark:bg-[#2d2d2d] border border-[#cccccc] dark:border-[#3c3c3c] text-[#1e1e1e] dark:text-[#e0e0e0] focus:outline-none">
+                <option value="cpp">C++ (GCC)</option>
+                <option value="c">C (GCC)</option>
+                <option value="web">HTML / CSS / JS</option>
+                <option value="basic">BASIC</option>
+            </select>
+
+            <button onclick="toggleGuide()" id="btn-guide" class="px-2.5 py-1 border border-[#cccccc] dark:border-[#3c3c3c] bg-[#f5f5f5] dark:bg-[#2d2d2d] hover:border-[#888888] text-xs text-[#333333] dark:text-[#cccccc]">
+                Wiki języka
+            </button>
+
+            <button onclick="toggleTheme()" id="btn-theme" class="px-2 py-1 border border-[#cccccc] dark:border-[#3c3c3c] bg-[#f5f5f5] dark:bg-[#2d2d2d] hover:border-[#888888] text-xs text-[#333333] dark:text-[#cccccc]" title="Jasny / Ciemny">
+                Motyw
+            </button>
+        </div>
+    </header>
+
+    <!-- GŁÓWNA PRZESTRZEŃ: LEWO (EDYTOR + DOLNA KONSOLA) | PRAWO (WIKI JĘZYKÓW) -->
+    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        
+        <!-- LEWA CZĘŚĆ: EDYTOR NA GÓRZE + TERMINAl/PODGLĄD NA DOLE -->
+        <div class="flex-1 flex flex-col overflow-hidden min-w-0">
+            
+            <!-- EDYTOR KODU -->
+            <section class="flex-1 flex flex-col overflow-hidden min-h-0">
+                <!-- Pasek zakładki pliku -->
+                <div class="px-3 py-1 border-b border-[#d4d4d4] dark:border-[#333333] flex items-center justify-between bg-[#f0f0f0] dark:bg-[#252526] shrink-0">
+                    <div id="web-tabs" class="hidden items-center gap-1">
+                        <button onclick="setWebTab('html')" id="tab-html" class="web-tab px-2 py-0.5 text-xs bg-[#ffffff] dark:bg-[#1e1e1e] text-[#1e1e1e] dark:text-[#ffffff] border border-[#cccccc] dark:border-[#3c3c3c]">index.html</button>
+                        <button onclick="setWebTab('css')" id="tab-css" class="web-tab px-2 py-0.5 text-xs text-[#666666] dark:text-[#888888] hover:text-[#1e1e1e] dark:hover:text-[#e0e0e0]">style.css</button>
+                        <button onclick="setWebTab('js')" id="tab-js" class="web-tab px-2 py-0.5 text-xs text-[#666666] dark:text-[#888888] hover:text-[#1e1e1e] dark:hover:text-[#e0e0e0]">script.js</button>
+                    </div>
+                    <div id="file-label" class="text-xs text-[#333333] dark:text-[#cccccc]">main.cpp</div>
+                    
+                    <span id="cursor-info" class="text-[11px] text-[#777777]">Ln 1, Col 1</span>
+                </div>
+
+                <!-- Pole tekstowe -->
+                <div class="editor-box bg-[#ffffff] dark:bg-[#1e1e1e]">
+                    <div id="line-nums" class="line-nums bg-[#f5f5f5] dark:bg-[#1e1e1e] text-[#999999] dark:text-[#555555] border-r border-[#e5e5e5] dark:border-[#2d2d2d]">1</div>
+                    <textarea id="code-area" class="code-area text-[#1e1e1e] dark:text-[#d4d4d4]" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                </div>
+            </section>
+
+            <!-- DOLNY PANEL: KONSOLA (stdout + stdin) LUB PODGLĄD STRONY -->
+            <section class="h-[38%] min-h-[160px] border-t border-[#d4d4d4] dark:border-[#333333] flex flex-col bg-[#f5f5f5] dark:bg-[#181818] shrink-0">
+                
+                <!-- Podgląd dla HTML/CSS/JS -->
+                <div id="web-output" class="hidden flex-1 flex-col overflow-hidden">
+                    <div class="px-3 py-1 border-b border-[#d4d4d4] dark:border-[#333333] flex justify-between items-center text-[11px] text-[#555555] dark:text-[#999999] bg-[#ebebeb] dark:bg-[#252526] shrink-0">
+                        <span>Podgląd strony + konsola JS</span>
+                        <button onclick="clearJsConsole()" class="hover:text-[#1e1e1e] dark:hover:text-[#ffffff]">Wyczyść logi</button>
+                    </div>
+                    <div class="flex-1 flex flex-col sm:flex-row overflow-hidden">
+                        <iframe id="preview-frame" sandbox="allow-scripts allow-modals" class="w-full sm:w-2/3 h-full bg-white border-0"></iframe>
+                        <div id="js-console" class="w-full sm:w-1/3 h-24 sm:h-full border-t sm:border-t-0 sm:border-l border-[#d4d4d4] dark:border-[#333333] p-2 text-xs overflow-y-auto space-y-0.5 text-[#333333] dark:text-[#cccccc] bg-[#f8f8f8] dark:bg-[#181818]"></div>
+                    </div>
+                </div>
+
+                <!-- Konsola i stdin dla C++, C, BASIC -->
+                <div id="console-output-wrap" class="flex-1 flex flex-col overflow-hidden">
+                    <div class="px-3 py-1 border-b border-[#d4d4d4] dark:border-[#333333] flex justify-between items-center text-[11px] text-[#555555] dark:text-[#999999] bg-[#ebebeb] dark:bg-[#252526] shrink-0">
+                        <span id="status-text">Konsola (stdout)</span>
+                        <button onclick="clearTerminal()" class="hover:text-[#1e1e1e] dark:hover:text-[#ffffff]">Wyczyść</button>
+                    </div>
+                    <div class="flex-1 flex flex-col sm:flex-row overflow-hidden">
+                        <!-- Wyjście programu -->
+                        <pre id="terminal-box" class="flex-1 p-3 text-xs overflow-y-auto whitespace-pre-wrap leading-relaxed text-[#1e1e1e] dark:text-[#d4d4d4]">Kliknij "Run" (lub Ctrl+Enter), aby uruchomić program.</pre>
+                        
+                        <!-- Pole stdin po prawej stronie dolnego terminala (jak w OnlineGDB) -->
+                        <div class="w-full sm:w-64 border-t sm:border-t-0 sm:border-l border-[#d4d4d4] dark:border-[#333333] flex flex-col bg-[#f0f0f0] dark:bg-[#202020] shrink-0">
+                            <label for="stdin-box" class="px-2.5 py-1 border-b border-[#e0e0e0] dark:border-[#2d2d2d] text-[11px] text-[#666666] dark:text-[#999999]">
+                                Standard Input (stdin):
+                            </label>
+                            <textarea id="stdin-box" placeholder="Wpisz dane dla cin / scanf / INPUT..." class="flex-1 w-full bg-transparent p-2 text-xs text-[#1e1e1e] dark:text-[#d4d4d4] placeholder-[#999999] dark:placeholder-[#555555] focus:outline-none resize-none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+
+        <!-- PRAWA KOLUMNA: ZWIJANE WIKI JĘZYKÓW -->
+        <aside id="guide-section" class="w-full lg:w-[370px] xl:w-[410px] h-64 lg:h-full border-t lg:border-t-0 lg:border-l border-[#d4d4d4] dark:border-[#333333] flex flex-col bg-[#f5f5f5] dark:bg-[#202020] shrink-0">
+            <div class="px-3 py-1.5 border-b border-[#d4d4d4] dark:border-[#333333] flex items-center justify-between gap-2 bg-[#ebebeb] dark:bg-[#252526] shrink-0">
+                <div class="flex items-center gap-1">
+                    <button onclick="setWikiTab('cpp')" id="wiki-tab-cpp" class="wiki-tab px-1.5 py-0.5 text-[11px] bg-[#1e1e1e] text-white dark:bg-[#333333] dark:text-[#ffffff]">C++</button>
+                    <button onclick="setWikiTab('c')" id="wiki-tab-c" class="wiki-tab px-1.5 py-0.5 text-[11px] text-[#666666] dark:text-[#888888] hover:text-[#1e1e1e] dark:hover:text-[#ffffff]">C</button>
+                    <button onclick="setWikiTab('web')" id="wiki-tab-web" class="wiki-tab px-1.5 py-0.5 text-[11px] text-[#666666] dark:text-[#888888] hover:text-[#1e1e1e] dark:hover:text-[#ffffff]">Web</button>
+                    <button onclick="setWikiTab('basic')" id="wiki-tab-basic" class="wiki-tab px-1.5 py-0.5 text-[11px] text-[#666666] dark:text-[#888888] hover:text-[#1e1e1e] dark:hover:text-[#ffffff]">BASIC</button>
+                </div>
+                <button onclick="toggleGuide()" class="text-[11px] text-[#666666] hover:text-[#1e1e1e] dark:hover:text-[#ffffff]" title="Ukryj panel">Ukryj [x]</button>
+            </div>
+            
+            <div class="px-2.5 py-1.5 border-b border-[#e0e0e0] dark:border-[#2d2d2d] shrink-0">
+                <input id="wiki-search" oninput="renderWiki()" type="text" placeholder="Szukaj komendy (np. int, string, for, printf)..." class="w-full px-2 py-1 border border-[#cccccc] dark:border-[#3c3c3c] bg-[#ffffff] dark:bg-[#1e1e1e] text-xs text-[#1e1e1e] dark:text-[#d4d4d4] placeholder-[#999999] dark:placeholder-[#555555] focus:outline-none">
+            </div>
+
+            <div id="guide-list" class="flex-1 overflow-y-auto p-2.5 space-y-2.5">
+                <!-- Treść generowana dynamicznie -->
+            </div>
+        </aside>
+
+    </main>
+
+    <script>
+        // ==========================================
+        // 1. SZABLONY STARTOWE KODU
+        // ==========================================
+        const TEMPLATES = {
+            cpp: `#include <iostream>\n#include <string>\nusing namespace std;\n\nint main() {\n    string imie = "Darin";\n    int n = 5;\n\n    cout << "Czesc, " << imie << "!" << endl;\n    for (int i = 1; i <= n; i++) {\n        cout << i << "^2 = " << i * i << endl;\n    }\n    return 0;\n}`,
+            c: `#include <stdio.h>\n\nint main() {\n    char imie[] = "Darin";\n    int n = 5;\n\n    printf("Czesc, %s!\\n", imie);\n    for (int i = 1; i <= n; i++) {\n        printf("%d^2 = %d\\n", i, i * i);\n    }\n    return 0;\n}`,
+            web: {
+                html: `<div class="box">\n  <h3>Test strony</h3>\n  <p>Edytuj HTML, CSS i JS, a potem kliknij Run.</p>\n  <button id="btn">Kliknij mnie</button>\n  <span id="out">0</span>\n</div>`,
+                css: `body {\n  font-family: monospace;\n  padding: 16px;\n}\n.box {\n  max-width: 360px;\n  padding: 12px;\n  border: 1px solid #999;\n}\nbutton {\n  font-family: monospace;\n  padding: 4px 10px;\n  cursor: pointer;\n}`,
+                js: `let licznik = 0;\ndocument.getElementById("btn").addEventListener("click", () => {\n  licznik++;\n  document.getElementById("out").textContent = " -> " + licznik;\n  console.log("Licznik:", licznik);\n});`
+            },
+            basic: `10 REM prosta petla na start\n20 LET IMIE$ = "Darin"\n30 PRINT "Czesc, "; IMIE$; "!"\n40 FOR I = 1 TO 5\n50   PRINT I; "^2 = "; I * I\n60 NEXT I\n70 END`
+        };
+
+        // ==========================================
+        // 2. WIKI JĘZYKÓW (KOMENDY + PRZYKŁADY)
+        // ==========================================
+        const WIKI_DATA = {
+            web: [
+                {
+                    title: "HTML — Podstawowe znaczniki i formularze",
+                    desc: "Znaczniki HTML budują szkielet dokumentu.",
+                    commands: [
+                        { cmd: "<html>, <head>, <body>", info: "Główny kontener dokumentu, nagłówek techniczny i treść strony" },
+                        { cmd: "<h1> ... <h6>, <p>", info: "Nagłówki sekcji oraz zwykły akapit tekstu" },
+                        { cmd: "<a href=\"...\">, <img src=\"...\">", info: "Odnośnik do strony oraz osadzenie obrazka" },
+                        { cmd: "<ul>, <li>, <div>", info: "Lista punktowana, pozycja listy oraz blok grupujący" },
+                        { cmd: "<input>, <button>", info: "Pole wpisywania danych oraz przycisk akcji" }
+                    ],
+                    code: `<h1>Tytuł</h1>
+<p>Akapit z <a href="#">linkiem</a>.</p>
+<ul><li>Punkt A</li><li>Punkt B</li></ul>
+<input id="pole" placeholder="wpisz tekst">
+<button id="ok">ok</button>`,
+                    example: {
+                        html: `<div class="karta">\n  <h3>Formularz powitalny</h3>\n  <p>Wpisz swoje imię:</p>\n  <input id="imieInput" placeholder="np. Kasia">\n  <button id="powitajBtn">przywitaj</button>\n  <p id="komunikat"></p>\n</div>`,
+                        css: `.karta { font-family: monospace; padding: 14px; border: 1px solid #9e9c93; max-width: 320px; }\ninput, button { font-family: monospace; padding: 5px 8px; margin-top: 6px; border: 1px solid #1f1f1d; }`,
+                        js: `document.getElementById("powitajBtn").addEventListener("click", () => {\n  const imie = document.getElementById("imieInput").value || "Gościu";\n  document.getElementById("komunikat").textContent = "Cześć, " + imie + "!";\n});`
+                    }
+                },
+                {
+                    title: "CSS — Kolory, odstępy i układ Flexbox",
+                    desc: "Reguły CSS odpowiadają za wygląd i rozmieszczenie elementów.",
+                    commands: [
+                        { cmd: "color, background", info: "Kolor tekstu oraz kolor tła" },
+                        { cmd: "margin, padding", info: "Margines na zewnątrz oraz odstęp wewnątrz bloku" },
+                        { cmd: "border, font-size", info: "Ramka wokół elementu oraz rozmiar czcionki" },
+                        { cmd: "display: flex; gap: 8px;", info: "Ustawienie elementów obok siebie z równym odstępem" }
+                    ],
+                    code: `.pudelko {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    margin: 8px 0;
+    color: #1f1f1d;
+    background: #eae8e1;
+    border: 1px solid #9e9c93;
+    font-size: 13px;
+}`,
+                    example: {
+                        html: `<div class="pasek">\n  <div class="box">[1]</div>\n  <div class="box">[2]</div>\n  <div class="box">[3]</div>\n</div>`,
+                        css: `.pasek { display: flex; gap: 8px; padding: 10px; background: #eae8e1; border: 1px solid #9e9c93; }\n.box { padding: 8px 12px; background: #1f1f1d; color: #f4f3ef; font-family: monospace; font-size: 13px; }`,
+                        js: `console.log("Flexbox załadowany.");`
+                    }
+                },
+                {
+                    title: "JavaScript — Zmienne, DOM, zdarzenia, warunki i pętle",
+                    desc: "Podstawowe konstrukcje JS do obsługi logiki na stronie.",
+                    commands: [
+                        { cmd: "let, const", info: "Zmienna (let) oraz stała niezmienna (const)" },
+                        { cmd: "console.log(...)", info: "Wypisanie wiadomości do dolnej konsoli" },
+                        { cmd: "document.querySelector(...)", info: "Pobranie elementu ze strony po selektorze CSS" },
+                        { cmd: "addEventListener('click', fn)", info: "Podpięcie akcji pod kliknięcie przycisku" },
+                        { cmd: "if / else, for, function", info: "Warunek, pętla oraz własna funkcja" }
+                    ],
+                    code: `const btn = document.querySelector("#btn");
+let suma = 0;
+
+function dodaj(x) {
+    if (x > 0) suma += x;
+    else console.log("Liczba musi być dodatnia");
+}
+
+for (let i = 1; i <= 3; i++) dodaj(i);
+btn.addEventListener("click", () => console.log("Suma:", suma));`,
+                    example: {
+                        html: `<button id="startBtn">policz 1..5</button>\n<ul id="wyniki"></ul>`,
+                        css: `body { font-family: monospace; padding: 14px; }\nbutton { font-family: monospace; padding: 6px 10px; border: 1px solid #1f1f1d; cursor: pointer; }`,
+                        js: `const btn = document.querySelector("#startBtn");\nconst lista = document.querySelector("#wyniki");\n\nfunction generuj() {\n  lista.innerHTML = "";\n  for (let i = 1; i <= 5; i++) {\n    const li = document.createElement("li");\n    li.textContent = i % 2 === 0 ? i + " -> parzysta" : i + " -> nieparzysta";\n    lista.appendChild(li);\n  }\n}\n\nbtn.addEventListener("click", generuj);`
+                    }
+                }
+            ],
+            cpp: [
+                {
+                    title: "Struktura programu i typy (int, double, string, bool)",
+                    desc: "Wykonanie każdego programu w C++ startuje w funkcji <code>main()</code>.",
+                    commands: [
+                        { cmd: "#include <iostream>", info: "Dołączenie obsługi strumieni std::cout oraz std::cin" },
+                        { cmd: "int main() { return 0; }", info: "Główna funkcja startowa programu" },
+                        { cmd: "int, double", info: "Liczba całkowita (np. 17) oraz ułamkowa (np. 4.85)" },
+                        { cmd: "char, string", info: "Pojedynczy znak ('A') oraz tekst (\"Kamil\")" },
+                        { cmd: "bool", info: "Wartość logiczna: true (1) albo false (0)" }
+                    ],
+                    code: `#include <iostream>
+#include <string>
+using namespace std;
+
+int main() {
+    int wiek = 17;
+    double srednia = 4.85;
+    char grupa = 'A';
+    string imie = "Kamil";
+    bool aktywny = true;
+    cout << imie << " (" << grupa << "): " << wiek << " lat, sr. " << srednia << endl;
+    return 0;
+}`,
+                    example: `#include <iostream>\n#include <string>\nusing namespace std;\n\nint main() {\n    int wiek = 17;\n    double srednia = 4.85;\n    char grupa = 'A';\n    string imie = "Kamil";\n    bool aktywny = true;\n\n    cout << "Uczen: " << imie << " | Grupa: " << grupa << endl;\n    cout << "Wiek: " << wiek << " | Srednia: " << srednia << " | Aktywny: " << aktywny << endl;\n    return 0;\n}`
+                },
+                {
+                    title: "Wejście i wyjście: cout, cin, getline",
+                    desc: "Dane dla <code>cin</code> i <code>getline</code> wpisz w polu <b>&lt; stdin</b> przed uruchomieniem.",
+                    commands: [
+                        { cmd: "std::cout << ...", info: "Wypisanie tekstu lub wartości zmiennej na konsolę" },
+                        { cmd: "std::cin >> x", info: "Wczytanie liczby lub pojedynczego słowa ze standardowego wejścia" },
+                        { cmd: "std::getline(std::cin, s)", info: "Wczytanie całej linii tekstu wraz ze spacjami" }
+                    ],
+                    code: `#include <iostream>
+#include <string>
+using namespace std;
+
+int main() {
+    string linia;
+    getline(cin, linia);
+    cout << "Wczytano: " << linia << endl;
+    return 0;
+}`,
+                    example: `#include <iostream>\n#include <string>\nusing namespace std;\n\nint main() {\n    // Wpisz w polu '< stdin' np.: Jan Kowalski\n    string pelneImie;\n    if (getline(cin, pelneImie) && !pelneImie.empty()) {\n        cout << "Witaj, " << pelneImie << "!" << endl;\n    } else {\n        cout << "Wpisz imie i nazwisko w polu '< stdin' powyzej." << endl;\n    }\n    return 0;\n}`
+                },
+                {
+                    title: "Warunki, pętle, wektory (std::vector) i funkcje",
+                    desc: "Instrukcje sterujące oraz dynamiczna tablica <code>std::vector</code>.",
+                    commands: [
+                        { cmd: "if / else if / else, switch", info: "Instrukcje warunkowe wyboru" },
+                        { cmd: "for (...), while (...)", info: "Pętla z licznikiem oraz pętla dopóki warunek jest prawdziwy" },
+                        { cmd: "std::vector<int> v", info: "Rozszerzalna tablica (metody: push_back, size)" },
+                        { cmd: "int nazwa(int a) { ... }", info: "Własna funkcja zwracająca obliczoną wartość" }
+                    ],
+                    code: `#include <iostream>
+#include <vector>
+using namespace std;
+
+int kwadrat(int x) { return x * x; }
+
+int main() {
+    vector<int> liczby = {2, 4, 6};
+    liczby.push_back(8);
+    for (int x : liczby) {
+        if (x > 4) cout << x << "^2 = " << kwadrat(x) << endl;
+    }
+    return 0;
+}`,
+                    example: `#include <iostream>\n#include <vector>\nusing namespace std;\n\nint kwadrat(int x) {\n    return x * x;\n}\n\nint main() {\n    vector<int> liczby = {2, 3, 4, 5};\n    liczby.push_back(6);\n\n    for (int i = 0; i < (int)liczby.size(); i++) {\n        int n = liczby[i];\n        if (n % 2 == 0) {\n            cout << n << " (parzysta) -> kwadrat = " << kwadrat(n) << endl;\n        } else {\n            cout << n << " (nieparzysta)" << endl;\n        }\n    }\n    return 0;\n}`
+                }
+            ],
+            c: [
+                {
+                    title: "Struktura, typy danych i formaty printf / scanf",
+                    desc: "W C funkcje <code>printf</code> i <code>scanf</code> rozpoznają typ danych po znacznikach (np. <code>%d</code>).",
+                    commands: [
+                        { cmd: "#include <stdio.h>", info: "Biblioteka standardowego wejścia/wyjścia (printf, scanf, fgets)" },
+                        { cmd: "int, float, double", info: "Liczba całkowita oraz liczby zmiennoprzecinkowe" },
+                        { cmd: "char, char tekst[]", info: "Pojedynczy znak oraz tablica znaków (napis)" },
+                        { cmd: "%d, %f, %c, %s", info: "Znaczniki dla: int (%d), float/double (%f), char (%c), napisu (%s)" }
+                    ],
+                    code: `#include <stdio.h>
+
+int main() {
+    int rok = 2026;
+    float temp = 21.5f;
+    char znak = 'C';
+    char jezyk[] = "Jezyk C";
+    printf("%s (%c) - rok %d, temp %.1f\\n", jezyk, znak, rok, temp);
+    return 0;
+}`,
+                    example: `#include <stdio.h>\n\nint main() {\n    int rok = 2026;\n    double pi = 3.1415;\n    char ocena = 'A';\n    char kurs[] = "Programowanie w C";\n\n    printf("Kurs: %s\\n", kurs);\n    printf("Rok: %d | Ocena: %c | PI: %.2f\\n", rok, ocena, pi);\n    return 0;\n}`
+                },
+                {
+                    title: "Wejście/wyjście, warunki, pętle i wskaźniki (*, &)",
+                    desc: "Wskaźnik (<code>*</code>) przechowuje adres innej zmiennej pobrany operatorem <code>&amp;</code>.",
+                    commands: [
+                        { cmd: "printf(...), scanf(\"%d\", &x)", info: "Wypisywanie oraz wczytywanie zmiennych (wymaga & przed nazwą)" },
+                        { cmd: "fgets(buf, sizeof(buf), stdin)", info: "Bezpieczne wczytanie całej linii tekstu" },
+                        { cmd: "if / else, for, while", info: "Instrukcje warunkowe i pętle" },
+                        { cmd: "int *ptr = &x;", info: "Wskaźnik na adres zmiennej x (*ptr odczytuje lub zmienia wartość)" },
+                        { cmd: "int suma(int a, int b)", info: "Deklaracja funkcji w C" }
+                    ],
+                    code: `#include <stdio.h>
+
+void podwoj(int *wsk) {
+    *wsk = (*wsk) * 2;
+}
+
+int main() {
+    int liczba = 7;
+    podwoj(&liczba);
+    for (int i = 1; i <= 3; i++) {
+        if (liczba > 10) printf("[%d] Wartosc przez wskaznik: %d\\n", i, liczba);
+    }
+    return 0;
+}`,
+                    example: `#include <stdio.h>\n\nvoid podwoj(int *wsk) {\n    *wsk = (*wsk) * 2;\n}\n\nint main() {\n    int x = 6;\n    printf("Przed: %d\\n", x);\n    podwoj(&x);\n    printf("Po uzyciu wskaznika: %d\\n", x);\n\n    int i = 1;\n    while (i <= 3) {\n        printf("Iteracja while: %d\\n", i);\n        i++;\n    }\n    return 0;\n}`
+                }
+            ],
+            basic: [
+                {
+                    title: "Podstawowe komendy: PRINT, INPUT, LET, REM, END",
+                    desc: "Linie w klasycznym BASIC-u numeruje się co 10 (np. 10, 20, 30).",
+                    commands: [
+                        { cmd: "10 REM komentarz", info: "Komentarz pomijany podczas wykonywania kodu" },
+                        { cmd: "20 LET A = 10 / LET S$ = \"Hi\"", info: "Zmienna liczbowa (A) oraz tekstowa ze znakiem dolara (S$)" },
+                        { cmd: "30 PRINT \"Wynik:\"; A", info: "Wypisanie tekstu lub zmiennej na ekran" },
+                        { cmd: "40 INPUT X", info: "Pobranie wartości z pola '< stdin'" },
+                        { cmd: "99 END", info: "Zatrzymanie działania programu" }
+                    ],
+                    code: `10 REM powitanie i zmienne
+20 LET KURS$ = "BASIC"
+30 LET ROK = 2026
+40 PRINT "Witaj w "; KURS$; " ("; ROK; ")"
+50 END`,
+                    example: `10 REM zmienne liczbowe i tekstowe\n20 LET IMIE$ = "Marek"\n30 LET A = 12\n40 LET B = 8\n50 PRINT "Uczen: "; IMIE$\n60 PRINT "Suma A + B = "; A + B\n70 END`
+                },
+                {
+                    title: "Sterowanie: IF...THEN...ELSE, FOR...NEXT, GOTO, GOSUB",
+                    desc: "Warunki, pętle licznikowe oraz skoki do linii lub podprogramów.",
+                    commands: [
+                        { cmd: "IF A > 5 THEN ... ELSE ...", info: "Warunek logiczny wykonujący instrukcję lub skok do numeru linii" },
+                        { cmd: "FOR I = 1 TO 10 STEP 2 ... NEXT I", info: "Pętla od wartości początkowej do końcowej" },
+                        { cmd: "GOTO 50", info: "Skok bezpośrednio do linii o numerze 50" },
+                        { cmd: "GOSUB 100 ... RETURN", info: "Skok do podprogramu (100) i powrót przez RETURN" }
+                    ],
+                    code: `10 FOR I = 1 TO 6 STEP 1
+20   IF I MOD 2 = 0 THEN GOSUB 100 ELSE PRINT I; " - nieparzysta"
+30 NEXT I
+40 END
+100 PRINT I; " - parzysta (podprogram)"
+110 RETURN`,
+                    example: `10 REM petla FOR, warunek IF oraz GOSUB\n20 FOR I = 1 TO 5\n30   IF I = 3 THEN GOSUB 100 ELSE PRINT "Krok: "; I\n40 NEXT I\n50 END\n100 PRINT ">>> Specjalny komunikat dla I = 3 <<<"\n110 RETURN`
+                }
+            ]
+        };
+
+        // ==========================================
+        // 3. STAN APLIKACJI I INICJALIZACJA
+        // ==========================================
+        const state = {
+            lang: 'cpp',
+            webTab: 'html',
+            wikiTab: 'cpp',
+            guideOpen: true,
+            code: JSON.parse(JSON.stringify(TEMPLATES))
+        };
+
+        const codeArea = document.getElementById('code-area');
+        const lineNums = document.getElementById('line-nums');
+        const cursorInfo = document.getElementById('cursor-info');
+
+        window.onload = function () {
+            const savedTheme = localStorage.getItem('darin_theme');
+            if (savedTheme === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                document.documentElement.classList.add('dark');
+            }
+
+            try {
+                const saved = JSON.parse(localStorage.getItem('darin_code'));
+                if (saved && saved.web && saved.cpp && saved.c && saved.basic) {
+                    state.code = saved;
+                }
+            } catch (e) {}
+
+            setLanguage('cpp');
+        };
+
+        function saveState() {
+            try {
+                localStorage.setItem('darin_code', JSON.stringify(state.code));
+            } catch (e) {}
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.remove('hidden');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.add('hidden'), 2000);
+        }
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darin_theme', isDark ? 'dark' : 'light');
+        }
+
+        function toggleGuide() {
+            state.guideOpen = !state.guideOpen;
+            const guideSec = document.getElementById('guide-section');
+            if (state.guideOpen) {
+                guideSec.classList.remove('hidden');
+                guideSec.classList.add('flex');
+            } else {
+                guideSec.classList.add('hidden');
+                guideSec.classList.remove('flex');
+            }
+        }
+
+        // ==========================================
+        // 4. OBSŁUGA EDYTORA TEKSTU
+        // ==========================================
+        function updateLines() {
+            const count = codeArea.value.split('\n').length;
+            let text = '';
+            for (let i = 1; i <= count; i++) text += i + '\n';
+            lineNums.textContent = text;
+        }
+
+        function updateCursor() {
+            const before = codeArea.value.substring(0, codeArea.selectionStart);
+            const lines = before.split('\n');
+            cursorInfo.textContent = `Ln ${lines.length}, Col ${lines[lines.length - 1].length + 1}`;
+        }
+
+        codeArea.addEventListener('scroll', () => {
+            lineNums.scrollTop = codeArea.scrollTop;
+        });
+
+        codeArea.addEventListener('input', () => {
+            if (state.lang === 'web') {
+                state.code.web[state.webTab] = codeArea.value;
+            } else {
+                state.code[state.lang] = codeArea.value;
+            }
+            updateLines();
+            updateCursor();
+            saveState();
+        });
+
+        codeArea.addEventListener('click', updateCursor);
+        codeArea.addEventListener('keyup', updateCursor);
+
+        codeArea.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const s = codeArea.selectionStart;
+                const end = codeArea.selectionEnd;
+                codeArea.value = codeArea.value.substring(0, s) + '    ' + codeArea.value.substring(end);
+                codeArea.selectionStart = codeArea.selectionEnd = s + 4;
+                codeArea.dispatchEvent(new Event('input'));
+            } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                runCode();
+            }
+        });
+
+        function syncEditor() {
+            codeArea.value = state.lang === 'web'
+                ? state.code.web[state.webTab]
+                : state.code[state.lang];
+            updateLines();
+            updateCursor();
+        }
+
+        // ==========================================
+        // 5. PRZEŁĄCZANIE JĘZYKÓW I ZAKŁADEK
+        // ==========================================
+        function setLanguage(lang) {
+            state.lang = lang;
+            const selectEl = document.getElementById('lang-select');
+            if (selectEl) selectEl.value = lang;
+
+            const webTabs = document.getElementById('web-tabs');
+            const fileLabel = document.getElementById('file-label');
+            const webOut = document.getElementById('web-output');
+            const conOut = document.getElementById('console-output-wrap');
+
+            if (lang === 'web') {
+                webTabs.classList.remove('hidden');
+                webTabs.classList.add('flex');
+                fileLabel.classList.add('hidden');
+                webOut.classList.remove('hidden');
+                webOut.classList.add('flex');
+                conOut.classList.add('hidden');
+                conOut.classList.remove('flex');
+            } else {
+                webTabs.classList.add('hidden');
+                webTabs.classList.remove('flex');
+                fileLabel.classList.remove('hidden');
+                const names = { cpp: 'main.cpp', c: 'main.c', basic: 'program.bas' };
+                fileLabel.textContent = names[lang];
+
+                webOut.classList.add('hidden');
+                webOut.classList.remove('flex');
+                conOut.classList.remove('hidden');
+                conOut.classList.add('flex');
+            }
+
+            syncEditor();
+            setWikiTab(lang);
+
+            if (lang === 'web') {
+                runCode();
+            } else {
+                document.getElementById('status-text').textContent = 'Konsola (stdout)';
+                document.getElementById('terminal-box').textContent = 'Kliknij "Run" (lub Ctrl+Enter), aby uruchomić program.';
+            }
+        }
+
+        function setWebTab(tab) {
+            state.webTab = tab;
+            document.querySelectorAll('.web-tab').forEach(btn => {
+                btn.className = 'web-tab px-2 py-0.5 text-xs text-[#666666] dark:text-[#888888] hover:text-[#1e1e1e] dark:hover:text-[#e0e0e0]';
+            });
+            document.getElementById('tab-' + tab).className = 'web-tab px-2 py-0.5 text-xs bg-[#ffffff] dark:bg-[#1e1e1e] text-[#1e1e1e] dark:text-[#ffffff] border border-[#cccccc] dark:border-[#3c3c3c]';
+            syncEditor();
+        }
+
+        function resetCurrentCode() {
+            if (state.lang === 'web') {
+                state.code.web = { ...TEMPLATES.web };
+            } else {
+                state.code[state.lang] = TEMPLATES[state.lang];
+            }
+            syncEditor();
+            saveState();
+            showToast('Przywrócono kod domyślny');
+            if (state.lang === 'web') runCode();
+        }
+
+        // ==========================================
+        // 6. URUCHAMIANIE KODU (WEB, C++, C, BASIC)
+        // ==========================================
+        async function runCode() {
+            if (state.lang === 'web') {
+                runWeb();
+            } else if (state.lang === 'basic') {
+                runBasic();
+            } else {
+                await runCompiler(state.lang);
+            }
+        }
+
+        // 6A. HTML + CSS + JS w iframe
+        function runWeb() {
+            const iframe = document.getElementById('preview-frame');
+            const jsConsole = document.getElementById('js-console');
+            jsConsole.innerHTML = '';
+
+            const hook = `<script>
+                (function(){
+                    const send = (t, args) => {
+                        const msg = Array.from(args).map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' ');
+                        window.parent.postMessage({ type: 'js-log', level: t, msg }, '*');
+                    };
+                    const oLog = console.log, oErr = console.error;
+                    console.log = (...a) => { send('log', a); oLog.apply(console, a); };
+                    console.error = (...a) => { send('err', a); oErr.apply(console, a); };
+                    window.onerror = (m, u, l) => send('err', ['Błąd (linia ' + l + '): ' + m]);
+                })();
+            <\/script>`;
+
+            iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${state.code.web.css}</style>${hook}</head><body>${state.code.web.html}<script>try{${state.code.web.js}}catch(e){console.error(e.message)}<\/script></body></html>`;
+        }
+
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'js-log') {
+                const box = document.getElementById('js-console');
+                const row = document.createElement('div');
+                row.className = e.data.level === 'err' ? 'text-red-600 dark:text-red-400' : '';
+                row.textContent = '$ ' + e.data.msg;
+                box.appendChild(row);
+                box.scrollTop = box.scrollHeight;
+            }
+        });
+
+        function clearJsConsole() {
+            document.getElementById('js-console').innerHTML = '';
+        }
+
+        function clearTerminal() {
+            document.getElementById('terminal-box').textContent = '';
+        }
+
+        // 6B. Kompilacja C++ i C (Piston API + fallback na Wandbox API)
+        async function runCompiler(lang) {
+            const btn = document.getElementById('btn-run');
+            const statusText = document.getElementById('status-text');
+            const term = document.getElementById('terminal-box');
+            const code = state.code[lang];
+            const stdin = document.getElementById('stdin-box').value;
+
+            btn.disabled = true;
+            btn.textContent = 'Kompiluję...';
+            statusText.textContent = 'Kompilacja...';
+            term.textContent = 'Trwa kompilacja i uruchamianie...';
+
+            try {
+                const res = await fetch('https://emkc.org/api/v2/piston/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        language: lang === 'cpp' ? 'c++' : 'c',
+                        version: '*',
+                        files: [{ name: lang === 'cpp' ? 'main.cpp' : 'main.c', content: code }],
+                        stdin: stdin
+                    })
+                });
+
+                if (!res.ok) throw new Error('Piston HTTP ' + res.status);
+                const data = await res.json();
+
+                if (data.compile && data.compile.code !== 0) {
+                    statusText.textContent = 'Błąd kompilacji';
+                    term.textContent = data.compile.stderr || data.compile.output;
+                } else if (data.run) {
+                    statusText.textContent = `Program zakończony (kod wyjścia: ${data.run.code})`;
+                    term.textContent = data.run.output || '(brak wyjścia)';
+                } else {
+                    throw new Error('Brak odpowiedzi z Piston');
+                }
+            } catch (err1) {
+                try {
+                    const wbRes = await fetch('https://wandbox.org/api/compile.json', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            compiler: lang === 'cpp' ? 'gcc-head' : 'gcc-head-c',
+                            code: code,
+                            stdin: stdin
+                        })
+                    });
+                    if (!wbRes.ok) throw new Error('Wandbox HTTP ' + wbRes.status);
+                    const wb = await wbRes.json();
+
+                    if (wb.compiler_error) {
+                        statusText.textContent = 'Błąd kompilacji';
+                        term.textContent = wb.compiler_error;
+                    } else {
+                        statusText.textContent = `Program zakończony (kod wyjścia: ${wb.status || 0})`;
+                        const out = (wb.program_output || '') + (wb.program_error ? '\n' + wb.program_error : '');
+                        term.textContent = out || '(brak wyjścia)';
+                    }
+                } catch (err2) {
+                    statusText.textContent = 'Błąd połączenia';
+                    term.textContent = 'Nie udało się połączyć z kompilatorem. Sprawdź internet.';
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '&#9654; Run';
+            }
+        }
+
+        // 6C. Wbudowany interpreter języka BASIC
+        function runBasic() {
+            const code = state.code.basic;
+            const stdinLines = document.getElementById('stdin-box').value.split(/\r?\n/).filter(x => x.trim() !== '');
+            let stdinIdx = 0;
+
+            const statusText = document.getElementById('status-text');
+            const term = document.getElementById('terminal-box');
+
+            try {
+                const rawLines = code.split(/\r?\n/);
+                const program = [];
+
+                rawLines.forEach((raw, idx) => {
+                    const line = raw.trim();
+                    if (!line) return;
+                    const m = line.match(/^(\d+)\s+(.*)$/);
+                    if (m) {
+                        program.push({ num: parseInt(m[1], 10), stmt: m[2].trim() });
+                    } else {
+                        program.push({ num: (idx + 1) * 10, stmt: line });
+                    }
+                });
+
+                program.sort((a, b) => a.num - b.num);
+                const lineMap = new Map();
+                program.forEach((item, i) => lineMap.set(item.num, i));
+
+                const vars = {};
+                const forStack = [];
+                const gosubStack = [];
+                const out = [];
+                let pc = 0;
+                let steps = 0;
+
+                function evalExpr(expr) {
+                    expr = expr.trim();
+                    if (!expr) return '';
+                    if (/^"[^"]*"$/.test(expr)) return expr.slice(1, -1);
+
+                    let jsExpr = expr
+                        .replace(/([A-Za-z][A-Za-z0-9_]*)\$/g, (_, n) => {
+                            const k = n.toUpperCase() + '$';
+                            return JSON.stringify(vars[k] !== undefined ? String(vars[k]) : '');
+                        })
+                        .replace(/\b([A-Za-z][A-Za-z0-9_]*)\b/g, (m) => {
+                            const u = m.toUpperCase();
+                            if (u === 'AND') return '&&';
+                            if (u === 'OR') return '||';
+                            if (u === 'NOT') return '!';
+                            if (u === 'MOD') return '%';
+                            if (u === 'INT') return 'Math.floor';
+                            if (u === 'ABS') return 'Math.abs';
+                            if (u === 'SQR') return 'Math.sqrt';
+                            return vars[u] !== undefined ? vars[u] : 0;
+                        })
+                        .replace(/<>|!=|<=|>=|==|=/g, op => op === '<>' ? '!=' : (op === '=' ? '==' : op));
+
+                    return Function('"use strict"; return (' + jsExpr + ')')();
+                }
+
+                function splitPrint(str) {
+                    const res = [];
+                    let cur = '', inQ = false;
+                    for (let i = 0; i < str.length; i++) {
+                        if (str[i] === '"') inQ = !inQ;
+                        if (!inQ && (str[i] === ';' || str[i] === ',')) {
+                            res.push({ expr: cur.trim(), sep: str[i] });
+                            cur = '';
+                        } else {
+                            cur += str[i];
+                        }
+                    }
+                    if (cur.trim() !== '') res.push({ expr: cur.trim(), sep: null });
+                    return res;
+                }
+
+                while (pc < program.length) {
+                    if (++steps > 10000) throw new Error('przekroczono limit kroków (nieskończona pętla).');
+                    const cur = program[pc];
+                    const stmt = cur.stmt;
+                    const up = stmt.toUpperCase();
+
+                    if (up.startsWith('REM') || stmt.startsWith("'")) { pc++; continue; }
+                    if (up === 'END' || up === 'STOP') break;
+
+                    if (up.startsWith('PRINT')) {
+                        const rest = stmt.slice(5).trim();
+                        if (!rest) {
+                            out.push('\n');
+                        } else {
+                            const parts = splitPrint(rest);
+                            let lineStr = '', trailing = false;
+                            parts.forEach(p => {
+                                if (p.expr) lineStr += evalExpr(p.expr);
+                                if (p.sep === ',') lineStr += '\t';
+                                trailing = (p.sep === ';' || p.sep === ',');
+                            });
+                            out.push(lineStr + (trailing ? '' : '\n'));
+                        }
+                        pc++;
+                        continue;
+                    }
+
+                    if (up.startsWith('INPUT')) {
+                        let rest = stmt.slice(5).trim();
+                        if (rest.startsWith('"')) {
+                            const q = rest.indexOf('"', 1);
+                            if (q !== -1) {
+                                out.push(rest.slice(1, q));
+                                rest = rest.slice(q + 1).replace(/^[;,]\s*/, '').trim();
+                            }
+                        }
+                        const vName = rest.toUpperCase();
+                        const rawVal = stdinIdx < stdinLines.length ? stdinLines[stdinIdx++] : '';
+                        if (vName.endsWith('$')) {
+                            vars[vName] = rawVal;
+                        } else {
+                            const num = parseFloat(rawVal);
+                            vars[vName] = isNaN(num) ? 0 : num;
+                        }
+                        out.push(rawVal + '\n');
+                        pc++;
+                        continue;
+                    }
+
+                    if (up.startsWith('IF ')) {
+                        const thenPos = up.indexOf(' THEN ');
+                        if (thenPos === -1) throw new Error('brak THEN w linii ' + cur.num);
+                        const cond = stmt.slice(3, thenPos).trim();
+                        const after = stmt.slice(thenPos + 6).trim();
+
+                        let elsePos = -1, inQ = false;
+                        const upAfter = after.toUpperCase();
+                        for (let i = 0; i < after.length; i++) {
+                            if (after[i] === '"') inQ = !inQ;
+                            if (!inQ && upAfter.startsWith(' ELSE ', i)) { elsePos = i; break; }
+                        }
+
+                        const truePart = elsePos !== -1 ? after.slice(0, elsePos).trim() : after;
+                        const falsePart = elsePos !== -1 ? after.slice(elsePos + 6).trim() : null;
+                        const branch = evalExpr(cond) ? truePart : falsePart;
+
+                        if (branch) {
+                            if (/^\d+$/.test(branch)) {
+                                const target = parseInt(branch, 10);
+                                if (!lineMap.has(target)) throw new Error('nieznana linia ' + target);
+                                pc = lineMap.get(target);
+                                continue;
+                            } else {
+                                const tempProgram = [...program];
+                                tempProgram[pc] = { num: cur.num, stmt: branch };
+                                program.splice(0, program.length, ...tempProgram);
+                                continue;
+                            }
+                        }
+                        pc++;
+                        continue;
+                    }
+
+                    if (up.startsWith('GOTO ')) {
+                        const target = parseInt(stmt.slice(5).trim(), 10);
+                        if (!lineMap.has(target)) throw new Error('nieznana linia ' + target);
+                        pc = lineMap.get(target);
+                        continue;
+                    }
+
+                    if (up.startsWith('GOSUB ')) {
+                        const target = parseInt(stmt.slice(6).trim(), 10);
+                        if (!lineMap.has(target)) throw new Error('nieznana linia ' + target);
+                        gosubStack.push(pc + 1);
+                        pc = lineMap.get(target);
+                        continue;
+                    }
+
+                    if (up === 'RETURN') {
+                        if (!gosubStack.length) throw new Error('RETURN bez GOSUB w linii ' + cur.num);
+                        pc = gosubStack.pop();
+                        continue;
+                    }
+
+                    if (up.startsWith('FOR ')) {
+                        const m = stmt.slice(4).match(/^([A-Za-z][A-Za-z0-9_]*)\s*=\s*(.+?)\s+TO\s+(.+?)(?:\s+STEP\s+(.+))?$/i);
+                        if (!m) throw new Error('błędna pętla FOR w linii ' + cur.num);
+                        const v = m[1].toUpperCase();
+                        vars[v] = Number(evalExpr(m[2]));
+                        forStack.push({
+                            v,
+                            end: Number(evalExpr(m[3])),
+                            step: m[4] ? Number(evalExpr(m[4])) : 1,
+                            loopPc: pc + 1
+                        });
+                        pc++;
+                        continue;
+                    }
+
+                    if (up.startsWith('NEXT')) {
+                        if (!forStack.length) throw new Error('NEXT bez FOR w linii ' + cur.num);
+                        const top = forStack[forStack.length - 1];
+                        vars[top.v] += top.step;
+                        const done = top.step >= 0 ? vars[top.v] > top.end : vars[top.v] < top.end;
+                        if (!done) {
+                            pc = top.loopPc;
+                        } else {
+                            forStack.pop();
+                            pc++;
+                        }
+                        continue;
+                    }
+
+                    const assign = stmt.match(/^(?:LET\s+)?([A-Za-z][A-Za-z0-9_]*\$?)\s*=\s*(.+)$/i);
+                    if (assign) {
+                        vars[assign[1].toUpperCase()] = evalExpr(assign[2]);
+                        pc++;
+                        continue;
+                    }
+
+                    throw new Error(`nieznana instrukcja w linii ${cur.num}: ${stmt}`);
+                }
+
+                statusText.textContent = '> basic: ok';
+                term.textContent = out.join('') || '(program zakończył bez wyjścia)';
+            } catch (e) {
+                statusText.textContent = '> basic: błąd';
+                term.textContent = 'błąd: ' + e.message;
+            }
+        }
+
+        // ==========================================
+        // 7. RENDEROWANIE MAŁEGO WIKI JĘZYKÓW
+        // ==========================================
+        function setWikiTab(tab) {
+            state.wikiTab = tab;
+            document.querySelectorAll('.wiki-tab').forEach(btn => {
+                btn.className = 'wiki-tab px-1.5 py-0.5 text-[11px] text-[#666666] dark:text-[#888888] hover:text-[#1e1e1e] dark:hover:text-[#ffffff]';
+            });
+
+            const activeBtn = document.getElementById('wiki-tab-' + tab);
+            if (activeBtn) {
+                activeBtn.className = 'wiki-tab px-1.5 py-0.5 text-[11px] bg-[#1e1e1e] text-white dark:bg-[#333333] dark:text-[#ffffff]';
+            }
+            renderWiki();
+        }
+
+        function renderWiki() {
+            const list = document.getElementById('guide-list');
+            const query = (document.getElementById('wiki-search')?.value || '').trim().toLowerCase();
+            const items = WIKI_DATA[state.wikiTab] || [];
+
+            const filtered = items.filter(item => {
+                if (!query) return true;
+                const inTitle = item.title.toLowerCase().includes(query);
+                const inDesc = item.desc.toLowerCase().includes(query);
+                const inCode = item.code.toLowerCase().includes(query);
+                const inCmds = item.commands.some(c =>
+                    c.cmd.toLowerCase().includes(query) || c.info.toLowerCase().includes(query)
+                );
+                return inTitle || inDesc || inCode || inCmds;
+            });
+
+            if (filtered.length === 0) {
+                list.innerHTML = `<div class="text-xs text-[#777777] py-4">Brak wyników dla "${query.replace(/</g, '&lt;')}"</div>`;
+                return;
+            }
+
+            list.innerHTML = filtered.map((item) => {
+                const origIdx = items.indexOf(item);
+                const rows = item.commands.map(c => `
+                    <tr class="border-t border-[#e5e5e5] dark:border-[#2d2d2d]">
+                        <td class="py-1 pr-2 text-[11px] text-[#2e7d32] dark:text-[#6fbf73] whitespace-nowrap align-top">${c.cmd.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
+                        <td class="py-1 text-[11px] text-[#555555] dark:text-[#a0a0a0] align-top">${c.info}</td>
+                    </tr>
+                `).join('');
+
+                return `
+                <div class="bg-[#ffffff] dark:bg-[#252526] border border-[#d4d4d4] dark:border-[#333333] p-2.5">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <h3 class="text-xs font-medium text-[#1e1e1e] dark:text-[#e5e5e5]">${item.title}</h3>
+                        <button onclick="insertExample(${origIdx})" class="px-2 py-0.5 border border-[#cccccc] dark:border-[#444444] hover:border-[#888888] text-[11px] text-[#333333] dark:text-[#cccccc] shrink-0">
+                            Wstaw
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-[#666666] dark:text-[#999999] mb-2 leading-relaxed">${item.desc}</p>
+                    <div class="overflow-x-auto mb-2">
+                        <table class="w-full text-left border-collapse">
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                    <pre class="bg-[#f5f5f5] dark:bg-[#1e1e1e] border border-[#e5e5e5] dark:border-[#2d2d2d] p-2 text-[11px] overflow-x-auto text-[#1e1e1e] dark:text-[#cccccc]"><code>${item.code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
+                </div>
+            `}).join('');
+        }
+
+        function insertExample(idx) {
+            const targetLang = state.wikiTab;
+            const ex = WIKI_DATA[targetLang][idx].example;
+            if (!ex) return;
+
+            if (state.lang !== targetLang) {
+                setLanguage(targetLang);
+            }
+
+            if (targetLang === 'web') {
+                state.code.web = { ...ex };
+            } else {
+                state.code[targetLang] = ex;
+            }
+            syncEditor();
+            saveState();
+            showToast('wstawiono przykład do bufora');
+            runCode();
+        }
+    </script>
+</body>
+</html>
