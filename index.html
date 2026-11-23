@@ -3,71 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>L A Y E R : 0 0 // DARIN0V0</title>
+  <title>L A Y E R : 0 0 // D A R I N 0 V 0</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <!-- Nakładka CRT Scanlines -->
-  <div class="crt-overlay"></div>
-  <div class="noise-overlay"></div>
+<body class="theme-lain">
+  <!-- Nakładki CRT / szum / winieta -->
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
 
-  <main class="wired-container">
-    <!-- Górny pasek systemowy -->
-    <header class="sys-header">
-      <span class="blink">●</span> PROTOCOL_7 // NODE: <strong>DARIN0V0</strong>
-      <span class="jp-sub">「現実はどこにあるのか」</span>
+  <!-- Ukryty kontener dla YouTube IFrame API -->
+  <div id="player" style="position:fixed; width:1px; height:1px; opacity:0; pointer-events:none;"></div>
+  <audio id="bgMusic" preload="none"></audio>
+
+  <!-- Rozproszone napisy w tle jak na Fauux -->
+  <div class="bg-whisper whisper-1">現実はどこにあるのか</div>
+  <div class="bg-whisper whisper-2">0x4C 0x41 0x49 0x4E // PROTOCOL_7</div>
+  <div class="bg-whisper whisper-3">CLOSE THE WORLD, OPEN THE NEXT</div>
+
+  <main class="wired-altar">
+    <!-- Górna belka protokołu + przełącznik motywów -->
+    <header class="wired-top">
+      <div class="node-id">
+        <span class="rec-dot">●</span> NODE::<strong>DARIN0V0</strong> <span class="jp-tag">[神はここにいる]</span>
+      </div>
+      <div class="theme-switcher">
+        <button data-theme="lain" title="Wired / Fauux">[LAIN]</button>
+        <button data-theme="matrix" title="Phosphor">[SYS]</button>
+        <button data-theme="blood" title="Crimson">[0x00]</button>
+      </div>
     </header>
 
-    <!-- Centralny obiekt / "Ołtarz" -->
-    <section class="core-node">
-      <div class="glitch-title" data-text="DARIN0V0">DARIN0V0</div>
-      <p class="cryptic-quote">
-        "If you aren't remembered, then you never existed."
-      </p>
+    <!-- Centralny ołtarz / Glitch Emblem -->
+    <section class="central-shrine">
+      <div class="sigil-box">
+        <div class="glitch-header" data-text="D A R I N 0 V 0">D A R I N 0 V 0</div>
+        <div class="sub-mantra">"If you aren't remembered, then you never existed."</div>
+      </div>
 
-      <!-- Miejsce na GIF w stylu PS1 / Lain -->
-      <div class="media-frame">
-        <div class="placeholder-sigil">
-          [ 0x4C 0x41 0x49 0x4E ]<br>
-          CONNECTING TO THE WIRED...
+      <!-- Kontroler Ambientu (YouTube API z Twojego JS) -->
+      <div class="audio-shrine">
+        <button id="playMusicBtn" class="wired-btn">TOGGLE_AMBIENT</button>
+        <span class="audio-status">INIT</span>
+        <div class="vol-wrap">
+          <input type="range" id="volumeControl" min="0" max="100" value="50">
+          <span class="volume-value">50%</span>
         </div>
+        <canvas id="audioVisualizer"></canvas>
       </div>
     </section>
 
-    <!-- Rozproszone linki zamiast klasycznego menu -->
-    <nav class="scattered-links">
-      <a href="https://github.com/Darin0v0" target="_blank" class="node-link">[01] GITHUB_ARCHIVE</a>
-      <a href="#projects" class="node-link" onclick="toggleLayer('projects')">[02] MEMORY_DUMPS</a>
-      <a href="#about" class="node-link" onclick="toggleLayer('about')">[03] EGO_PROFILE</a>
-      <a href="mailto:twoj@email.com" class="node-link">[04] TRANSMIT_SIGNAL</a>
+    <!-- Szybkie węzły (wywołują komendy w Twoim terminalu) -->
+    <nav class="wired-nodes">
+      <a href="#terminal" class="node-trigger" data-cmd="projects">[ 01. MEMORY_DUMPS (PROJECTS) ]</a>
+      <a href="#terminal" class="node-trigger" data-cmd="about">[ 02. EGO_RECORD ]</a>
+      <a href="#terminal" class="node-trigger" data-cmd="help">[ 03. PROTOCOL_HELP ]</a>
+      <a href="https://github.com/Darin0v0" target="_blank" rel="noopener noreferrer" class="node-trigger">[ 04. EXTERNAL_NODE ]</a>
     </nav>
 
-    <!-- Ukryte warstwy (otwierane po kliknięciu, bez przeładowania strony) -->
-    <section id="projects" class="hidden-layer">
-      <h2>// MEMORY_DUMPS [PROJECTS]</h2>
-      <ul>
-        <li><a href="#">&gt; PROJECT_ALPHA</a> — krótki opis projektu w surowym stylu.</li>
-        <li><a href="#">&gt; PROJECT_BETA</a> — eksperyment / narzędzie / skrypt.</li>
-      </ul>
-    </section>
-
-    <section id="about" class="hidden-layer">
-      <h2>// EGO_PROFILE</h2>
-      <p>
-        Status: <span class="red-text">ONLINE</span><br>
-        Location: The Wired / Poland<br>
-        Interests: Linux, Low-level, Retro-web, Cybernetics.
-      </p>
-    </section>
-
-    <!-- Stopka z klimatem starego internetu -->
-    <footer class="sys-footer">
-      <div class="marquee-box">
-        <span>+++ NO MATTER WHERE YOU GO, EVERYONE'S CONNECTED +++ PRESENT DAY, PRESENT TIME +++</span>
+    <!-- Terminal (Twoje oryginalne ID: terminalOutput, repoPath, apiBtn) -->
+    <section id="terminal" class="wired-terminal">
+      <div class="terminal-label">// LAYER_07_INTERFACE :: TYPE 'PROJECTS' OR 'HELP'</div>
+      <div id="terminalOutput" class="terminal-screen"></div>
+      <div class="terminal-prompt">
+        <span class="prompt-glyph">lain@wired:~$</span>
+        <input type="text" id="repoPath" placeholder="enter command (projects / about / help / clear)..." autocomplete="off">
+        <button id="apiBtn" class="wired-btn">EXECUTE_QUERY</button>
       </div>
-      <p class="footer-meta">
-        UID: 000-1998-0706 // <span id="clock">00:00:00</span>
-      </p>
+    </section>
+
+    <!-- Kontener na projekty z GitHub API (Twoje oryginalne ID: projectsContainer) -->
+    <section id="projectsContainer" class="wired-projects" style="display: none;"></section>
+
+    <!-- Stopka w stylu Fauux -->
+    <footer class="wired-footer">
+      <div class="marquee-line">
+        <span>+++ PRESENT DAY, PRESENT TIME +++ NO MATTER WHERE YOU GO, EVERYONE'S CONNECTED +++ 01001100 01000001 01001001 01001110 +++</span>
+      </div>
+      <div class="footer-coords">
+        <span>UID: 000-1998-0706</span>
+        <span id="wiredClock">00:00:00</span>
+        <span>LAYER: 00</span>
+      </div>
     </footer>
   </main>
 
