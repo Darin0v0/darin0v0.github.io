@@ -1,374 +1,548 @@
-document.addEventListener('DOMContentLoaded', function() {
-  // Konfiguracja
-  const GITHUB_USER = 'Darin0v0';
-  const GITHUB_REPO = 'Darin0v0.github.io';
-  const PROJECTS_PATH = 'projects';
+/* LAYER_00 // motywy i wspólne zmienne */
+:root {
+  color-scheme: dark;
+  --bg: #020000;
+  --panel: rgba(8, 0, 0, 0.88);
+  --surface: #040000;
+  --surface-2: #060000;
+  --primary: #d10000;
+  --secondary: #ff2a2a;
+  --text: #b9b0b0;
+  --muted: #887777;
+  --heading: #e8e0e0;
+  --dim: #4d0000;
+  --border: #6e0000;
+  --glow: rgba(209, 0, 0, 0.35);
+  --pointer-glow: rgba(140, 0, 0, 0.14);
+  --grid-line: rgba(255, 0, 0, 0.03);
+  --grid-line-2: rgba(255, 0, 0, 0.02);
+  --sigil-glow: rgba(60, 0, 0, 0.25);
+  --shadow-rgb: 0, 0, 0;
+}
 
-  // Elementy DOM
-  const terminalOutput = document.getElementById('terminalOutput');
-  const themeButtons = document.querySelectorAll('.theme-switcher button');
-  const playMusicBtn = document.getElementById('playMusicBtn');
-  const bgMusic = document.getElementById('bgMusic');
-  const apiBtn = document.getElementById('apiBtn');
-  const repoPath = document.getElementById('repoPath');
-  const projectsContainer = document.getElementById('projectsContainer');
-  
-  let musicPlaying = false;
+body[data-theme="matrix"] {
+  --bg: #000500;
+  --panel: rgba(0, 10, 0, 0.9);
+  --surface: #000600;
+  --surface-2: #000a00;
+  --primary: #00cc44;
+  --secondary: #66ff99;
+  --text: #a8c7b0;
+  --muted: #6f9a7b;
+  --heading: #d8ffe4;
+  --dim: #003b14;
+  --border: #006622;
+  --glow: rgba(0, 204, 68, 0.25);
+  --pointer-glow: rgba(0, 204, 68, 0.12);
+  --grid-line: rgba(0, 255, 90, 0.035);
+  --grid-line-2: rgba(0, 255, 90, 0.025);
+  --sigil-glow: rgba(0, 90, 30, 0.25);
+}
 
-  // Audio System Variables
-  const volumeControl = document.getElementById('volumeControl');
-  const volumeValue = document.querySelector('.volume-value');
-  const audioVisualizer = document.getElementById('audioVisualizer');
-  const audioStatus = document.querySelector('.audio-status');
-  let audioContext = null;
-  let analyser = null;
-  let audioSource = null;
-  let isPlaying = false;
-  let animationFrame;
-  let player;
+body[data-theme="blood"] {
+  --bg: #050005;
+  --panel: rgba(12, 0, 12, 0.9);
+  --surface: #070007;
+  --surface-2: #0c000c;
+  --primary: #b30059;
+  --secondary: #ff1a8c;
+  --text: #c4b5c0;
+  --muted: #9a8294;
+  --heading: #f0dce8;
+  --dim: #3d001f;
+  --border: #730039;
+  --glow: rgba(179, 0, 89, 0.3);
+  --pointer-glow: rgba(179, 0, 89, 0.14);
+  --grid-line: rgba(255, 26, 140, 0.035);
+  --grid-line-2: rgba(255, 26, 140, 0.025);
+  --sigil-glow: rgba(100, 0, 50, 0.25);
+}
 
-  // Zegar w stopce Wired
-  const wiredClock = document.getElementById('wiredClock');
-  if (wiredClock) {
-    setInterval(() => {
-      wiredClock.textContent = new Date().toTimeString().split(' ')[0];
-    }, 1000);
-    wiredClock.textContent = new Date().toTimeString().split(' ')[0];
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(0.75rem, 3vw, 2rem) 1rem;
+  overflow-x: hidden;
+  position: relative;
+  cursor: crosshair;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: Georgia, "Times New Roman", serif;
+  background-image:
+    radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), var(--pointer-glow) 0%, transparent 45%),
+    repeating-linear-gradient(0deg, var(--grid-line) 0, var(--grid-line) 1px, transparent 1px, transparent 4px),
+    repeating-linear-gradient(90deg, var(--grid-line-2) 0, var(--grid-line-2) 1px, transparent 1px, transparent 4px);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--bg);
+}
+
+:where(button, a, input):focus-visible {
+  outline: 2px solid var(--secondary);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Nakładki CRT */
+.crt-scanlines,
+.crt-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.crt-scanlines {
+  z-index: 9999;
+  background: linear-gradient(rgba(var(--shadow-rgb), 0) 50%, rgba(0, 0, 0, 0.5) 50%);
+  background-size: 100% 3px;
+}
+
+.crt-vignette {
+  z-index: 9998;
+  box-shadow: inset 0 0 110px rgba(0, 0, 0, 0.95);
+}
+
+.bg-whisper {
+  position: fixed;
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: var(--dim);
+  letter-spacing: 3px;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  opacity: 0.75;
+}
+
+.whisper-1 { top: 8%; left: 4%; writing-mode: vertical-rl; }
+.whisper-2 { bottom: 10%; right: 4%; }
+.whisper-3 { top: 14%; right: 6%; font-style: italic; }
+
+/* Główny panel */
+.wired-altar {
+  width: 100%;
+  max-width: 780px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 0 35px var(--glow), inset 0 0 20px rgba(0, 0, 0, 0.9);
+  padding: clamp(1rem, 3vw, 1.5rem);
+  position: relative;
+  z-index: 2;
+}
+
+.wired-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  border-bottom: 1px dashed var(--border);
+  padding-bottom: 0.6rem;
+  margin-bottom: 1.8rem;
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 1.5px;
+}
+
+.rec-dot {
+  color: var(--secondary);
+  animation: pulseDot 1.1s steps(2, start) infinite;
+}
+
+@keyframes pulseDot {
+  to { opacity: 0; }
+}
+
+.jp-tag {
+  color: var(--primary);
+  margin-left: 0.4rem;
+}
+
+.theme-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.theme-switcher button {
+  background: transparent;
+  border: 1px solid var(--dim);
+  color: var(--text);
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: color 0.1s steps(2), border-color 0.1s steps(2);
+}
+
+.theme-switcher button:hover,
+.theme-switcher button[aria-pressed="true"] {
+  border-color: var(--secondary);
+  color: var(--secondary);
+}
+
+.theme-switcher button[aria-pressed="true"] {
+  box-shadow: inset 0 0 10px var(--glow);
+}
+
+/* Nagłówek */
+.central-shrine {
+  text-align: center;
+  margin-bottom: 1.8rem;
+}
+
+.sigil-box {
+  border: 1px double var(--border);
+  padding: 1.5rem 1rem;
+  background: radial-gradient(circle, var(--sigil-glow) 0%, var(--surface) 85%);
+  margin-bottom: 1rem;
+}
+
+.glitch-header {
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: clamp(1.25rem, 5.5vw, 2.3rem);
+  font-weight: 700;
+  letter-spacing: clamp(0.15rem, 1.4vw, 0.55rem);
+  color: var(--heading);
+  text-shadow: 2px 0 var(--primary), -2px 0 rgba(90, 0, 200, 0.7);
+  animation: fauuxJitter 4s infinite linear alternate-reverse;
+  overflow-wrap: anywhere;
+}
+
+@keyframes fauuxJitter {
+  0%, 92%, 100% { transform: translate(0, 0) skew(0deg); }
+  93% { transform: translate(-2px, 1px) skew(3deg); }
+  94% { transform: translate(2px, -1px) skew(-4deg); }
+  95% { transform: translate(0, 0) skew(0deg); }
+}
+
+.sub-mantra {
+  margin-top: 0.6rem;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+/* Odtwarzacz */
+.audio-shrine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  padding: 0.5rem;
+  border: 1px solid var(--dim);
+  background: var(--surface);
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 0.75rem;
+}
+
+.audio-status {
+  color: var(--secondary);
+  min-width: 75px;
+  font-variant-numeric: tabular-nums;
+}
+
+.vol-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+input[type="range"] {
+  accent-color: var(--primary);
+  height: 3px;
+  background: var(--dim);
+  cursor: pointer;
+}
+
+#audioVisualizer {
+  width: 90px;
+  height: 18px;
+  border: 1px solid var(--dim);
+  background: #000;
+  image-rendering: pixelated;
+}
+
+/* Nawigacja */
+.wired-nodes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.8rem;
+}
+
+.node-trigger {
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: var(--text);
+  text-decoration: none;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--dim);
+  background: var(--surface-2);
+  letter-spacing: 1px;
+  transition: background 0.1s steps(2), color 0.1s steps(2), border-color 0.1s steps(2);
+}
+
+.node-trigger:hover {
+  background: var(--primary);
+  color: var(--bg);
+  border-color: var(--secondary);
+  font-weight: bold;
+}
+
+/* Terminal */
+.wired-terminal {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.9rem;
+  margin-bottom: 1.5rem;
+  font-family: "Courier New", ui-monospace, monospace;
+}
+
+.terminal-label {
+  font-size: 0.7rem;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: 1.5px;
+}
+
+.terminal-screen {
+  height: clamp(140px, 26vh, 190px);
+  overflow-y: auto;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--text);
+  padding: 0.5rem;
+  border-top: 1px dashed var(--dim);
+  border-bottom: 1px dashed var(--dim);
+  margin-bottom: 0.7rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dim) transparent;
+  overflow-wrap: anywhere;
+}
+
+.terminal-screen::-webkit-scrollbar { width: 6px; }
+.terminal-screen::-webkit-scrollbar-thumb { background: var(--dim); }
+
+.terminal-screen div:last-child {
+  color: var(--secondary);
+}
+
+.terminal-prompt {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.prompt-glyph {
+  color: var(--primary);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+#repoPath {
+  flex: 1 1 240px;
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--dim);
+  color: var(--heading);
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.4rem 0.6rem;
+  outline: none;
+}
+
+#repoPath:focus {
+  border-color: var(--secondary);
+}
+
+#repoPath::placeholder {
+  color: var(--muted);
+  opacity: 0.8;
+}
+
+.wired-btn {
+  background: var(--surface-2);
+  border: 1px solid var(--primary);
+  color: var(--secondary);
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: background 0.1s steps(2), color 0.1s steps(2);
+}
+
+.wired-btn:hover {
+  background: var(--primary);
+  color: var(--bg);
+}
+
+.wired-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+/* Projekty */
+.wired-projects {
+  border: 1px solid var(--border);
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  background: var(--surface);
+}
+
+.project-card {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 0.5rem;
+  border-bottom: 1px dashed var(--dim);
+  font-family: "Courier New", ui-monospace, monospace;
+}
+
+.project-card:last-child {
+  border-bottom: none;
+}
+
+.project-title {
+  font-size: 0.9rem;
+  color: var(--heading);
+  letter-spacing: 1.5px;
+  flex: 1 1 50%;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.project-title::before {
+  content: ">> ";
+  color: var(--primary);
+}
+
+.project-link {
+  font-size: 0.75rem;
+  color: var(--secondary);
+  text-decoration: none;
+  border: 1px solid var(--dim);
+  padding: 0.25rem 0.55rem;
+  margin-left: 0.5rem;
+  white-space: nowrap;
+}
+
+.project-link:hover {
+  background: var(--primary);
+  color: var(--bg);
+  border-color: var(--secondary);
+}
+
+/* Stopka */
+.wired-footer {
+  border-top: 1px dashed var(--border);
+  padding-top: 0.7rem;
+  font-family: "Courier New", ui-monospace, monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.marquee-line {
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--primary);
+  margin-bottom: 0.45rem;
+}
+
+.marquee-line span {
+  display: inline-block;
+  padding-left: 100%;
+  animation: marqueeScroll 18s linear infinite;
+}
+
+@keyframes marqueeScroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+.footer-coords {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+@media (max-width: 600px) {
+  body {
+    align-items: flex-start;
+    padding: 0.75rem 0.5rem;
   }
 
-  // Load YouTube IFrame API
-  function loadYouTubeAPI() {
-    if (window.YT) {
-      initPlayer();
-      return;
-    }
-
-    const tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    const firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+  .wired-top {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  // Initialize YouTube Player
-  function initPlayer() {
-    try {
-      player = new YT.Player('player', {
-        videoId: 'cReuQk0pJbI',
-        playerVars: {
-          'autoplay': 1,
-          'controls': 0,
-          'disablekb': 1,
-          'enablejsapi': 1,
-          'fs': 0,
-          'modestbranding': 1,
-          'playsinline': 1,
-          'rel': 0,
-          'showinfo': 0
-        },
-        events: {
-          'onReady': onPlayerReady,
-          'onStateChange': onPlayerStateChange,
-          'onError': onPlayerError
-        }
-      });
-      displayTerminalMessage("> INITIALIZING WIRED AUDIO STREAM...");
-    } catch (error) {
-      console.error('YouTube player initialization failed:', error);
-      displayTerminalMessage("> ERROR: YOUTUBE PLAYER INITIALIZATION FAILED");
-      audioStatus.textContent = "ERROR";
-    }
+  .bg-whisper { display: none; }
+
+  .sigil-box { padding: 1rem 0.5rem; }
+
+  #repoPath { flex-basis: 100%; }
+
+  .project-title { flex-basis: 100%; }
+
+  .project-link { margin-left: 0; }
+
+  #audioVisualizer { width: 72px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 
-  function onPlayerReady(event) {
-    try {
-      const savedVolume = localStorage.getItem('audioVolume') || 50;
-      player.setVolume(savedVolume);
-      volumeControl.value = savedVolume;
-      volumeValue.textContent = `${savedVolume}%`;
-      
-      event.target.playVideo();
-      isPlaying = true;
-      playMusicBtn.textContent = "MUTE_AMBIENT";
-      audioStatus.textContent = "PLAYING";
-      displayTerminalMessage("> LAYER_00 AUDIO STREAM READY");
-    } catch (error) {
-      console.error('Player ready handler failed:', error);
-      displayTerminalMessage("> ERROR: PLAYER SETUP FAILED");
-      audioStatus.textContent = "ERROR";
-    }
+  .marquee-line span {
+    animation: none;
+    padding-left: 0;
   }
-
-  function onPlayerStateChange(event) {
-    try {
-      if (event.data == YT.PlayerState.PLAYING) {
-        isPlaying = true;
-        playMusicBtn.textContent = "MUTE_AMBIENT";
-        audioStatus.textContent = "PLAYING";
-        displayTerminalMessage("> AMBIENT SOUNDS ENABLED");
-      } else if (event.data == YT.PlayerState.PAUSED) {
-        isPlaying = false;
-        playMusicBtn.textContent = "TOGGLE_AMBIENT";
-        audioStatus.textContent = "PAUSED";
-        displayTerminalMessage("> AMBIENT SOUNDS DISABLED");
-      } else if (event.data == YT.PlayerState.ENDED) {
-        player.playVideo();
-      }
-    } catch (error) {
-      console.error('State change handler failed:', error);
-      displayTerminalMessage("> ERROR: PLAYER STATE CHANGE FAILED");
-    }
-  }
-
-  function onPlayerError(event) {
-    console.error('YouTube player error:', event.data);
-    displayTerminalMessage("> ERROR: AUDIO STREAM INTERRUPTED");
-    audioStatus.textContent = "ERROR";
-  }
-
-  // Volume Control
-  volumeControl.addEventListener('input', (e) => {
-    try {
-      const volume = parseInt(e.target.value);
-      if (player && player.setVolume) {
-        player.setVolume(volume);
-        volumeValue.textContent = `${volume}%`;
-        localStorage.setItem('audioVolume', volume);
-      }
-    } catch (error) {
-      console.error('Volume control failed:', error);
-      displayTerminalMessage("> ERROR: VOLUME CONTROL FAILED");
-    }
-  });
-
-  // Toggle Play/Pause
-  playMusicBtn.addEventListener('click', () => {
-    try {
-      if (player && player.getPlayerState) {
-        if (isPlaying) {
-          player.pauseVideo();
-        } else {
-          player.playVideo();
-        }
-      } else {
-        displayTerminalMessage("> ERROR: PLAYER NOT READY");
-      }
-    } catch (error) {
-      console.error('Play/Pause failed:', error);
-      displayTerminalMessage("> ERROR: PLAYBACK CONTROL FAILED");
-    }
-  });
-
-  // Handle visibility change
-  document.addEventListener('visibilitychange', () => {
-    try {
-      if (document.hidden) {
-        if (isPlaying && player && player.setVolume) {
-          player.setVolume(20);
-          audioStatus.textContent = "BACKGROUND";
-        }
-      } else {
-        if (isPlaying && player && player.setVolume) {
-          player.setVolume(parseInt(volumeControl.value));
-          audioStatus.textContent = "PLAYING";
-        }
-      }
-    } catch (error) {
-      console.error('Visibility change handler failed:', error);
-    }
-  });
-
-  // Initialize YouTube API
-  window.onYouTubeIframeAPIReady = initPlayer;
-  loadYouTubeAPI();
-
-  // Funkcje pomocnicze
-  const MAX_TERMINAL_LINES = 10;
-  const displayTerminalMessage = (message) => {
-    const div = document.createElement('div');
-    div.textContent = message;
-    terminalOutput.appendChild(div);
-
-    while (terminalOutput.children.length > MAX_TERMINAL_LINES) {
-      terminalOutput.removeChild(terminalOutput.firstChild);
-    }
-
-    terminalOutput.scrollTop = terminalOutput.scrollHeight;
-  };
-
-  const setLoading = (isLoading) => {
-    apiBtn.disabled = isLoading;
-    apiBtn.textContent = isLoading ? 'LOADING...' : 'EXECUTE_QUERY';
-  };
-
-  // Funkcja zmiany motywu (domyślnie 'lain' pod Fauux)
-  const setTheme = (theme) => {
-    try {
-      document.body.className = `theme-${theme}`;
-      localStorage.setItem('cyberTheme', theme);
-      displayTerminalMessage(`> PROTOCOL LAYER CHANGED TO ${theme.toUpperCase()}`);
-    } catch (e) {
-      console.error("Error saving theme:", e);
-      displayTerminalMessage("> THEME CHANGED BUT NOT SAVED");
-    }
-  };
-
-  try {
-    const savedTheme = localStorage.getItem('cyberTheme') || 'lain';
-    setTheme(savedTheme);
-  } catch (e) {
-    console.error("Error loading theme:", e);
-    setTheme('lain');
-  }
-
-  themeButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const theme = button.getAttribute('data-theme');
-      setTheme(theme);
-    });
-  });
-
-  // Cleanup on page unload
-  window.addEventListener('beforeunload', () => {
-    if (animationFrame) {
-      cancelAnimationFrame(animationFrame);
-    }
-    if (audioContext) {
-      audioContext.close();
-    }
-  });
-
-  // Pobieranie projektów z GitHub
-  async function fetchProjects() {
-    try {
-      setLoading(true);
-      displayTerminalMessage("> CONNECTING TO GITHUB REPOSITORY NODES...");
-      
-      const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${PROJECTS_PATH}`);
-      
-      if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data.filter(item => item.type === 'dir');
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-      displayTerminalMessage(`> ERROR: ${error.message}`);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  // Wyświetlanie projektów
-  async function showProjects() {
-    const projects = await fetchProjects();
-    projectsContainer.innerHTML = '';
-    projectsContainer.style.display = 'block';
-    
-    if (projects.length === 0) {
-      displayTerminalMessage("> NO MEMORY DUMPS FOUND");
-      return;
-    }
-    
-    projects.forEach(project => {
-      const projectCard = document.createElement('div');
-      projectCard.className = 'project-card';
-      
-      const title = document.createElement('h3');
-      title.className = 'project-title';
-      title.textContent = project.name.replace(/-/g, ' ').toUpperCase();
-      
-      const link = document.createElement('a');
-      link.className = 'project-link';
-      link.href = `https://${GITHUB_USER}.github.io/${PROJECTS_PATH}/${project.name}/`;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = 'ENTER_NODE';
-      
-      const githubLink = document.createElement('a');
-      githubLink.className = 'project-link github-link';
-      githubLink.href = `https://github.com/${GITHUB_USER}/${GITHUB_REPO}/tree/main/${PROJECTS_PATH}/${project.name}`;
-      githubLink.target = '_blank';
-      githubLink.rel = 'noopener noreferrer';
-      githubLink.textContent = 'SOURCE_DUMP';
-      
-      projectCard.append(title, link, githubLink);
-      projectsContainer.appendChild(projectCard);
-    });
-    
-    displayTerminalMessage(`> MOUNTED ${projects.length} PROJECT NODES`);
-  }
-
-  // Obsługa komend
-  apiBtn.addEventListener('click', () => executeCommand());
-  repoPath.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') executeCommand();
-  });
-
-  // Podpięcie klikalnych węzłów nawigacji pod komendy terminala
-  document.querySelectorAll('.node-trigger[data-cmd]').forEach(trigger => {
-    trigger.addEventListener('click', (e) => {
-      e.preventDefault();
-      const cmd = trigger.getAttribute('data-cmd');
-      executeCommand(cmd);
-    });
-  });
-
-  function executeCommand(forcedCmd = null) {
-    const command = (forcedCmd || repoPath.value).trim().toLowerCase();
-    if (!forcedCmd) repoPath.value = '';
-    
-    if (!command) {
-      displayTerminalMessage("> ERROR: NO COMMAND PROVIDED");
-      return;
-    }
-    
-    displayTerminalMessage(`> EXECUTING: ${command.toUpperCase()}`);
-    
-    setTimeout(() => {
-      if (command === 'help' || command === '?') {
-        showHelp();
-      } else if (command === 'projects' || command === 'show projects') {
-        showProjects();
-      } else if (command === 'clear') {
-        terminalOutput.innerHTML = '';
-        projectsContainer.style.display = 'none';
-      } else if (command === 'about') {
-        displayTerminalMessage("> DARIN_0V0: FULL-STACK DEVELOPER");
-        displayTerminalMessage("> CONNECTED TO THE WIRED // PROTOCOL_7");
-        displayTerminalMessage(`> GITHUB: github.com/${GITHUB_USER}`);
-        displayTerminalMessage("> EMAIL: dawidmurias907@gmail.com");
-      } else {
-        displayTerminalMessage(`> UNKNOWN COMMAND: ${command.toUpperCase()}`);
-        displayTerminalMessage("> TYPE 'HELP' FOR AVAILABLE COMMANDS");
-      }
-    }, 250);
-  }
-
-  function showHelp() {
-    const helpMessages = [
-      "> AVAILABLE PROTOCOL COMMANDS:",
-      "> HELP - SHOW THIS MESSAGE",
-      "> PROJECTS - MOUNT PROJECTS FROM GITHUB",
-      "> ABOUT - DISPLAY EGO_RECORD",
-      "> CLEAR - PURGE TERMINAL BUFFER"
-    ];
-    
-    helpMessages.forEach(msg => displayTerminalMessage(msg));
-  }
-
-  // Inicjalizacja terminala i automatyczne pobranie projektów przy starcie
-  displayTerminalMessage("> LAYER_00 INITIALIZED");
-  displayTerminalMessage("> PRESENT DAY, PRESENT TIME");
-  displayTerminalMessage("> TYPE 'HELP' OR CLICK A NODE ABOVE");
-  showProjects();
-
-  // Efekt śledzenia kursora w tle
-  document.addEventListener('mousemove', (e) => {
-    const x = (e.clientX / window.innerWidth) * 100;
-    const y = (e.clientY / window.innerHeight) * 100;
-    document.body.style.setProperty('--mouse-x', `${x}%`);
-    document.body.style.setProperty('--mouse-y', `${y}%`);
-  });
-});
+}
