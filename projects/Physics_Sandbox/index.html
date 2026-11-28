@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#070e14">
+  <meta name="description" content="PHYSICS_SANDBOX // piaskownica fizyki Verlet: tkanina, lina, żel, pajęczyna i flaga z interaktywnym przeciąganiem i wiatrem.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23070e14'/%3E%3Ccircle cx='20' cy='20' r='6' fill='none' stroke='%238be9ff' stroke-width='3'/%3E%3Ccircle cx='44' cy='44' r='6' fill='none' stroke='%23ffb454' stroke-width='3'/%3E%3Cpath d='M25 25 L39 39' stroke='%238be9ff' stroke-width='3'/%3E%3C/svg%3E">
+  <title>PHYSICS_SANDBOX // VERLET LAB</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; padding: clamp(0.75rem, 2vw, 1.5rem);
+      display: flex; justify-content: center; align-items: center;
+      background: radial-gradient(circle at 70% 10%, #10222e 0%, #070e14 58%, #03070a 100%);
+      color: #bdd4dd; font: 13px/1.55 ui-monospace, "SFMono-Regular", Consolas, monospace;
+      overflow-x: hidden;
+    }
+    .app { width: 100%; max-width: 1100px; }
+    header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 0.9rem; }
+    h1 { margin: 0; font-size: clamp(1.3rem, 4vw, 2rem); letter-spacing: 0.24em; font-weight: 500; color: #d8f4ff; text-shadow: 0 0 22px rgba(139,233,255,0.35); }
+    .sub { color: #63828f; font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 0.55rem 1rem; align-items: center;
+      padding: 0.65rem 0.85rem; margin-bottom: 0.8rem; border: 1px solid #1e3a46;
+      border-radius: 5px; background: rgba(8,20,27,0.8);
+    }
+    label { display: flex; align-items: center; gap: 0.4rem; color: #7fa0ac; font-size: 0.71rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    input[type="range"] { accent-color: #8be9ff; width: 88px; }
+    select, button {
+      font: inherit; color: #d6f2ff; background: #0c1c25; border: 1px solid #28505f;
+      border-radius: 4px; padding: 0.35rem 0.55rem; cursor: pointer;
+    }
+    button:hover, select:hover { border-color: #8be9ff; color: #8be9ff; }
+    button.active { background: #8be9ff; color: #061219; border-color: #8be9ff; }
+    .val { color: #8be9ff; min-width: 3.6em; font-variant-numeric: tabular-nums; }
+    .stage { position: relative; border: 1px solid #1e3a46; border-radius: 5px; overflow: hidden; background: #03080c; box-shadow: 0 18px 55px rgba(0,0,0,0.55); }
+    canvas { display: block; width: 100%; height: clamp(330px, 58vh, 560px); touch-action: none; cursor: grab; }
+    canvas:active { cursor: grabbing; }
+    .hud { position: absolute; left: 10px; top: 10px; display: grid; gap: 2px; font-size: 0.68rem; color: rgba(139,233,255,0.75); pointer-events: none; text-shadow: 0 1px 3px #000; }
+    #hudInspect { color: #ffb454; max-width: min(320px, 80vw); }
+    .hint { margin-top: 0.7rem; color: #62808c; font-size: 0.72rem; line-height: 1.7; }
+    :where(button, select, input):focus-visible { outline: 2px solid #8be9ff; outline-offset: 2px; }
+    @media (max-width: 680px) { input[type="range"] { width: 74px; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div><h1>PHYSICS SANDBOX</h1><div class="sub">VERLET INTEGRATION · SOFT BODIES</div></div>
+      <div class="sub" id="fps">-- FPS</div>
+    </header>
+
+    <div class="toolbar">
+      <label for="preset">PRESET
+        <select id="preset">
+          <option value="cloth">TKANINA</option><option value="rope">LINA</option>
+          <option value="jelly">ŻEL</option><option value="web">PAJĘCZYNA</option>
+          <option value="flag">FLAGA</option>
+        </select>
+      </label>
+      <label for="gravity">GRAV <input type="range" id="gravity" min="-0.4" max="1.2" step="0.05" value="0.32"><span class="val" id="gravityValue">0.32</span></label>
+      <label for="wind">WIND <input type="range" id="wind" min="-0.5" max="0.5" step="0.01" value="0"><span class="val" id="windValue">0.00</span></label>
+      <label for="stiff">STIFF <input type="range" id="stiff" min="0.1" max="1" step="0.05" value="0.9"><span class="val" id="stiffValue">0.90</span></label>
+      <label for="damp">DAMP <input type="range" id="damp" min="0.8" max="0.995" step="0.005" value="0.985"><span class="val" id="dampValue">0.985</span></label>
+      <label for="iters">ITER <input type="range" id="iters" min="1" max="8" value="4"><span class="val" id="itersValue">4</span></label>
+      <label for="gravPreset">GRAV PRESET
+        <select id="gravPreset" aria-label="Precedens siły grawitacji">
+          <option value="custom">WŁASNE</option><option value="zero">0 · brak</option>
+          <option value="moon">0.06 · KSIĘŻYC</option><option value="earth">0.32 · ZIEMIA</option>
+          <option value="jupiter">0.80 · JOWISZ</option><option value="reverse">-0.20 · REWERS</option>
+        </select>
+      </label>
+      <label for="spawnShape">SPAWN
+        <select id="spawnShape" aria-label="Kształt nowego ciała miękkiego">
+          <option value="box">KWADRAT</option><option value="circle">KOŁO</option>
+          <option value="triangle">TRÓJKĄT</option><option value="line">LINIA</option>
+        </select>
+      </label>
+      <button type="button" id="spawnBtn">DODAJ KSZTAŁT</button>
+      <button type="button" id="stressBtn">STRESS TEST</button>
+      <button type="button" id="nodesBtn" class="active">NODES</button>
+      <button type="button" id="pauseBtn">PAUSE</button>
+      <button type="button" id="stepBtn" title="Wykonaj jedną iterację po zatrzymaniu">STEP</button>
+      <button type="button" id="resetBtn">RESET</button>
+      <button type="button" id="saveBtn">SAVE PNG</button>
+    </div>
+
+    <div class="stage">
+      <canvas id="scene" width="1000" height="540" aria-label="Interaktywna symulacja fizyki Verlet"></canvas>
+      <div class="hud"><span id="hudInfo">0 POINTS · 0 LINKS</span><span id="hudPreset">TKANINA</span><span id="hudInspect">Kliknij wiązanie, aby je zbadać</span></div>
+    </div>
+    <div class="hint">Chwyć dowolny węzeł i przeciągnij — poluzowanie rzuci nim z prędkością ruchu. Kolor wiązania mówi o naprężeniu: <b>cyjan</b> = ściskanie, <b>pomarańcz</b> = rozciąganie. Kliknięcie w wiązanie pokazuje jego długość i naprężenie. <b>STEP</b> wykonuje jedną iterację przy pause; <b>STRESS TEST</b> dodaje ciała co kilka klatek.</div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const canvas = document.getElementById('scene');
+      const ctx = canvas.getContext('2d');
+      const presetSelect = document.getElementById('preset');
+      const fpsLabel = document.getElementById('fps');
+      const hudInfo = document.getElementById('hudInfo');
+      const hudPreset = document.getElementById('hudPreset');
+      const nodesBtn = document.getElementById('nodesBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const stepBtn = document.getElementById('stepBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const saveBtn = document.getElementById('saveBtn');
+      const stressBtn = document.getElementById('stressBtn');
+      const spawnBtn = document.getElementById('spawnBtn');
+      const gravPreset = document.getElementById('gravPreset');
+      const shapeSelect = document.getElementById('spawnShape');
+      const hudInspect = document.getElementById('hudInspect');
+      const sliders = ['gravity', 'wind', 'stiff', 'damp', 'iters'];
+      const labels = {
+        gravity: document.getElementById('gravityValue'), wind: document.getElementById('windValue'),
+        stiff: document.getElementById('stiffValue'), damp: document.getElementById('dampValue'),
+        iters: document.getElementById('itersValue')
+      };
+
+      class Point {
+        constructor(x, y, pinned = false) {
+          this.x = x; this.y = y; this.px = x; this.py = y; this.pinned = pinned;
+        }
+      }
+
+      class Link {
+        constructor(a, b, stiffness = 1) {
+          this.a = a; this.b = b;
+          this.length = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+          this.stiffness = stiffness;
+          this.ratio = 1;
+        }
+      }
+
+      let points = [], links = [], width = 0, height = 0;
+      let paused = false, stepOnce = false, showNodes = true, dragged = null, pointer = { x: 0, y: 0 };
+      let selectedLink = null, stress = false, stressTick = 0;
+      let frames = 0, fpsTime = performance.now();
+
+      function addPoint(x, y, pinned) {
+        const point = new Point(x, y, pinned);
+        points.push(point);
+        return point;
+      }
+
+      function addLink(a, b, stiffness) {
+        links.push(new Link(a, b, stiffness));
+      }
+
+      function build(name) {
+        points = [];
+        links = [];
+        dragged = null;
+        selectedLink = null;
+        stressTick = 0;
+        hudInspect.textContent = 'Kliknij wiązanie, aby je zbadać';
+        const add = addPoint;
+        const link = addLink;
+        const W = width, H = height;
+
+        if (name === 'cloth' || name === 'flag') {
+          const cols = name === 'flag' ? 22 : 20;
+          const rows = name === 'flag' ? 12 : 13;
+          const spacing = Math.min(W / (cols + 6), H / (rows + 6));
+          const startX = name === 'flag' ? W * 0.18 : (W - (cols - 1) * spacing) / 2;
+          const startY = name === 'flag' ? H * 0.18 : 34;
+          const grid = [];
+          for (let y = 0; y < rows; y += 1) {
+            grid[y] = [];
+            for (let x = 0; x < cols; x += 1) {
+              const pinned = name === 'flag' ? x === 0 : (y === 0 && (x % 5 === 0 || x === cols - 1));
+              grid[y][x] = add(startX + x * spacing, startY + y * spacing, pinned);
+            }
+          }
+          for (let y = 0; y < rows; y += 1) {
+            for (let x = 0; x < cols; x += 1) {
+              if (x < cols - 1) link(grid[y][x], grid[y][x + 1]);
+              if (y < rows - 1) link(grid[y][x], grid[y + 1][x]);
+              if (x < cols - 1 && y < rows - 1) link(grid[y][x], grid[y + 1][x + 1], 0.32);
+            }
+          }
+        } else if (name === 'rope') {
+          const count = 30;
+          const spacing = Math.min(13, (H - 90) / count);
+          const x = W / 2;
+          let previous = null;
+          for (let i = 0; i < count; i += 1) {
+            const point = add(x, 24 + i * spacing, i === 0);
+            if (previous) link(previous, point);
+            previous = point;
+          }
+        } else if (name === 'jelly') {
+          const count = 18;
+          const cx = W / 2, cy = H * 0.45;
+          const radius = Math.min(W, H) * 0.22;
+          const center = add(cx, cy, true);
+          const ring = [];
+          for (let i = 0; i < count; i += 1) {
+            const a = i / count * Math.PI * 2;
+            ring.push(add(cx + Math.cos(a) * radius, cy + Math.sin(a) * radius));
+          }
+          ring.forEach((point, index) => {
+            link(point, ring[(index + 1) % count]);
+            link(point, center, 0.55);
+            if (index % 2 === 0) link(point, ring[(index + 2) % count], 0.22);
+          });
+        } else if (name === 'web') {
+          const cx = W / 2, cy = H / 2;
+          const rings = 5, spokes = 12;
+          const maxRadius = Math.min(W, H) * 0.42;
+          const center = add(cx, cy, true);
+          const grid = [];
+          for (let r = 1; r <= rings; r += 1) {
+            grid[r] = [];
+            for (let s = 0; s < spokes; s += 1) {
+              const a = s / spokes * Math.PI * 2;
+              const radius = maxRadius * r / rings;
+              grid[r][s] = add(cx + Math.cos(a) * radius, cy + Math.sin(a) * radius, r === rings && s % 3 === 0);
+            }
+          }
+          for (let s = 0; s < spokes; s += 1) {
+            link(center, grid[1][s]);
+            for (let r = 1; r < rings; r += 1) link(grid[r][s], grid[r + 1][s]);
+          }
+          for (let r = 1; r <= rings; r += 1) {
+            for (let s = 0; s < spokes; s += 1) link(grid[r][s], grid[r][(s + 1) % spokes], 0.6);
+          }
+        }
+
+        hudInfo.textContent = `${points.length} POINTS · ${links.length} LINKS`;
+        hudPreset.textContent = presetSelect.options[presetSelect.selectedIndex].textContent;
+      }
+
+      function spawnSoftShape(kind, x, y) {
+        const needed = kind === 'box' ? 16 : kind === 'circle' ? 13 : kind === 'triangle' ? 4 : 8;
+        if (points.length + needed > 1400) {
+          hudInspect.textContent = 'LIMIT: zbyt dużo punktów';
+          return false;
+        }
+        const cx = Math.max(40, Math.min(width - 40, x ?? width / 2));
+        const cy = Math.max(40, Math.min(height - 40, y ?? height / 2));
+        const stiffness = parseFloat(document.getElementById('stiff').value);
+        if (kind === 'box') {
+          const cell = Math.min(90, Math.max(40, Math.min(width, height) * 0.12));
+          const grid = [];
+          for (let row = 0; row < 4; row += 1) {
+            grid[row] = [];
+            for (let col = 0; col < 4; col += 1) {
+              grid[row][col] = addPoint(cx + (col - 1.5) * cell / 3, cy + (row - 1.5) * cell / 3);
+            }
+          }
+          for (let row = 0; row < 4; row += 1) {
+            for (let col = 0; col < 4; col += 1) {
+              if (col < 3) addLink(grid[row][col], grid[row][col + 1], stiffness);
+              if (row < 3) addLink(grid[row][col], grid[row + 1][col], stiffness);
+              if (col < 3 && row < 3) addLink(grid[row][col], grid[row + 1][col + 1], stiffness * 0.35);
+            }
+          }
+        } else if (kind === 'circle') {
+          const radius = Math.min(width, height) * 0.09;
+          const center = addPoint(cx, cy);
+          const ring = [];
+          for (let i = 0; i < 12; i += 1) {
+            const angle = i / 12 * Math.PI * 2;
+            ring.push(addPoint(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius));
+          }
+          ring.forEach((point, index) => {
+            addLink(point, ring[(index + 1) % 12], stiffness);
+            addLink(point, center, stiffness * 0.6);
+          });
+        } else if (kind === 'triangle') {
+          const radius = Math.min(width, height) * 0.1;
+          const center = addPoint(cx, cy);
+          const corners = [];
+          for (let i = 0; i < 3; i += 1) {
+            const angle = i / 3 * Math.PI * 2 - Math.PI / 2;
+            corners.push(addPoint(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius));
+          }
+          corners.forEach((point, index) => {
+            addLink(point, corners[(index + 1) % 3], stiffness);
+            addLink(point, center, stiffness * 0.7);
+          });
+        } else {
+          const spacing = 14;
+          let previous = null;
+          for (let i = 0; i < 8; i += 1) {
+            const point = addPoint(cx - 49 + i * spacing, cy);
+            if (previous) addLink(previous, point, stiffness);
+            previous = point;
+          }
+        }
+        hudInfo.textContent = `${points.length} POINTS · ${links.length} LINKS`;
+        hudInspect.textContent = `Dodano ${kind} · ${needed} punktów`;
+        return true;
+      }
+
+      function updateInspect() {
+        if (!selectedLink) return;
+        if (!links.includes(selectedLink)) {
+          selectedLink = null;
+          hudInspect.textContent = 'Kliknij wiązanie, aby je zbadać';
+          return;
+        }
+        const current = selectedLink.length * selectedLink.ratio;
+        hudInspect.textContent = `LINK #${links.indexOf(selectedLink)} · spoczynek ${selectedLink.length.toFixed(1)} px · teraz ${current.toFixed(1)} px · k=${selectedLink.stiffness.toFixed(2)} · odkształcenie ${((selectedLink.ratio - 1) * 100).toFixed(1)}%`;
+      }
+
+      function inspectAt(x, y) {
+        let best = null;
+        let bestDistance = 100;
+        links.forEach((link) => {
+          const dx = link.b.x - link.a.x, dy = link.b.y - link.a.y;
+          const lengthSq = dx * dx + dy * dy || 1;
+          const t = Math.max(0, Math.min(1, ((x - link.a.x) * dx + (y - link.a.y) * dy) / lengthSq));
+          const px = link.a.x + dx * t, py = link.a.y + dy * t;
+          const distance = (px - x) ** 2 + (py - y) ** 2;
+          if (distance < bestDistance) { bestDistance = distance; best = link; }
+        });
+        selectedLink = best;
+        updateInspect();
+      }
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        width = Math.max(1, rect.width);
+        height = Math.max(1, rect.height);
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        build(presetSelect.value);
+      }
+
+      function step() {
+        const gravity = parseFloat(document.getElementById('gravity').value);
+        const wind = parseFloat(document.getElementById('wind').value);
+        const damping = parseFloat(document.getElementById('damp').value);
+        const stiffness = parseFloat(document.getElementById('stiff').value);
+        const iterations = parseInt(document.getElementById('iters').value, 10);
+
+        points.forEach((point) => {
+          if (point.pinned) return;
+          if (point === dragged) return;
+          const vx = (point.x - point.px) * damping;
+          const vy = (point.y - point.py) * damping;
+          point.px = point.x;
+          point.py = point.y;
+          point.x += vx + wind;
+          point.y += vy + gravity;
+        });
+
+        for (let iteration = 0; iteration < iterations; iteration += 1) {
+          links.forEach((link) => {
+            const dx = link.b.x - link.a.x;
+            const dy = link.b.y - link.a.y;
+            const distance = Math.hypot(dx, dy) || 1e-6;
+            link.ratio = distance / link.length;
+            const diff = (distance - link.length) / distance * stiffness * 0.5;
+            if (!link.a.pinned && link.a !== dragged) { link.a.x += dx * diff; link.a.y += dy * diff; }
+            if (!link.b.pinned && link.b !== dragged) { link.b.x -= dx * diff; link.b.y -= dy * diff; }
+          });
+          points.forEach((point) => {
+            if (point.pinned || point === dragged) return;
+            const margin = 3;
+            if (point.x < margin) point.x = margin;
+            else if (point.x > width - margin) point.x = width - margin;
+            if (point.y < margin) point.y = margin;
+            else if (point.y > height - margin) point.y = height - margin;
+          });
+        }
+      }
+
+      function draw(now) {
+        if (!paused || stepOnce) {
+          step();
+          stepOnce = false;
+        }
+        if (stress && !paused) {
+          stressTick += 1;
+          if (stressTick >= 45) {
+            stressTick = 0;
+            const added = spawnSoftShape(shapeSelect.value, 60 + Math.random() * (width - 120), 60 + Math.random() * (height - 120));
+            if (!added) {
+              stress = false;
+              stressBtn.classList.remove('active');
+            }
+          }
+        }
+
+        ctx.fillStyle = '#03080c';
+        ctx.fillRect(0, 0, width, height);
+        ctx.strokeStyle = 'rgba(70,130,150,0.09)';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < width; x += 40) {
+          ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, height); ctx.stroke();
+        }
+        for (let y = 0; y < height; y += 40) {
+          ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(width, y + 0.5); ctx.stroke();
+        }
+
+        ctx.lineWidth = 1.2;
+        links.forEach((link) => {
+          const stretch = Math.max(0, Math.min(1, (link.ratio - 0.92) / 0.16));
+          const hue = 188 - stretch * 165;
+          ctx.strokeStyle = `hsl(${hue}, 90%, ${55 + stretch * 8}%)`;
+          ctx.globalAlpha = 0.75;
+          ctx.beginPath();
+          ctx.moveTo(link.a.x, link.a.y);
+          ctx.lineTo(link.b.x, link.b.y);
+          ctx.stroke();
+        });
+        ctx.globalAlpha = 1;
+
+        if (selectedLink && links.includes(selectedLink)) {
+          ctx.strokeStyle = '#ffe600';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(selectedLink.a.x, selectedLink.a.y);
+          ctx.lineTo(selectedLink.b.x, selectedLink.b.y);
+          ctx.stroke();
+          [selectedLink.a, selectedLink.b].forEach((point) => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+            ctx.strokeStyle = '#ffe600';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          });
+          if (frames % 20 === 0) updateInspect();
+        }
+
+        if (showNodes) {
+          points.forEach((point) => {
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, point.pinned ? 3.5 : 2, 0, Math.PI * 2);
+            ctx.fillStyle = point.pinned ? '#ffd166' : '#8be9ff';
+            ctx.fill();
+          });
+        }
+        if (dragged) {
+          ctx.beginPath();
+          ctx.arc(dragged.x, dragged.y, 8, 0, Math.PI * 2);
+          ctx.strokeStyle = '#ffb454';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
+        frames += 1;
+        if (now - fpsTime > 700) {
+          fpsLabel.textContent = `${Math.round(frames * 1000 / (now - fpsTime))} FPS`;
+          frames = 0;
+          fpsTime = now;
+        }
+        requestAnimationFrame(draw);
+      }
+
+      function pointerPosition(event) {
+        const rect = canvas.getBoundingClientRect();
+        return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+      }
+
+      canvas.addEventListener('pointerdown', (event) => {
+        pointer = pointerPosition(event);
+        let nearest = null;
+        let best = 28 * 28;
+        points.forEach((point) => {
+          const dx = point.x - pointer.x, dy = point.y - pointer.y;
+          const distance = dx * dx + dy * dy;
+          if (distance < best) { best = distance; nearest = point; }
+        });
+        if (nearest) {
+          dragged = nearest;
+          selectedLink = null;
+          hudInspect.textContent = 'Kliknij wiązanie, aby je zbadać';
+          canvas.setPointerCapture(event.pointerId);
+        } else {
+          inspectAt(pointer.x, pointer.y);
+        }
+      });
+      canvas.addEventListener('pointermove', (event) => {
+        pointer = pointerPosition(event);
+        if (!dragged) return;
+        dragged.x = pointer.x;
+        dragged.y = pointer.y;
+      });
+      canvas.addEventListener('pointerup', () => { dragged = null; });
+      canvas.addEventListener('pointercancel', () => { dragged = null; });
+
+      const precision = { gravity: 2, wind: 2, stiff: 2, damp: 3, iters: 0 };
+      sliders.forEach((id) => {
+        document.getElementById(id).addEventListener('input', () => {
+          labels[id].textContent = parseFloat(document.getElementById(id).value).toFixed(precision[id]);
+          if (id === 'gravity') gravPreset.value = 'custom';
+        });
+      });
+
+      const gravityValues = { zero: 0, moon: 0.06, earth: 0.32, jupiter: 0.8, reverse: -0.2 };
+      gravPreset.addEventListener('change', () => {
+        const value = gravityValues[gravPreset.value];
+        if (value === undefined) return;
+        const slider = document.getElementById('gravity');
+        slider.value = String(value);
+        labels.gravity.textContent = parseFloat(slider.value).toFixed(2);
+      });
+
+      presetSelect.addEventListener('change', () => build(presetSelect.value));
+      resetBtn.addEventListener('click', () => {
+        stress = false;
+        stressBtn.classList.remove('active');
+        build(presetSelect.value);
+      });
+      spawnBtn.addEventListener('click', () => spawnSoftShape(shapeSelect.value, width / 2, height / 3));
+      stressBtn.addEventListener('click', () => {
+        stress = !stress;
+        stressBtn.classList.toggle('active', stress);
+        hudInspect.textContent = stress ? 'STRESS TEST: dodawanie ciał co 45 klatek' : 'STRESS TEST wyłączony';
+        if (stress) {
+          spawnSoftShape('circle', width * 0.3, height * 0.3);
+          spawnSoftShape('box', width * 0.7, height * 0.3);
+        }
+      });
+      saveBtn.addEventListener('click', () => {
+        try {
+          const link = document.createElement('a');
+          link.download = 'physics_sandbox.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        } catch (_) {
+          hudInspect.textContent = 'PNG niedostępny';
+        }
+      });
+      pauseBtn.addEventListener('click', () => {
+        paused = !paused;
+        stepOnce = false;
+        pauseBtn.textContent = paused ? 'RESUME' : 'PAUSE';
+        pauseBtn.classList.toggle('active', paused);
+      });
+      stepBtn.addEventListener('click', () => {
+        if (!paused) return;
+        stepOnce = true;
+      });
+      nodesBtn.addEventListener('click', () => {
+        showNodes = !showNodes;
+        nodesBtn.classList.toggle('active', showNodes);
+      });
+      window.addEventListener('resize', resize);
+
+      resize();
+      requestAnimationFrame(draw);
+    })();
+  </script>
+</body>
+</html>

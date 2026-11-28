@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0d0d14">
+  <meta name="description" content="SHADER_LAB // edytor fragment shaderów GLSL z kompilacją na żywo, presetami i eksportem klatki do PNG.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230d0d14'/%3E%3Cpath d='M10 12 L28 50 L38 30 L54 50' fill='none' stroke='%23b78cff' stroke-width='4'/%3E%3C/svg%3E">
+  <title>SHADER_LAB // GLSL PLAYGROUND</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; padding: clamp(0.75rem, 2vw, 1.5rem);
+      display: flex; justify-content: center; align-items: center;
+      background: radial-gradient(circle at 80% 10%, #1c1630 0%, #0d0d14 55%, #06060b 100%);
+      color: #c9c7dd; font: 13px/1.55 ui-monospace, "SFMono-Regular", Consolas, monospace;
+      overflow-x: hidden;
+    }
+    .app { width: 100%; max-width: 1180px; }
+    header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 0.9rem; }
+    h1 { margin: 0; font-size: clamp(1.3rem, 4vw, 2rem); letter-spacing: 0.28em; font-weight: 500; color: #e6dcff; text-shadow: 0 0 22px rgba(183,140,255,0.4); }
+    .sub { color: #7d789c; font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 0.6rem 0.9rem; align-items: center;
+      padding: 0.65rem 0.85rem; margin-bottom: 0.8rem; border: 1px solid #2d2945;
+      border-radius: 5px; background: rgba(16,15,28,0.8);
+    }
+    label { display: flex; align-items: center; gap: 0.45rem; color: #9791b8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    select, button {
+      font: inherit; color: #ded7ff; background: #151326; border: 1px solid #373158;
+      border-radius: 4px; padding: 0.35rem 0.6rem; cursor: pointer;
+    }
+    button:hover, select:hover { border-color: #b78cff; color: #b78cff; }
+    button.primary { background: #b78cff; color: #100c1c; border-color: #b78cff; font-weight: bold; }
+    button.primary:hover { background: #d0b3ff; color: #0b0712; }
+    input[type="range"] { accent-color: #b78cff; width: 110px; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr); gap: 0.9rem; align-items: start; }
+    .stage { position: relative; border: 1px solid #2d2945; border-radius: 5px; overflow: hidden; background: #000; box-shadow: 0 16px 50px rgba(0,0,0,0.5); }
+    #gl { display: block; width: 100%; height: clamp(320px, 55vh, 540px); cursor: crosshair; }
+    .stage:fullscreen { width: 100vw; height: 100vh; border: 0; border-radius: 0; }
+    .stage:fullscreen #gl { height: 100vh; }
+    .badge { position: absolute; left: 10px; top: 10px; padding: 0.35rem 0.6rem; background: rgba(10,8,18,0.75); border: 1px solid rgba(183,140,255,0.3); border-radius: 3px; font-size: 0.68rem; color: #cbb6ff; pointer-events: none; max-width: calc(100% - 20px); }
+    .thumbs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+    .thumb { padding: 0.3rem; background: #151326; border: 1px solid #373158; border-radius: 4px; color: #9b93bd; font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .thumb canvas { display: block; width: 96px; height: 54px; border-radius: 2px; background: #000; }
+    .thumb span { display: block; padding: 0.2rem 0.1rem 0; }
+    .thumb.active { border-color: #b78cff; color: #d0b3ff; box-shadow: 0 0 12px rgba(183,140,255,0.25); }
+    .editor-panel { border: 1px solid #2d2945; border-radius: 5px; background: rgba(16,15,28,0.85); overflow: hidden; }
+    .editor-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; padding: 0.5rem 0.7rem; border-bottom: 1px solid #2d2945; font-size: 0.7rem; color: #9b93bd; letter-spacing: 0.1em; }
+    .editor-head button { padding: 0.15rem 0.4rem; font-size: 0.65rem; }
+    .editor-wrap { position: relative; }
+    .line-mark { position: absolute; left: 0; right: 0; height: 1.6em; background: rgba(255,128,152,0.18); border-left: 3px solid #ff8098; pointer-events: none; z-index: 0; }
+    textarea {
+      position: relative; z-index: 1;
+      display: block; width: 100%; height: clamp(300px, 55vh, 540px); resize: vertical;
+      border: 0; outline: none; padding: 0.8rem; background: transparent; color: #cfc9ea;
+      font: 12px/1.6 ui-monospace, "SFMono-Regular", Consolas, monospace; tab-size: 2;
+      white-space: pre; overflow: auto;
+    }
+    textarea:focus { box-shadow: inset 0 0 14px rgba(183,140,255,0.15); }
+    .status { padding: 0.55rem 0.7rem; border-top: 1px solid #2d2945; font-size: 0.72rem; color: #7ee0a8; min-height: 2.2em; word-break: break-word; }
+    .status.error { color: #ff8098; }
+    .hint { margin-top: 0.75rem; color: #777295; font-size: 0.72rem; line-height: 1.7; }
+    :where(button, select, input, textarea):focus-visible { outline: 2px solid #b78cff; outline-offset: 2px; }
+    @media (max-width: 900px) { .workspace { grid-template-columns: 1fr; } textarea { height: 300px; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div><h1>SHADER LAB</h1><div class="sub">FRAGMENT SHADER · WEBGL 1.0</div></div>
+      <div class="sub" id="fps">-- FPS</div>
+    </header>
+
+    <div class="toolbar">
+      <label for="preset">PRESET
+        <select id="preset">
+          <option value="plasma">PLASMA</option>
+          <option value="mandelbrot">MANDELBROT</option>
+          <option value="raymarch">RAYMARCH SPHERE</option>
+          <option value="voronoi">VORONOI</option>
+          <option value="tunnel">TUNNEL</option>
+        </select>
+      </label>
+      <label for="timeScale">TIME <input type="range" id="timeScale" min="0" max="200" value="100"><span id="timeValue" class="sub">1.0×</span></label>
+      <label for="resScale">RES <input type="range" id="resScale" min="25" max="100" step="5" value="100"><span id="resValue" class="sub">100%</span></label>
+      <label for="mouseMode">MOUSE
+        <select id="mouseMode" aria-label="Tryb uniformu u_mouse">
+          <option value="live">LIVE</option><option value="center">CENTER</option><option value="lock">LOCK</option>
+        </select>
+      </label>
+      <button type="button" id="compileBtn" class="primary">COMPILE ▶</button>
+      <button type="button" id="pauseBtn">PAUSE</button>
+      <button type="button" id="shotBtn">SAVE PNG</button>
+      <button type="button" id="fsBtn" title="Podgląd na pełnym ekranie">FULLSCREEN</button>
+    </div>
+
+    <div class="thumbs" id="thumbs" aria-label="Galeria presetów"></div>
+
+    <div class="workspace">
+      <div class="stage">
+        <canvas id="gl" width="900" height="540" aria-label="Podgląd renderu fragment shadera"></canvas>
+        <div class="badge" id="badge">u_time · u_resolution · u_mouse</div>
+      </div>
+      <section class="editor-panel">
+        <div class="editor-head">
+          <span>// FRAGMENT.GLSL</span>
+          <span>GLSL ES 1.00 · <button type="button" id="errorBtn" hidden>PRZEJDŹ DO LINII</button></span>
+        </div>
+        <div class="editor-wrap">
+          <div class="line-mark" id="errorLine" hidden aria-hidden="true"></div>
+          <textarea id="editor" spellcheck="false" aria-label="Kod fragment shadera"></textarea>
+        </div>
+        <div class="status" id="status" role="status">Gotowe.</div>
+      </section>
+    </div>
+
+    <div class="hint">Zmień kod i naciśnij <b>COMPILE</b> lub <b>Ctrl+Enter</b>. Błędy kompilatora pojawią się pod editorem z zaznaczoną linią. <code>u_mouse</code> przyjmuje pozycję kursora (LIVE), środek (CENTER) lub zatrzymaną pozycję po kliknięciu (LOCK). <code>u_resolution</code> można skalować suwakiem RES.</div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const presets = {
+        plasma: `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+uniform vec2 u_mouse;
+
+void main() {
+  vec2 p = (gl_FragCoord.xy - 0.5 * u_resolution) / min(u_resolution.x, u_resolution.y);
+  vec2 m = (u_mouse / u_resolution - 0.5) * 2.0;
+  float t = u_time * 0.9;
+  float v = sin(p.x * 9.0 + t)
+          + sin(p.y * 11.0 - t * 0.8)
+          + sin((p.x + p.y) * 8.0 + t * 0.5)
+          + sin(length(p - 0.35 * m) * 18.0 - t * 1.5);
+  v *= 0.25;
+  vec3 col = 0.5 + 0.5 * cos(6.28318 * (v + vec3(0.0, 0.33, 0.67)) + t * 0.1);
+  gl_FragColor = vec4(col, 1.0);
+}`,
+        mandelbrot: `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / min(u_resolution.x, u_resolution.y);
+  float zoom = 1.6 + 1.2 * (1.0 + sin(u_time * 0.22));
+  vec2 c = uv * 2.6 / zoom + vec2(-0.72, 0.0);
+  vec2 z = vec2(0.0);
+  float i = 0.0;
+  for (int n = 0; n < 128; n++) {
+    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;
+    if (dot(z, z) > 4.0) break;
+    i += 1.0;
+  }
+  vec3 col = vec3(0.0);
+  if (i < 127.0) {
+    float v = i / 128.0;
+    col = 0.5 + 0.5 * cos(6.28318 * (v * 3.0 + vec3(0.0, 0.15, 0.32)));
+    col *= 0.75 + 0.25 * sin(v * 55.0);
+  }
+  gl_FragColor = vec4(col, 1.0);
+}`,
+        raymarch: `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+
+float sdSphere(vec3 p, float r) { return length(p) - r; }
+
+float map(vec3 p) {
+  float t = u_time * 0.7;
+  vec3 q = p;
+  q.xz = mat2(cos(t), -sin(t), sin(t), cos(t)) * q.xz;
+  float d = sdSphere(q - vec3(0.0, 0.15 + 0.22 * sin(t * 2.0), 0.0), 0.85);
+  return min(d, p.y + 1.05);
+}
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / u_resolution.y;
+  vec3 ro = vec3(0.0, 0.55, -3.1);
+  vec3 rd = normalize(vec3(uv, 1.25));
+  float t = 0.0;
+  for (int i = 0; i < 72; i++) {
+    float d = map(ro + rd * t);
+    if (d < 0.001 || t > 12.0) break;
+    t += d;
+  }
+  vec3 col = vec3(0.015, 0.02, 0.045);
+  if (t < 12.0) {
+    vec3 p = ro + rd * t;
+    vec2 e = vec2(0.001, 0.0);
+    vec3 n = normalize(vec3(
+      map(p + e.xyy) - map(p - e.xyy),
+      map(p + e.yxy) - map(p - e.yxy),
+      map(p + e.yyx) - map(p - e.yyx)));
+    vec3 l = normalize(vec3(0.6, 0.85, -0.4));
+    float diff = max(dot(n, l), 0.0);
+    float fres = pow(1.0 - max(dot(n, -rd), 0.0), 3.0);
+    col = vec3(0.16, 0.38, 0.6) * diff + vec3(0.55, 0.85, 1.0) * fres * 0.7 + 0.04;
+    col *= 1.0 / (1.0 + t * 0.075);
+  }
+  gl_FragColor = vec4(col, 1.0);
+}`,
+        voronoi: `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+
+vec2 hash2(vec2 p) {
+  p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+  return fract(sin(p) * 43758.5453);
+}
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / min(u_resolution.x, u_resolution.y) * 5.0;
+  vec2 g = floor(uv), f = fract(uv);
+  float d = 8.0;
+  vec2 id = vec2(0.0);
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 o = vec2(float(x), float(y));
+      vec2 h = hash2(g + o);
+      vec2 r = o + 0.5 + 0.5 * sin(u_time * 0.8 + 6.2831 * h) - f;
+      float dist = dot(r, r);
+      if (dist < d) { d = dist; id = g + o; }
+    }
+  }
+  vec3 col = 0.5 + 0.5 * cos(6.2831 * (hash2(id).x + vec3(0.0, 0.3, 0.62)));
+  col *= smoothstep(0.0, 0.8, sqrt(d)) * 0.85 + 0.15;
+  gl_FragColor = vec4(col, 1.0);
+}`,
+        tunnel: `precision highp float;
+uniform float u_time;
+uniform vec2 u_resolution;
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution) / u_resolution.y;
+  float a = atan(uv.y, uv.x);
+  float r = length(uv);
+  float z = 1.0 / max(r, 0.001) + u_time * 1.6;
+  vec2 q = vec2(a / 6.28318 * 6.0, z);
+  vec3 col = 0.5 + 0.5 * cos(6.28318 * (fract(q.y * 0.12) + vec3(0.0, 0.33, 0.67)) + sin(q.x * 6.0) * 0.6);
+  col *= smoothstep(0.0, 0.35, r) * 0.9 + 0.1;
+  col += vec3(0.2, 0.35, 0.5) * pow(1.0 - r, 8.0) * 0.35;
+  gl_FragColor = vec4(col, 1.0);
+}`
+      };
+
+      const canvas = document.getElementById('gl');
+      const editor = document.getElementById('editor');
+      const presetSelect = document.getElementById('preset');
+      const compileBtn = document.getElementById('compileBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const shotBtn = document.getElementById('shotBtn');
+      const status = document.getElementById('status');
+      const timeScale = document.getElementById('timeScale');
+      const timeValue = document.getElementById('timeValue');
+      const fpsLabel = document.getElementById('fps');
+      const badge = document.getElementById('badge');
+      const thumbsEl = document.getElementById('thumbs');
+      const resScale = document.getElementById('resScale');
+      const resValue = document.getElementById('resValue');
+      const mouseMode = document.getElementById('mouseMode');
+      const fsBtn = document.getElementById('fsBtn');
+      const errorBtn = document.getElementById('errorBtn');
+      const errorLine = document.getElementById('errorLine');
+
+      const vertexSource = 'attribute vec2 a_pos; void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }';
+      const gl = canvas.getContext('webgl', { antialias: false, preserveDrawingBuffer: true }) ||
+                 canvas.getContext('experimental-webgl', { antialias: false, preserveDrawingBuffer: true });
+
+      if (!gl) {
+        status.classList.add('error');
+        status.textContent = 'WebGL nie jest dostępne w tej przeglądarce.';
+        compileBtn.disabled = true;
+        return;
+      }
+
+      const buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+
+      let program = null;
+      let locations = null;
+      let paused = false;
+      let startTime = performance.now();
+      let pausedAt = 0;
+      let frames = 0;
+      let fpsTime = startTime;
+      let mouse = { x: 0.5, y: 0.5 };
+      let lockedMouse = { x: 0.5, y: 0.5 };
+      let mouseLocked = false;
+      let errorLineNumber = 0;
+
+      function updateErrorLine() {
+        if (!errorLineNumber) return;
+        const style = getComputedStyle(editor);
+        const fontSize = parseFloat(style.fontSize) || 12;
+        const lineHeight = parseFloat(style.lineHeight) || fontSize * 1.6;
+        const paddingTop = parseFloat(style.paddingTop) || 12;
+        errorLine.style.top = `${paddingTop + (errorLineNumber - 1) * lineHeight - editor.scrollTop}px`;
+      }
+
+      function markErrorLine(line) {
+        errorLineNumber = line || 0;
+        errorLine.hidden = !errorLineNumber;
+        errorBtn.hidden = !errorLineNumber;
+        updateErrorLine();
+      }
+
+      function jumpToError() {
+        if (!errorLineNumber) return;
+        const lines = editor.value.split('\n');
+        const start = lines.slice(0, errorLineNumber - 1).reduce((sum, line) => sum + line.length + 1, 0);
+        editor.focus();
+        editor.setSelectionRange(start, start + (lines[errorLineNumber - 1] || '').length);
+        const style = getComputedStyle(editor);
+        const lineHeight = parseFloat(style.lineHeight) || 19.2;
+        editor.scrollTop = Math.max(0, (errorLineNumber - 3) * lineHeight);
+        updateErrorLine();
+      }
+
+      function compile(type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+          const log = gl.getShaderInfoLog(shader);
+          gl.deleteShader(shader);
+          throw new Error(log || 'Nieznany błąd kompilacji');
+        }
+        return shader;
+      }
+
+      function build(source) {
+        const vertex = compile(gl.VERTEX_SHADER, vertexSource);
+        const fragment = compile(gl.FRAGMENT_SHADER, source);
+        const next = gl.createProgram();
+        gl.attachShader(next, vertex);
+        gl.attachShader(next, fragment);
+        gl.linkProgram(next);
+        gl.deleteShader(vertex);
+        gl.deleteShader(fragment);
+        if (!gl.getProgramParameter(next, gl.LINK_STATUS)) {
+          const log = gl.getProgramInfoLog(next);
+          gl.deleteProgram(next);
+          throw new Error(log || 'Nieznany błąd linkowania');
+        }
+        return next;
+      }
+
+      function applyShader() {
+        try {
+          const next = build(editor.value);
+          if (program) gl.deleteProgram(program);
+          program = next;
+          locations = {
+            pos: gl.getAttribLocation(program, 'a_pos'),
+            time: gl.getUniformLocation(program, 'u_time'),
+            resolution: gl.getUniformLocation(program, 'u_resolution'),
+            mouse: gl.getUniformLocation(program, 'u_mouse')
+          };
+          status.classList.remove('error');
+          status.textContent = '✔ Kompilacja OK · shader aktywny';
+          markErrorLine(0);
+          startTime = performance.now() - pausedAt * 1000;
+          return true;
+        } catch (error) {
+          const log = String(error.message || error).trim();
+          const match = log.match(/ERROR:\s*\d+:(\d+)/i) || log.match(/\b\d+:(\d+)\b/);
+          const line = match ? parseInt(match[1], 10) : 0;
+          status.classList.add('error');
+          status.textContent = `✘ ${log}${line ? ` · linia ${line}` : ''}`;
+          markErrorLine(line);
+          return false;
+        }
+      }
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.max(0.25, Math.min(window.devicePixelRatio || 1, 2) * parseInt(resScale.value, 10) / 100);
+        const width = Math.max(1, Math.round(rect.width * ratio));
+        const height = Math.max(1, Math.round(rect.height * ratio));
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+          gl.viewport(0, 0, width, height);
+        }
+      }
+
+      function draw(now) {
+        resize();
+        if (program) {
+          gl.useProgram(program);
+          gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+          gl.enableVertexAttribArray(locations.pos);
+          gl.vertexAttribPointer(locations.pos, 2, gl.FLOAT, false, 0, 0);
+          const elapsed = paused ? pausedAt : (now - startTime) / 1000 * (parseInt(timeScale.value, 10) / 100);
+          const mode = mouseMode.value;
+          const mx = mode === 'center' ? 0.5 : (mode === 'lock' ? lockedMouse.x : mouse.x);
+          const my = mode === 'center' ? 0.5 : (mode === 'lock' ? lockedMouse.y : mouse.y);
+          if (locations.time) gl.uniform1f(locations.time, elapsed);
+          if (locations.resolution) gl.uniform2f(locations.resolution, canvas.width, canvas.height);
+          if (locations.mouse) gl.uniform2f(locations.mouse, mx * canvas.width, (1 - my) * canvas.height);
+          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+          badge.textContent = `u_time ${elapsed.toFixed(1)} · u_res ${canvas.width}×${canvas.height} · u_mouse ${mx.toFixed(2)},${my.toFixed(2)}`;
+        }
+        frames += 1;
+        if (now - fpsTime > 700) {
+          fpsLabel.textContent = `${Math.round(frames * 1000 / (now - fpsTime))} FPS`;
+          frames = 0;
+          fpsTime = now;
+        }
+        requestAnimationFrame(draw);
+      }
+
+      function renderThumb(name, target) {
+        const tc = document.createElement('canvas');
+        tc.width = 96; tc.height = 54;
+        const tg = tc.getContext('webgl', { antialias: false, preserveDrawingBuffer: true });
+        if (!tg) return;
+        const compileIn = (type, source) => {
+          const shader = tg.createShader(type);
+          tg.shaderSource(shader, source);
+          tg.compileShader(shader);
+          if (!tg.getShaderParameter(shader, tg.COMPILE_STATUS)) {
+            const log = tg.getShaderInfoLog(shader);
+            tg.deleteShader(shader);
+            throw new Error(log || 'thumb compile');
+          }
+          return shader;
+        };
+        try {
+          const vs = compileIn(tg.VERTEX_SHADER, vertexSource);
+          const fs = compileIn(tg.FRAGMENT_SHADER, presets[name]);
+          const programThumb = tg.createProgram();
+          tg.attachShader(programThumb, vs);
+          tg.attachShader(programThumb, fs);
+          tg.linkProgram(programThumb);
+          if (!tg.getProgramParameter(programThumb, tg.LINK_STATUS)) throw new Error('thumb link');
+          const bufferThumb = tg.createBuffer();
+          tg.bindBuffer(tg.ARRAY_BUFFER, bufferThumb);
+          tg.bufferData(tg.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), tg.STATIC_DRAW);
+          tg.useProgram(programThumb);
+          const loc = tg.getAttribLocation(programThumb, 'a_pos');
+          tg.enableVertexAttribArray(loc);
+          tg.vertexAttribPointer(loc, 2, tg.FLOAT, false, 0, 0);
+          const tLoc = tg.getUniformLocation(programThumb, 'u_time');
+          if (tLoc) tg.uniform1f(tLoc, 1.7);
+          const rLoc = tg.getUniformLocation(programThumb, 'u_resolution');
+          if (rLoc) tg.uniform2f(rLoc, 96, 54);
+          const mLoc = tg.getUniformLocation(programThumb, 'u_mouse');
+          if (mLoc) tg.uniform2f(mLoc, 48, 27);
+          tg.viewport(0, 0, 96, 54);
+          tg.drawArrays(tg.TRIANGLE_STRIP, 0, 4);
+          const pixels = new Uint8Array(96 * 54 * 4);
+          tg.readPixels(0, 0, 96, 54, tg.RGBA, tg.UNSIGNED_BYTE, pixels);
+          const flipped = document.createElement('canvas');
+          flipped.width = 96; flipped.height = 54;
+          const image = flipped.getContext('2d').createImageData(96, 54);
+          for (let y = 0; y < 54; y += 1) {
+            const source = (53 - y) * 96 * 4;
+            image.data.set(pixels.subarray(source, source + 96 * 4), y * 96 * 4);
+          }
+          flipped.getContext('2d').putImageData(image, 0, 0);
+          target.getContext('2d').drawImage(flipped, 0, 0);
+          const lose = tg.getExtension('WEBGL_lose_context');
+          if (lose) lose.loseContext();
+        } catch (_) {
+          target.getContext('2d').fillStyle = '#151326';
+          target.getContext('2d').fillRect(0, 0, 96, 54);
+        }
+      }
+
+      function markActiveThumb() {
+        thumbsEl.querySelectorAll('.thumb').forEach((button) => {
+          button.classList.toggle('active', button.dataset.preset === presetSelect.value);
+        });
+      }
+
+      function buildThumbs() {
+        Object.keys(presets).forEach((name) => {
+          const option = presetSelect.querySelector(`option[value="${name}"]`);
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'thumb';
+          button.dataset.preset = name;
+          button.setAttribute('aria-label', `Preset ${option ? option.textContent : name}`);
+          const thumbCanvas = document.createElement('canvas');
+          thumbCanvas.width = 96; thumbCanvas.height = 54;
+          thumbCanvas.setAttribute('aria-hidden', 'true');
+          const label = document.createElement('span');
+          label.textContent = option ? option.textContent : name;
+          button.append(thumbCanvas, label);
+          button.addEventListener('click', () => {
+            presetSelect.value = name;
+            editor.value = presets[name];
+            pausedAt = 0;
+            markActiveThumb();
+            applyShader();
+            status.textContent = `Preset ${label.textContent} · skompilowany`;
+          });
+          thumbsEl.appendChild(button);
+          renderThumb(name, thumbCanvas);
+        });
+        markActiveThumb();
+      }
+
+      presetSelect.addEventListener('change', () => {
+        editor.value = presets[presetSelect.value];
+        pausedAt = 0;
+        markActiveThumb();
+        applyShader();
+      });
+      compileBtn.addEventListener('click', applyShader);
+      pauseBtn.addEventListener('click', () => {
+        if (paused) {
+          startTime = performance.now() - pausedAt * 1000;
+          paused = false;
+        } else {
+          pausedAt = (performance.now() - startTime) / 1000;
+          paused = true;
+        }
+        pauseBtn.textContent = paused ? 'RESUME' : 'PAUSE';
+      });
+      timeScale.addEventListener('input', () => { timeValue.textContent = `${(timeScale.value / 100).toFixed(1)}×`; });
+      resScale.addEventListener('input', () => { resValue.textContent = `${resScale.value}%`; });
+      errorBtn.addEventListener('click', jumpToError);
+      editor.addEventListener('scroll', updateErrorLine);
+      window.addEventListener('resize', updateErrorLine);
+      fsBtn.addEventListener('click', () => {
+        try {
+          const stage = canvas.parentElement;
+          if (document.fullscreenElement || document.webkitFullscreenElement) {
+            const exit = document.exitFullscreen || document.webkitExitFullscreen;
+            if (exit) Promise.resolve(exit.call(document)).catch(() => {
+              status.textContent = 'Nie udało się wyjść z trybu pełnoekranowego';
+            });
+          } else {
+            const request = stage.requestFullscreen || stage.webkitRequestFullscreen;
+            if (!request) {
+              status.textContent = 'Fullscreen nie jest dostępny w tej przeglądarce';
+              return;
+            }
+            Promise.resolve(request.call(stage)).catch(() => {
+              status.textContent = 'Nie udało się przełączyć trybu pełnoekranowego';
+            });
+          }
+        } catch (_) {
+          status.textContent = 'Nie udało się przełączyć trybu pełnoekranowego';
+        }
+      });
+      shotBtn.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = `shader_${presetSelect.value}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+
+      canvas.addEventListener('pointermove', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+        mouse.y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+        if (mouseMode.value === 'lock' && !mouseLocked) lockedMouse = { ...mouse };
+      });
+      canvas.addEventListener('pointerdown', () => {
+        if (mouseMode.value !== 'lock') return;
+        mouseLocked = !mouseLocked;
+        lockedMouse = { ...mouse };
+        status.textContent = mouseLocked ? 'u_mouse zablokowany · kliknij, aby zwolnić' : 'u_mouse śledzi kursor';
+      });
+
+      editor.addEventListener('keydown', (event) => {
+        if (event.key === 'Tab') {
+          event.preventDefault();
+          const start = editor.selectionStart;
+          editor.value = `${editor.value.slice(0, start)}  ${editor.value.slice(editor.selectionEnd)}`;
+          editor.selectionStart = editor.selectionEnd = start + 2;
+        }
+        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+          event.preventDefault();
+          applyShader();
+        }
+      });
+
+      editor.value = presets.plasma;
+      buildThumbs();
+      if (applyShader()) requestAnimationFrame(draw);
+    })();
+  </script>
+</body>
+</html>

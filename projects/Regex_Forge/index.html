@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b0713">
+  <meta name="description" content="REGEX FORGE // własny silnik wyrażeń regularnych: parser AST, automat Thompson NFA i debugger dopasowania krok po kroku.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b0713'/%3E%3Ctext x='32' y='45' font-size='38' text-anchor='middle' fill='%23c084fc' font-family='monospace'%3E.*%3C/text%3E%3C/svg%3E">
+  <title>Regex Forge — silnik wyrażeń regularnych</title>
+  <style>
+    :root {
+      --bg:#0b0713; --panel:#130d20; --panel2:#1a1229; --border:#2c2040;
+      --text:#eee8f7; --muted:#9384ab; --violet:#c084fc; --lime:#a3e635; --pink:#f472b6;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; height:100%; }
+    body {
+      background:var(--bg); color:var(--text);
+      font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    header {
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:9px 13px;
+      background:#150e23; border-bottom:1px solid var(--border);
+    }
+    .brand { font-weight:700; font-size:13px; letter-spacing:.03em; margin-right:6px; }
+    .brand span { color:var(--violet); }
+    button, select, input, textarea {
+      font:inherit; color:var(--text); background:#1a1229; border:1px solid var(--border);
+      border-radius:6px; padding:6px 9px;
+    }
+    button:hover, select:hover { border-color:#614a86; background:#221735; }
+    button.primary { background:var(--violet); color:#1b0b2e; border-color:var(--violet); font-weight:700; }
+    button.active { background:#33204d; color:var(--violet); border-color:#6b4d94; }
+    input.pattern { min-width:190px; font-family:ui-monospace,Consolas,monospace; }
+    .sep { width:1px; height:20px; background:var(--border); margin:0 3px; }
+    .label { color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.05em; }
+    .flags { display:flex; gap:4px; }
+    .flags button { width:28px; text-align:center; font-family:ui-monospace,Consolas,monospace; }
+    .main { flex:1; display:grid; grid-template-columns:minmax(260px,.72fr) minmax(0,1.28fr); min-height:0; }
+    .col { display:flex; flex-direction:column; min-width:0; min-height:0; border-right:1px solid var(--border); }
+    .col:last-child { border-right:0; }
+    .card { background:var(--panel); border-bottom:1px solid var(--border); padding:11px 13px; }
+    .card h3 {
+      margin:0 0 8px; font-size:10px; text-transform:uppercase; letter-spacing:.09em;
+      color:var(--muted); font-weight:700; display:flex; justify-content:space-between;
+    }
+    .card h3 b { color:var(--violet); font-weight:700; }
+    textarea.test {
+      width:100%; min-height:78px; resize:vertical; font-family:ui-monospace,Consolas,monospace;
+      font-size:12px; line-height:1.6;
+    }
+    .result { min-height:32px; padding:7px 9px; background:#100a1b; border:1px solid var(--border); border-radius:6px; font-family:ui-monospace,Consolas,monospace; white-space:pre-wrap; word-break:break-all; }
+    .result mark, .preview mark { background:rgba(192,132,252,.28); color:var(--violet); border-radius:2px; }
+    .result.good { border-color:#5c7d29; }
+    .result.bad { border-color:#8b3a5c; color:var(--pink); }
+    .scroll { overflow:auto; min-height:0; flex:1; }
+    .ast { padding:6px 13px 12px; font:11px/1.7 ui-monospace,Consolas,monospace; }
+    .ast-node { margin-left:var(--depth); border-left:1px solid #33254a; padding-left:8px; color:var(--muted); }
+    .ast-node b { color:var(--lime); font-weight:600; }
+    .ast-node span { color:#cbbde0; }
+    .stage { position:relative; flex:1; min-height:0; background:radial-gradient(circle at 50% 40%,#150e24,#090611 75%); }
+    canvas { display:block; width:100%; height:100%; }
+    .ctrl { display:flex; align-items:center; gap:7px; padding:8px 13px; background:var(--panel); border-top:1px solid var(--border); flex-wrap:wrap; }
+    .ctrl input[type="range"] { flex:1; min-width:90px; accent-color:var(--violet); }
+    .groups { min-height:26px; display:flex; flex-wrap:wrap; gap:5px; }
+    .group-chip {
+      border:1px solid var(--border); border-radius:5px; padding:2px 7px; background:#100a1b;
+      font:11px ui-monospace,Consolas,monospace; white-space:nowrap;
+    }
+    .group-chip b { color:var(--lime); }
+    .group-chip.empty { color:var(--muted); }
+    .replace-row { display:flex; gap:6px; align-items:center; }
+    .replace-row input { min-width:0; flex:1; }
+    .preview {
+      margin-top:6px; min-height:30px; padding:5px 7px; background:#100a1b; border:1px solid var(--border);
+      border-radius:6px; font:11px/1.6 ui-monospace,Consolas,monospace; white-space:pre-wrap; word-break:break-all;
+    }
+    .guard-warn { margin-top:5px; color:var(--pink); font-size:10px; }
+    .timeline-wrap { max-height:116px; overflow:auto; padding:6px 13px; background:var(--panel); border-top:1px solid var(--border); }
+    .timeline-wrap h3 {
+      margin:0 0 5px; font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
+    }
+    .timeline-item {
+      display:flex; gap:8px; padding:2px 5px; cursor:pointer; border-radius:4px;
+      font:11px ui-monospace,Consolas,monospace;
+    }
+    .timeline-item:hover { background:#221735; }
+    .timeline-item.on { background:#33204d; color:var(--violet); }
+    .timeline-item span:first-child { color:var(--lime); min-width:34px; }
+    .trace-wrap { max-height:170px; overflow:auto; background:var(--panel); border-top:1px solid var(--border); }
+    table { width:100%; border-collapse:collapse; font:11px ui-monospace,Consolas,monospace; }
+    th, td { padding:3px 9px; text-align:left; white-space:nowrap; }
+    th { color:var(--muted); position:sticky; top:0; background:var(--panel); font-weight:600; }
+    tr.on td { background:#2a1b40; color:var(--violet); }
+    td.k { color:var(--muted); }
+    .status {
+      display:flex; gap:16px; flex-wrap:wrap; padding:7px 13px; background:#150e23;
+      border-top:1px solid var(--border); color:var(--muted); font-size:10px;
+    }
+    .status b { color:var(--text); font-variant-numeric:tabular-nums; }
+    .accent { color:var(--violet); } .green { color:var(--lime); }
+    :where(button,select,input,textarea):focus-visible { outline:2px solid var(--violet); outline-offset:1px; }
+    @media (max-width:900px) {
+      body { height:auto; min-height:100vh; overflow:auto; }
+      .main { grid-template-columns:1fr; min-height:0; }
+      .col:first-child { border-right:0; border-bottom:1px solid var(--border); }
+      .stage { min-height:260px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">REGEX <span>FORGE</span></div>
+    <input id="pattern" class="pattern" type="text" spellcheck="false" value="(ab|cd)+\d" aria-label="Wyrażenie regularne">
+    <button type="button" id="matchBtn" class="primary">⟶ Dopasuj</button>
+    <div class="sep"></div>
+    <div class="flags" aria-label="Flagi">
+      <button type="button" id="flagI" title="IgnoreCase">i</button>
+      <button type="button" id="flagS" title="DotAll">s</button>
+    </div>
+    <div class="sep"></div>
+    <select id="example" aria-label="Przykład">
+      <option value="custom">— przykłady —</option>
+      <option value="0">Telefon · \d{3}-\d{4}</option>
+      <option value="1">Słowa · [A-Z][a-z]+</option>
+      <option value="2">Naprzemienne · a(b|c)*d</option>
+      <option value="3">E-mail · ^\w+@\w+\.\w+$</option>
+      <option value="4">Grupy · (ab|cd)+\d</option>
+      <option value="5">Powtórzenia · (xy){2,3}z</option>
+    </select>
+    <button type="button" id="shareBtn" title="Skopiuj link do bieżącego wzorca i tekstu">↗ Link</button>
+  </header>
+
+  <div class="main">
+    <div class="col">
+      <div class="card">
+        <h3>Test string <b id="matchInfo">—</b></h3>
+        <textarea id="testString" class="test" spellcheck="false">xx abcd7 yy</textarea>
+      </div>
+      <div class="card">
+        <h3>Wynik <b id="matchPos">—</b></h3>
+        <div class="result" id="result">—</div>
+        <div class="guard-warn" id="guardWarn" aria-live="polite"></div>
+      </div>
+      <div class="card">
+        <h3>Grupy przechwytywania <b id="groupCount">0</b></h3>
+        <div class="groups" id="groups"></div>
+      </div>
+      <div class="card">
+        <h3>Podgląd zamiany <b>$0 · $1…</b></h3>
+        <div class="replace-row">
+          <label class="label" for="replacement" style="flex:none">na</label>
+          <input id="replacement" type="text" spellcheck="false" value="[$1]" aria-label="Szablon zamiany, np. $1 lub $&">
+        </div>
+        <div class="preview" id="replacePreview" aria-live="polite"></div>
+      </div>
+      <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0;padding-bottom:0">
+        <h3>AST <b id="astCount">0 węzłów</b></h3>
+        <div class="scroll ast" id="ast"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" style="padding:8px 13px">
+        <h3 style="margin:0">Thompson NFA <b id="nfaInfo">0 stanów</b></h3>
+      </div>
+      <div class="stage"><canvas id="canvas" aria-label="Wizualizacja automatu NFA"></canvas></div>
+      <div class="ctrl">
+        <button type="button" id="firstBtn">⏮</button>
+        <button type="button" id="prevBtn">◀ Krok</button>
+        <button type="button" id="playBtn" class="primary">▶ Auto</button>
+        <button type="button" id="nextBtn">Krok ▶</button>
+        <button type="button" id="lastBtn">⏭</button>
+        <input type="range" id="traceSlider" min="0" max="0" value="0">
+        <span class="label" id="traceLabel">0 / 0</span>
+      </div>
+      <div class="trace-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Stan</th><th>Pozycja</th><th>Znak</th><th>Akcja</th></tr></thead>
+          <tbody id="traceBody"></tbody>
+        </table>
+      </div>
+      <div class="timeline-wrap">
+        <h3>Match timeline <b id="matchCount">0</b></h3>
+        <div id="timeline"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status">
+    <span>Stany <b id="statStates">0</b></span>
+    <span>Krawędzie <b id="statEdges">0</b></span>
+    <span>Kroki <b id="statSteps">0</b></span>
+    <span>Flagi <b id="statFlags">—</b></span>
+    <span id="hint">Parser → AST → NFA → backtracking z priorytetem krawędzi</span>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const $ = (id) => document.getElementById(id);
+      const canvas = $('canvas');
+      const ctx = canvas.getContext('2d');
+      const SAMPLES = [
+        { pattern: '\\d{3}-\\d{4}', text: 'numer 123-4567, fax 890-1234' },
+        { pattern: '[A-Z][a-z]+', text: 'Hello World from Krakow' },
+        { pattern: 'a(b|c)*d', text: 'xx abcbcd yy' },
+        { pattern: '^\\w+@\\w+\\.\\w+$', text: 'user@example.com' },
+        { pattern: '(ab|cd)+\\d', text: 'xx abcd7 yy' },
+        { pattern: '(xy){2,3}z', text: 'xyxyxyxy z' }
+      ];
+
+      let flags = { i: false, s: false };
+      let ast = null, states = [], start = 0, accept = 0;
+      let trace = [], traceIndex = 0, timer = null, layout = [];
+      let groupTotal = 0, allMatches = [], selectedMatch = 0, lastSteps = [], guardAborted = false;
+      const STEP_BUDGET = 20000;
+      let budgetLeft = STEP_BUDGET;
+
+      function parse(pattern) {
+        let pos = 0, groupIndex = 0;
+        const peek = () => pattern[pos];
+        const fail = (msg) => { throw new Error(`pozycja ${pos}: ${msg}`); };
+
+        function parseAlt() {
+          const branches = [parseSeq()];
+          while (peek() === '|') { pos += 1; branches.push(parseSeq()); }
+          return branches.length === 1 ? branches[0] : { type: 'Alt', branches };
+        }
+
+        function parseSeq() {
+          const items = [];
+          while (pos < pattern.length && peek() !== ')' && peek() !== '|') items.push(parseQuantified());
+          if (!items.length) return { type: 'Empty' };
+          return items.length === 1 ? items[0] : { type: 'Seq', items };
+        }
+
+        function parseQuantified() {
+          let node = parseAtom();
+          if (pos < pattern.length) {
+            const char = peek();
+            if (char === '*' || char === '+' || char === '?') {
+              pos += 1;
+              node = { type: 'Repeat', node, min: char === '+' ? 1 : 0, max: char === '?' ? 1 : Infinity, lazy: false };
+            } else if (char === '{') {
+              const saved = pos;
+              pos += 1;
+              const digits = () => {
+                const from = pos;
+                while (/\d/.test(peek() || '')) pos += 1;
+                if (from === pos) fail('oczekiwano liczby w { }');
+                return parseInt(pattern.slice(from, pos), 10);
+              };
+              const min = digits();
+              let max = min;
+              if (peek() === ',') { pos += 1; max = /\d/.test(peek() || '') ? digits() : Infinity; }
+              if (peek() !== '}') { pos = saved; node = { type: 'Char', value: '{', label: '{' }; }
+              else {
+                pos += 1;
+                if (max < min) fail('nieprawidłowy zakres powtórzeń');
+                if (max - min > 12) fail('zbyt duży zakres powtórzeń (max 12)');
+                node = { type: 'Repeat', node, min, max, lazy: false };
+              }
+            }
+          }
+          if (node.type === 'Repeat' && peek() === '?') { pos += 1; node.lazy = true; }
+          return node;
+        }
+
+        function classTest(ch, negate, singles, ranges, escapeSet) {
+          let inside = singles.has(ch) || ranges.some(([a, b]) => ch >= a && ch <= b) || escapeSet.some((fn) => fn(ch));
+          return negate ? !inside : inside;
+        }
+
+        function escapeMatcher(code) {
+          const sets = {
+            d: [(c) => c >= '0' && c <= '9', '\\d'],
+            D: [(c) => !(c >= '0' && c <= '9'), '\\D'],
+            w: [(c) => /[A-Za-z0-9_]/.test(c), '\\w'],
+            W: [(c) => !/[A-Za-z0-9_]/.test(c), '\\W'],
+            s: [(c) => /\s/.test(c), '\\s'],
+            S: [(c) => !/\s/.test(c), '\\S']
+          };
+          if (sets[code]) return { type: 'Class', label: sets[code][1], test: sets[code][0] };
+          const map = { n: '\n', t: '\t', r: '\r' };
+          return { type: 'Char', value: map[code] ?? code, label: `\\${code}` };
+        }
+
+        function parseClass() {
+          pos += 1;
+          const negate = peek() === '^';
+          if (negate) pos += 1;
+          const singles = new Set();
+          const ranges = [];
+          const escapeSet = [];
+          let label = '[' + (negate ? '^' : '');
+          let first = true;
+          while (pos < pattern.length && (peek() !== ']' || first)) {
+            first = false;
+            let ch = peek();
+            let low;
+            if (ch === '\\') {
+              pos += 1;
+              const esc = escapeMatcher(peek() || '');
+              if (esc.type === 'Class' && /^[dDwWsS]$/.test(pattern[pos])) {
+                escapeSet.push(esc.test); label += esc.label; pos += 1;
+              } else { low = esc.value; label += `\\${pattern[pos]}`; pos += 1; }
+            } else { low = ch; label += ch; pos += 1; }
+            if (low === undefined) continue;
+            if (peek() === '-' && pattern[pos + 1] !== ']' && pattern[pos + 1] !== undefined) {
+              pos += 1;
+              let high = peek();
+              if (high === '\\') { pos += 1; high = escapeMatcher(peek() || '').value; pos += 1; }
+              else { pos += 1; }
+              label += `-${high}`;
+              ranges.push([low, high]);
+            } else { singles.add(low); }
+          }
+          if (peek() !== ']') fail('niezamknięta klasa znaków');
+          pos += 1;
+          label += ']';
+          const test = (ch) => classTest(ch, negate, singles, ranges, escapeSet);
+          return { type: 'Class', label, test, parts: { singles: [...singles], ranges, negate } };
+        }
+
+        function parseAtom() {
+          const char = peek();
+          if (char === undefined) fail('nieoczekiwany koniec wzorca');
+          if (char === '(') {
+            pos += 1;
+            const capturing = !(peek() === '?' && pattern[pos + 1] === ':');
+            if (!capturing) pos += 2;
+            const index = capturing ? ++groupIndex : 0;
+            const inner = parseAlt();
+            if (peek() !== ')') fail('oczekiwano )');
+            pos += 1;
+            return { type: 'Group', node: inner, index };
+          }
+          if (char === '[') return parseClass();
+          if (char === '.') { pos += 1; return { type: 'Any' }; }
+          if (char === '^') { pos += 1; return { type: 'Anchor', kind: 'start' }; }
+          if (char === '$') { pos += 1; return { type: 'Anchor', kind: 'end' }; }
+          if (char === '\\') {
+            pos += 1;
+            if (pos >= pattern.length) fail('samotny znak \\');
+            const node = escapeMatcher(peek()); pos += 1; return node;
+          }
+          if (char === ')' || char === '|' || char === '*' || char === '+' || char === '?') fail(`nieoczekiwany znak "${char}"`);
+          pos += 1;
+          return { type: 'Char', value: char, label: char };
+        }
+
+        const result = parseAlt();
+        if (pos < pattern.length) fail('nieprzetworzony fragment wzorca');
+        groupTotal = groupIndex;
+        return result;
+      }
+
+      function newNode() { const id = states.length; states.push({ id, edges: [] }); return id; }
+      function addEdge(from, to, edge) { return states[from].edges.push({ to, ...edge }) - 1; }
+
+      function build(node) {
+        if (node.type === 'Char' || node.type === 'Class' || node.type === 'Any') {
+          const from = newNode(), to = newNode();
+          const label = node.label ?? node.value;
+          const test = node.type === 'Char'
+            ? (ch) => flags.i ? ch.toLowerCase() === String(node.value).toLowerCase() : ch === node.value
+            : node.type === 'Any'
+              ? (ch) => flags.s || ch !== '\n'
+              : (ch) => node.test(flags.i ? ch.toLowerCase() : ch);
+          addEdge(from, to, { type: 'match', label, test });
+          return { start: from, end: to };
+        }
+        if (node.type === 'Anchor') {
+          const from = newNode(), to = newNode();
+          addEdge(from, to, { type: 'anchor', label: node.kind === 'start' ? '^' : '$', kind: node.kind });
+          return { start: from, end: to };
+        }
+        if (node.type === 'Empty') {
+          const from = newNode(), to = newNode();
+          addEdge(from, to, { type: 'eps', label: 'ε' });
+          return { start: from, end: to };
+        }
+        if (node.type === 'Group') {
+          const frag = build(node.node);
+          const from = newNode(), to = newNode();
+          addEdge(from, frag.start, { type: 'eps', label: 'ε', groupStart: node.index || 0 });
+          addEdge(frag.end, to, { type: 'eps', label: 'ε', groupEnd: node.index || 0 });
+          return { start: from, end: to };
+        }
+        if (node.type === 'Seq') {
+          const first = newNode();
+          let tail = first;
+          node.items.forEach((item) => {
+            const frag = build(item);
+            addEdge(tail, frag.start, { type: 'eps', label: 'ε' });
+            tail = frag.end;
+          });
+          return { start: first, end: tail };
+        }
+        if (node.type === 'Alt') {
+          const from = newNode(), to = newNode();
+          node.branches.forEach((branch) => {
+            const frag = build(branch);
+            addEdge(from, frag.start, { type: 'eps', label: 'ε' });
+            addEdge(frag.end, to, { type: 'eps', label: 'ε' });
+          });
+          return { start: from, end: to };
+        }
+        if (node.type === 'Repeat') {
+          const from = newNode(), to = newNode();
+          let tail = from;
+          for (let k = 0; k < node.min; k += 1) {
+            const frag = build(node.node);
+            addEdge(tail, frag.start, { type: 'eps', label: 'ε' });
+            tail = frag.end;
+          }
+          if (node.max === Infinity) {
+            const frag = build(node.node);
+            addEdge(tail, frag.start, { type: 'eps', label: 'ε' });
+            addEdge(tail, to, { type: 'eps', label: 'ε' });
+            addEdge(frag.end, frag.start, { type: 'eps', label: 'ε' });
+            addEdge(frag.end, to, { type: 'eps', label: 'ε' });
+            if (node.lazy) { states[frag.end].edges.reverse(); states[tail].edges.reverse(); }
+          } else {
+            const optionalTails = [];
+            for (let k = node.min; k < node.max; k += 1) {
+              const frag = build(node.node);
+              addEdge(tail, frag.start, { type: 'eps', label: 'ε' });
+              addEdge(tail, to, { type: 'eps', label: 'ε' });
+              optionalTails.push(tail);
+              tail = frag.end;
+            }
+            addEdge(tail, to, { type: 'eps', label: 'ε' });
+            if (node.lazy) optionalTails.forEach((id) => states[id].edges.reverse());
+          }
+          return { start: from, end: to };
+        }
+        throw new Error(`nieznany węzeł ${node.type}`);
+      }
+
+      function validateAnchor(kind, text, pos) {
+        if (kind === 'start') return pos === 0;
+        return pos === text.length;
+      }
+
+      function run(startPos, text) {
+        const stack = [{ state: start, pos: startPos, visited: [], groups: {} }];
+        const seen = new Set();
+        const steps = [];
+        const advanceGroups = (frame, edge) => {
+          const groups = frame.groups || {};
+          if (edge.groupStart) return { ...groups, [edge.groupStart]: { start: frame.pos, end: frame.pos } };
+          if (edge.groupEnd && groups[edge.groupEnd]) {
+            return { ...groups, [edge.groupEnd]: { start: groups[edge.groupEnd].start, end: frame.pos } };
+          }
+          return groups;
+        };
+        while (stack.length) {
+          if (steps.length >= budgetLeft) {
+            budgetLeft = 0;
+            return { end: -1, steps, groups: {}, aborted: true };
+          }
+          const frame = stack.pop();
+          const key = `${frame.state}:${frame.pos}:${JSON.stringify(frame.groups || {})}`;
+          if (seen.has(key)) continue;
+          seen.add(key);
+          steps.push({
+            state: frame.state, pos: frame.pos,
+            char: frame.pos < text.length ? text[frame.pos] : '␃',
+            action: frame.state === accept ? 'AKCEPTACJA' : 'wejście',
+            visited: frame.visited.concat(frame.state)
+          });
+          if (frame.state === accept) {
+            budgetLeft = Math.max(0, budgetLeft - steps.length);
+            return { end: frame.pos, steps, groups: frame.groups || {}, aborted: false };
+          }
+          const edges = states[frame.state].edges;
+          for (let i = edges.length - 1; i >= 0; i -= 1) {
+            const edge = edges[i];
+            if (edge.type === 'eps') {
+              stack.push({ state: edge.to, pos: frame.pos, visited: frame.visited, groups: advanceGroups(frame, edge) });
+            } else if (edge.type === 'anchor') {
+              if (validateAnchor(edge.kind, text, frame.pos)) {
+                stack.push({ state: edge.to, pos: frame.pos, visited: frame.visited, groups: frame.groups });
+              }
+            } else if (frame.pos < text.length && edge.test(text[frame.pos])) {
+              stack.push({ state: edge.to, pos: frame.pos + 1, visited: frame.visited.concat(frame.state), groups: frame.groups });
+            }
+          }
+        }
+        budgetLeft = Math.max(0, budgetLeft - steps.length);
+        return { end: -1, steps, groups: {}, aborted: false };
+      }
+
+      function matchFrom(text, from) {
+        let fallback = { begin: from, end: -1, steps: [], groups: {}, aborted: false };
+        for (let begin = from; begin <= text.length; begin += 1) {
+          if (budgetLeft <= 0) return { ...fallback, aborted: true };
+          const result = run(begin, text);
+          if (result.aborted) return { ...result, begin, aborted: true };
+          if (result.end >= 0) return { ...result, begin };
+          if (result.steps.length > fallback.steps.length) fallback = { ...result, begin };
+        }
+        return fallback;
+      }
+
+      function match(text) {
+        budgetLeft = STEP_BUDGET;
+        return matchFrom(text, 0);
+      }
+
+      function findAll(text) {
+        budgetLeft = STEP_BUDGET;
+        const matches = [];
+        let cursor = 0;
+        let lastSteps = [];
+        while (cursor <= text.length && budgetLeft > 0 && matches.length < 50) {
+          const found = matchFrom(text, cursor);
+          lastSteps = found.steps;
+          if (found.aborted) return { matches, lastSteps, aborted: true };
+          if (found.end < 0) break;
+          matches.push({ begin: found.begin, end: found.end, groups: found.groups || {}, steps: found.steps });
+          cursor = found.end > found.begin ? found.end : found.begin + 1;
+        }
+        return { matches, lastSteps, aborted: budgetLeft <= 0 };
+      }
+
+      function astChildren(node) {
+        if (!node) return [];
+        if (node.type === 'Alt') return node.branches;
+        if (node.type === 'Seq') return node.items;
+        if (node.type === 'Group' || node.type === 'Repeat') return [node.node];
+        return [];
+      }
+
+      function renderAst(node, host, depth = 0) {
+        if (!node) return;
+        const row = document.createElement('div');
+        row.className = 'ast-node';
+        row.style.setProperty('--depth', `${depth * 11}px`);
+        const kind = document.createElement('b'); kind.textContent = node.type;
+        const detail = node.label ?? node.value ?? node.kind ??
+          (node.min !== undefined ? `{${node.min},${node.max === Infinity ? '' : node.max}}${node.lazy ? '?' : ''}` : '') ?? '';
+        const text = document.createElement('span'); text.textContent = ` ${detail}`;
+        row.append(kind, text);
+        host.appendChild(row);
+        astChildren(node).forEach((child) => renderAst(child, host, depth + 1));
+      }
+
+      function computeLayout() {
+        const depth = new Array(states.length).fill(Infinity);
+        depth[start] = 0;
+        const queue = [start];
+        while (queue.length) {
+          const id = queue.shift();
+          for (const edge of states[id].edges) {
+            if (depth[edge.to] > depth[id] + 1) { depth[edge.to] = depth[id] + 1; queue.push(edge.to); }
+          }
+        }
+        depth.forEach((value, i) => { if (!Number.isFinite(value)) depth[i] = 0; });
+        const columns = new Map();
+        states.forEach((state) => {
+          const d = depth[state.id];
+          if (!columns.has(d)) columns.set(d, []);
+          columns.get(d).push(state.id);
+        });
+        layout = new Array(states.length);
+        columns.forEach((ids, d) => ids.forEach((id, i) => { layout[id] = { col: d, row: i }; }));
+      }
+
+      function drawGraph() {
+        const width = canvas.clientWidth, height = canvas.clientHeight;
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) {
+          canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
+        }
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.clearRect(0, 0, width, height);
+        if (!states.length) return;
+
+        const cols = Math.max(...layout.map((l) => l.col)) + 1;
+        const rows = Math.max(...layout.map((l) => l.row)) + 1;
+        const radius = Math.max(9, Math.min(16, Math.min(width / (cols * 2.4), height / (rows * 2.2))));
+        const gapX = Math.max(38, width / (cols + 1));
+        const gapY = Math.max(34, height / (rows + 1));
+        const point = (id) => ({
+          x: gapX * (layout[id].col + 0.6),
+          y: gapY * (layout[id].row + 1)
+        });
+
+        states.forEach((state) => {
+          state.edges.forEach((edge) => {
+            const a = point(state.id), b = point(edge.to);
+            ctx.strokeStyle = edge.type === 'eps' ? 'rgba(147,132,171,0.35)' : edge.type === 'anchor' ? 'rgba(245,114,182,0.55)' : 'rgba(163,230,53,0.5)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            const bend = (b.y - a.y) * 0.35;
+            ctx.quadraticCurveTo((a.x + b.x) / 2, a.y + bend, b.x, b.y);
+            ctx.stroke();
+            if (edge.label && edge.label !== 'ε') {
+              const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2 + bend / 2;
+              ctx.font = '10px ui-monospace,Consolas,monospace';
+              ctx.fillStyle = edge.type === 'match' ? '#a3e635' : '#f472b6';
+              ctx.textAlign = 'center';
+              ctx.fillText(edge.label, mx, my - 4);
+            }
+          });
+        });
+
+        const active = trace[traceIndex]?.visited ?? [];
+        states.forEach((state) => {
+          const p = point(state.id);
+          const isActive = active.includes(state.id);
+          const isStart = state.id === start;
+          const isAccept = state.id === accept;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, radius + (isActive ? 4 : 0), 0, Math.PI * 2);
+          ctx.fillStyle = isAccept ? 'rgba(245,114,182,0.16)' : isActive ? 'rgba(192,132,252,0.22)' : 'rgba(26,18,41,0.9)';
+          ctx.fill();
+          ctx.strokeStyle = isAccept ? '#f472b6' : isStart ? '#c084fc' : isActive ? '#e9d5ff' : '#4b3b68';
+          ctx.lineWidth = isActive || isStart || isAccept ? 2 : 1;
+          ctx.stroke();
+          ctx.fillStyle = isAccept ? '#fbcfe8' : isActive ? '#fff' : '#cbbde0';
+          ctx.font = '10px ui-monospace,Consolas,monospace';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(String(state.id), p.x, p.y);
+          if (isAccept) {
+            ctx.beginPath(); ctx.arc(p.x, p.y, radius + 4, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(245,114,182,0.5)'; ctx.lineWidth = 1; ctx.stroke();
+          }
+        });
+      }
+
+      function renderTrace() {
+        const body = $('traceBody');
+        body.replaceChildren();
+        trace.forEach((step, i) => {
+          const row = document.createElement('tr');
+          if (i === traceIndex) row.className = 'on';
+          const cells = [String(i + 1), String(step.state), String(step.pos), step.char, step.action];
+          cells.forEach((value, j) => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            if (j === 4 && step.action === 'AKCEPTACJA') td.style.color = 'var(--lime)';
+            row.appendChild(td);
+          });
+          body.appendChild(row);
+        });
+        $('traceSlider').max = String(Math.max(0, trace.length - 1));
+        $('traceSlider').value = String(traceIndex);
+        $('traceLabel').textContent = `${traceIndex + 1} / ${trace.length}`;
+        if (trace[traceIndex]) {
+          const step = trace[traceIndex];
+          const node = document.querySelector(`#traceBody tr:nth-child(${traceIndex + 1})`);
+          if (node) node.scrollIntoView({ block: 'nearest' });
+        }
+      }
+
+      function activeMatch() { return allMatches[selectedMatch] || null; }
+
+      function showMatch(match) {
+        const text = $('testString').value;
+        const resultEl = $('result');
+        resultEl.replaceChildren();
+        if (!match) {
+          resultEl.textContent = text || '(pusty tekst)';
+          resultEl.className = 'result bad';
+          $('matchInfo').textContent = 'BRAK';
+          $('matchPos').textContent = '—';
+        } else {
+          const matched = text.slice(match.begin, match.end);
+          resultEl.append(
+            document.createTextNode(text.slice(0, match.begin)),
+            Object.assign(document.createElement('mark'), { textContent: matched }),
+            document.createTextNode(text.slice(match.end))
+          );
+          resultEl.className = 'result good';
+          $('matchInfo').textContent = 'ZNALEZIONO';
+          $('matchPos').textContent = `[${match.begin}, ${match.end}) · "${matched}"`;
+        }
+        renderGroups(match);
+        renderReplacement(match);
+        resultEl.scrollTop = 0;
+      }
+
+      function renderGroups(match) {
+        const host = $('groups');
+        host.replaceChildren();
+        $('groupCount').textContent = String(groupTotal);
+        if (!groupTotal) {
+          const empty = document.createElement('span');
+          empty.className = 'group-chip empty';
+          empty.textContent = '(brak grup)';
+          host.appendChild(empty);
+          return;
+        }
+        const text = $('testString').value;
+        for (let index = 1; index <= groupTotal; index += 1) {
+          const span = match && match.groups && match.groups[index];
+          const chip = document.createElement('span');
+          chip.className = 'group-chip';
+          const label = document.createElement('b');
+          label.textContent = `$${index}`;
+          const value = document.createElement('span');
+          value.textContent = span ? ` "${text.slice(span.start, span.end)}" [${span.start},${span.end})` : ' — (nieuczestniczyła)';
+          chip.append(label, value);
+          host.appendChild(chip);
+        }
+      }
+
+      function expandReplacement(template, match) {
+        const text = $('testString').value;
+        return template.replace(/\$(\$|&|\d)/g, (whole, token) => {
+          if (token === '$') return '$';
+          const full = match ? text.slice(match.begin, match.end) : '';
+          if (token === '&') return full;
+          const index = Number(token);
+          if (index === 0) return full;
+          const span = match && match.groups && match.groups[index];
+          return span ? text.slice(span.start, span.end) : '';
+        });
+      }
+
+      function renderReplacement(match) {
+        const preview = $('replacePreview');
+        preview.replaceChildren();
+        const text = $('testString').value;
+        if (!match) {
+          preview.textContent = text || '(pusty tekst)';
+          return;
+        }
+        preview.append(
+          document.createTextNode(text.slice(0, match.begin)),
+          Object.assign(document.createElement('mark'), { textContent: expandReplacement($('replacement').value, match) }),
+          document.createTextNode(text.slice(match.end))
+        );
+      }
+
+      function renderTimeline() {
+        const host = $('timeline');
+        host.replaceChildren();
+        $('matchCount').textContent = String(allMatches.length);
+        if (!allMatches.length) {
+          const empty = document.createElement('div');
+          empty.className = 'group-chip empty';
+          empty.textContent = 'Brak dopasowań.';
+          host.appendChild(empty);
+          return;
+        }
+        const text = $('testString').value;
+        allMatches.forEach((match, index) => {
+          const item = document.createElement('div');
+          item.className = `timeline-item${index === selectedMatch ? ' on' : ''}`;
+          const number = document.createElement('span');
+          number.textContent = `#${index + 1}`;
+          const detail = document.createElement('span');
+          detail.textContent = `[${match.begin},${match.end}) "${text.slice(match.begin, match.end)}"`;
+          item.append(number, detail);
+          item.addEventListener('click', () => selectMatch(index));
+          host.appendChild(item);
+        });
+      }
+
+      function selectMatch(index) {
+        const match = allMatches[index];
+        if (!match) return;
+        selectedMatch = index;
+        trace = match.steps;
+        traceIndex = Math.max(0, trace.length - 1);
+        showMatch(match);
+        renderTimeline();
+        renderTrace();
+        drawGraph();
+        $('hint').textContent = `Dopasowanie #${index + 1} · ${match.begin}–${match.end} · ${trace.length} kroków`;
+      }
+
+      function setTrace(index) {
+        traceIndex = Math.max(0, Math.min(trace.length - 1, index));
+        renderTrace(); drawGraph();
+        const step = trace[traceIndex];
+        if (step) $('hint').textContent = `Stan q${step.state} · pozycja ${step.pos} · znak "${step.char}"`;
+      }
+
+      function compile() {
+        stopAuto();
+        const pattern = $('pattern').value;
+        try {
+          ast = parse(pattern);
+          states = [];
+          const frag = build(ast);
+          start = frag.start;
+          accept = newNode();
+          addEdge(frag.end, accept, { type: 'eps', label: 'ε' });
+          computeLayout();
+          $('ast').replaceChildren();
+          renderAst(ast, $('ast'));
+          let count = 0;
+          const walk = (node) => { if (!node) return; count += 1; astChildren(node).forEach(walk); };
+          walk(ast);
+          $('astCount').textContent = `${count} węzłów`;
+          const edgeCount = states.reduce((sum, state) => sum + state.edges.length, 0);
+          $('nfaInfo').textContent = `${states.length} stanów`;
+          $('statStates').textContent = String(states.length);
+          $('statEdges').textContent = String(edgeCount);
+          $('statFlags').textContent = `${flags.i ? 'i' : ''}${flags.s ? 's' : ''}` || '—';
+          $('hint').textContent = 'Wzorzec skompilowany. Uruchom dopasowanie.';
+          return true;
+        } catch (error) {
+          $('hint').textContent = `Błąd wzorca: ${error.message}`;
+          $('result').textContent = error.message;
+          $('result').className = 'result bad';
+          $('guardWarn').textContent = '';
+          $('matchInfo').textContent = '—';
+          $('matchPos').textContent = '—';
+          $('groups').replaceChildren();
+          $('timeline').replaceChildren();
+          $('matchCount').textContent = '0';
+          return false;
+        }
+      }
+
+      function runMatch() {
+        stopAuto();
+        if (!compile()) return;
+        const found = findAll($('testString').value);
+        guardAborted = found.aborted;
+        allMatches = found.matches;
+        lastSteps = found.lastSteps;
+        selectedMatch = 0;
+        const chosen = allMatches[0] || null;
+        trace = chosen ? chosen.steps : lastSteps;
+        traceIndex = Math.max(0, trace.length - 1);
+        $('guardWarn').textContent = guardAborted
+          ? `Przerwano po ${STEP_BUDGET.toLocaleString('pl-PL')} krokach — możliwy katastroficzny backtracking.`
+          : '';
+        showMatch(chosen);
+        renderTimeline();
+        $('statSteps').textContent = String(trace.length);
+        if (chosen) {
+          $('hint').textContent = `Dopasowanie #1 · ${chosen.begin}–${chosen.end} · ${allMatches.length} wynik(ów) · ${trace.length} kroków`;
+        } else {
+          $('hint').textContent = guardAborted
+            ? 'Brak dopasowania — osiągnięto limit kroków.'
+            : `Brak dopasowania · ${trace.length} kroków`;
+        }
+        renderTrace(); drawGraph(); updateShareHash();
+      }
+
+      function stopAuto() {
+        if (timer) { clearInterval(timer); timer = null; }
+        $('playBtn').classList.remove('active');
+        $('playBtn').textContent = '▶ Auto';
+      }
+
+      function shareHash() {
+        const data = { p: $('pattern').value, t: $('testString').value, i: flags.i, s: flags.s };
+        return `case=${encodeURIComponent(JSON.stringify(data))}`;
+      }
+
+      function updateShareHash() {
+        try { history.replaceState(null, '', `#${shareHash()}`); }
+        catch (_) { /* historia niedostępna — link można skopiować ręcznie */ }
+      }
+
+      function loadFromHash() {
+        const hash = location.hash.replace(/^#/, '');
+        if (!hash.startsWith('case=')) return false;
+        try {
+          const data = JSON.parse(decodeURIComponent(hash.slice(5)));
+          if (typeof data.p !== 'string' || typeof data.t !== 'string') return false;
+          $('pattern').value = data.p;
+          $('testString').value = data.t;
+          flags.i = Boolean(data.i);
+          flags.s = Boolean(data.s);
+          ['flagI', 'flagS'].forEach((id) => $(id).classList.toggle('active', flags[id === 'flagI' ? 'i' : 's']));
+          $('statFlags').textContent = `${flags.i ? 'i' : ''}${flags.s ? 's' : ''}` || '—';
+          return true;
+        } catch (_) { return false; }
+      }
+
+      async function copyText(text) {
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return true;
+          }
+          const helper = document.createElement('textarea');
+          helper.value = text;
+          helper.setAttribute('readonly', '');
+          helper.style.position = 'fixed';
+          helper.style.opacity = '0';
+          document.body.appendChild(helper);
+          helper.select();
+          const ok = typeof document.execCommand === 'function' ? document.execCommand('copy') : false;
+          helper.remove();
+          return ok;
+        } catch (_) { return false; }
+      }
+
+      $('shareBtn').addEventListener('click', async () => {
+        updateShareHash();
+        const url = `${location.origin}${location.pathname}${location.search}#${shareHash()}`;
+        const ok = await copyText(url);
+        $('hint').textContent = ok
+          ? 'Link do przypadku testowego skopiowany do schowka.'
+          : 'Nie udało się skopiować — adres przypadku jest w pasku URL.';
+      });
+      $('replacement').addEventListener('input', () => renderReplacement(activeMatch()));
+      $('testString').addEventListener('input', () => {
+        $('result').className = 'result';
+        $('result').textContent = '—';
+        $('guardWarn').textContent = '';
+        $('hint').textContent = 'Tekst zmieniony — uruchom dopasowanie.';
+      });
+
+      $('matchBtn').addEventListener('click', runMatch);
+      $('pattern').addEventListener('keydown', (event) => { if (event.key === 'Enter') runMatch(); });
+      ['flagI', 'flagS'].forEach((id) => {
+        $(id).addEventListener('click', () => {
+          flags[id === 'flagI' ? 'i' : 's'] = !flags[id === 'flagI' ? 'i' : 's'];
+          $(id).classList.toggle('active', flags[id === 'flagI' ? 'i' : 's']);
+          runMatch();
+        });
+      });
+      $('example').addEventListener('change', (event) => {
+        const sample = SAMPLES[Number(event.target.value)];
+        if (!sample) return;
+        $('pattern').value = sample.pattern;
+        $('testString').value = sample.text;
+        runMatch();
+      });
+      $('firstBtn').addEventListener('click', () => { stopAuto(); setTrace(0); });
+      $('prevBtn').addEventListener('click', () => { stopAuto(); setTrace(traceIndex - 1); });
+      $('nextBtn').addEventListener('click', () => { stopAuto(); setTrace(traceIndex + 1); });
+      $('lastBtn').addEventListener('click', () => { stopAuto(); setTrace(trace.length - 1); });
+      $('traceSlider').addEventListener('input', (event) => { stopAuto(); setTrace(parseInt(event.target.value, 10)); });
+      $('playBtn').addEventListener('click', () => {
+        if (timer) { stopAuto(); return; }
+        if (traceIndex >= trace.length - 1) setTrace(0);
+        $('playBtn').classList.add('active');
+        $('playBtn').textContent = '❚❚ Pauza';
+        timer = setInterval(() => {
+          if (traceIndex >= trace.length - 1) { stopAuto(); return; }
+          setTrace(traceIndex + 1);
+        }, 160);
+      });
+      window.addEventListener('resize', drawGraph);
+
+      const restoredCase = loadFromHash();
+      runMatch();
+      if (restoredCase) $('hint').textContent = 'Wczytano przypadek testowy z linku.';
+    })();
+  </script>
+</body>
+</html>

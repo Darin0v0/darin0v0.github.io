@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#050a18">
+  <meta name="description" content="PARTICLE_FIELD // interaktywne pole przepływu z tysiącami cząstek i przyciąganiem kursora.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23050a18'/%3E%3Ccircle cx='32' cy='32' r='16' fill='none' stroke='%2338e8ff' stroke-width='3'/%3E%3C/svg%3E">
+  <title>PARTICLE_FIELD // FLOW LAB</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; padding: clamp(0.75rem, 2vw, 1.5rem);
+      display: flex; justify-content: center; align-items: center;
+      background: radial-gradient(circle at 70% 20%, #0d1730 0%, #050a18 60%, #02040c 100%);
+      color: #b8c8e8; font: 13px/1.5 ui-monospace, "SFMono-Regular", Consolas, monospace;
+      overflow-x: hidden;
+    }
+    .app { width: 100%; max-width: 1100px; }
+    header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 1rem; }
+    h1 { margin: 0; font-size: clamp(1.3rem, 4vw, 2rem); letter-spacing: 0.32em; font-weight: 500; color: #e8f6ff; text-shadow: 0 0 24px rgba(56,232,255,0.45); }
+    .sub { color: #6380a8; font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center;
+      padding: 0.7rem 0.9rem; margin-bottom: 0.8rem; border: 1px solid #1b2b4a;
+      background: rgba(8, 16, 34, 0.75); border-radius: 6px;
+    }
+    label { display: flex; align-items: center; gap: 0.45rem; color: #7090b8; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    input[type="range"] { accent-color: #38e8ff; width: 100px; }
+    select, button {
+      font: inherit; color: #cde8ff; background: #0b1730; border: 1px solid #25406a;
+      border-radius: 4px; padding: 0.35rem 0.6rem; cursor: pointer;
+    }
+    button:hover { border-color: #38e8ff; color: #38e8ff; box-shadow: 0 0 12px rgba(56,232,255,0.2); }
+    button.active { background: #38e8ff; color: #04101c; border-color: #38e8ff; }
+    .value { color: #38e8ff; min-width: 3.2em; font-variant-numeric: tabular-nums; }
+    .stage { position: relative; border: 1px solid #1b2b4a; border-radius: 6px; overflow: hidden; background: #02040c; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+    canvas { display: block; width: 100%; height: clamp(320px, 58vh, 560px); touch-action: none; }
+    .hud { position: absolute; left: 0.8rem; top: 0.7rem; display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.7rem; color: rgba(180,220,255,0.7); pointer-events: none; text-shadow: 0 1px 4px #000; }
+    .stage.obstacles #scene { cursor: cell; }
+    .hint { margin-top: 0.7rem; font-size: 0.72rem; color: #55709a; }
+    :where(button, select, input):focus-visible { outline: 2px solid #38e8ff; outline-offset: 2px; }
+    @media (max-width: 680px) { header { align-items: flex-start; } input[type="range"] { width: 78px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div><h1>PARTICLE FIELD</h1><div class="sub">FLOW FIELD · REAL-TIME CANVAS</div></div>
+      <div class="sub" id="fps">-- FPS</div>
+    </header>
+
+    <div class="toolbar">
+      <label for="count">PARTICLES <input type="range" id="count" min="400" max="4000" step="200" value="1800"><span class="value" id="countValue">1800</span></label>
+      <label for="scale">FLOW <input type="range" id="scale" min="20" max="220" value="110"><span class="value" id="scaleValue">1.1</span></label>
+      <label for="speed">SPEED <input type="range" id="speed" min="20" max="220" value="100"><span class="value" id="speedValue">1.0</span></label>
+      <label for="trail">TRAIL <input type="range" id="trail" min="1" max="24" value="16"><span class="value" id="trailValue">65%</span></label>
+      <label for="fieldPreset">FIELD
+        <select id="fieldPreset" aria-label="Preset pola przepływu">
+          <option value="sine">SINE</option><option value="vortex">VORTEX</option>
+          <option value="turbulence">TURBULENCE</option><option value="spiral">SPIRAL</option>
+          <option value="snake">SNAKE</option><option value="ripple">RIPPLE</option>
+        </select>
+      </label>
+      <label for="emitter">EMITTER
+        <select id="emitter" aria-label="Tryb emitera cząstek">
+          <option value="random">RANDOM</option><option value="edge">EDGE</option>
+          <option value="center">CENTER</option><option value="ring">RING</option>
+          <option value="cursor">CURSOR</option>
+        </select>
+      </label>
+      <label for="palette">PALETTE
+        <select id="palette">
+          <option value="cyan">CYAN</option><option value="aurora">AURORA</option>
+          <option value="ember">EMBER</option><option value="mono">MONO</option>
+          <option value="neon">NEON</option><option value="ocean">OCEAN</option>
+        </select>
+      </label>
+      <button type="button" id="modeBtn" class="active">ATTRACT</button>
+      <button type="button" id="obstacleBtn">PRZESZKODY</button>
+      <button type="button" id="pauseBtn">PAUSE</button>
+      <button type="button" id="resetBtn">RESET</button>
+      <button type="button" id="saveBtn">SAVE PNG</button>
+    </div>
+
+    <div class="stage" id="stage">
+      <canvas id="scene" width="1000" height="520" aria-label="Interaktywne pole cząstek"></canvas>
+      <div class="hud"><span id="hudCount">0 PARTICLES</span><span id="hudMode">ATTRACT</span><span id="hudField">FIELD SINE</span></div>
+    </div>
+    <div class="hint">Poruszaj kursorem lub palcem nad polem, aby sterować przepływem. Kliknięcie tworzy wybuch cząstek. Po włączeniu <b>PRZESZKODY</b> przeciąganie rysuje kolizyjne kręgi (klik je usuwa w pobliżu).</div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+      const canvas = document.getElementById('scene');
+      const ctx = canvas.getContext('2d');
+      const controls = {
+        count: document.getElementById('count'), scale: document.getElementById('scale'),
+        speed: document.getElementById('speed'), trail: document.getElementById('trail'),
+        palette: document.getElementById('palette')
+      };
+      const values = {
+        count: document.getElementById('countValue'), scale: document.getElementById('scaleValue'),
+        speed: document.getElementById('speedValue'), trail: document.getElementById('trailValue')
+      };
+      const modeBtn = document.getElementById('modeBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const saveBtn = document.getElementById('saveBtn');
+      const obstacleBtn = document.getElementById('obstacleBtn');
+      const fieldPreset = document.getElementById('fieldPreset');
+      const emitter = document.getElementById('emitter');
+      const stage = document.getElementById('stage');
+      const fpsLabel = document.getElementById('fps');
+      const hudCount = document.getElementById('hudCount');
+      const hudMode = document.getElementById('hudMode');
+      const hudField = document.getElementById('hudField');
+      const palettes = {
+        cyan: ['#38e8ff', '#3a6cff', '#b6f8ff'],
+        aurora: ['#7dffb2', '#2ee6c8', '#c17bff'],
+        ember: ['#ffb347', '#ff5f45', '#ffe8a3'],
+        mono: ['#ffffff', '#9aa8c0', '#4d5b78'],
+        neon: ['#ff3df5', '#7df9ff', '#ffe600'],
+        ocean: ['#00d2ff', '#3a7bd5', '#00ffa3']
+      };
+
+      let width = 0, height = 0, particles = [], palette = palettes.cyan;
+      let attract = true, paused = false, frame = 0, rafId = 0;
+      let obstacles = [], drawingObstacle = false, showObstacles = false;
+      let mouse = { x: 0, y: 0, active: false };
+      let lastFps = performance.now(), frames = 0, time = 0;
+
+      const random = (min, max) => min + Math.random() * (max - min);
+
+      function spawnPosition() {
+        const mode = emitter.value;
+        if (mode === 'edge') {
+          const side = Math.floor(Math.random() * 4);
+          if (side === 0) return { x: random(0, width), y: 1 };
+          if (side === 1) return { x: random(0, width), y: height - 1 };
+          if (side === 2) return { x: 1, y: random(0, height) };
+          return { x: width - 1, y: random(0, height) };
+        }
+        if (mode === 'center') return { x: width / 2 + random(-12, 12), y: height / 2 + random(-12, 12) };
+        if (mode === 'ring') {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = Math.min(width, height) * 0.28 + random(-12, 12);
+          return { x: width / 2 + Math.cos(angle) * radius, y: height / 2 + Math.sin(angle) * radius };
+        }
+        if (mode === 'cursor' && mouse.active) return { x: mouse.x + random(-14, 14), y: mouse.y + random(-14, 14) };
+        return { x: random(0, width), y: random(0, height) };
+      }
+
+      function makeParticle(x, y) {
+        const spawned = spawnPosition();
+        return {
+          x: x ?? spawned.x, y: y ?? spawned.y,
+          px: 0, py: 0, vx: 0, vy: 0,
+          life: random(60, 260), maxLife: 260, colorIndex: Math.floor(Math.random() * 3)
+        };
+      }
+
+      function setCount() {
+        values.count.textContent = controls.count.value;
+        hudCount.textContent = `${controls.count.value} PARTICLES`;
+        const target = parseInt(controls.count.value, 10);
+        while (particles.length < target) particles.push(makeParticle());
+        if (particles.length > target) particles.length = target;
+      }
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+        width = Math.max(1, rect.width);
+        height = Math.max(1, rect.height);
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.fillStyle = '#02040c';
+        ctx.fillRect(0, 0, width, height);
+        setCount();
+      }
+
+      function fieldAngle(x, y) {
+        const scale = parseInt(controls.scale.value, 10) / 100;
+        const nx = x / width * scale * 6;
+        const ny = y / height * scale * 6;
+        const preset = fieldPreset.value;
+        const cx = x - width / 2, cy = y - height / 2;
+        if (preset === 'vortex') return Math.atan2(cy, cx) + Math.PI / 2 + Math.sin(time) * 0.3;
+        if (preset === 'turbulence') return (Math.sin(nx * 1.7 + time) + Math.sin(ny * 1.3 - time * 0.8) + Math.sin((nx - ny) * 2.1 + time * 0.5)) * Math.PI;
+        if (preset === 'spiral') return Math.atan2(cy, cx) + Math.PI / 2 + Math.min(2.4, Math.hypot(cx, cy) / Math.min(width, height) * 4) - time * 0.2;
+        if (preset === 'snake') return Math.sin(nx * 0.8 + Math.cos(ny * 0.6 + time)) * Math.PI * 1.2;
+        if (preset === 'ripple') return Math.sin(Math.hypot(cx, cy) / (Math.min(width, height) * 0.06) - time * 4) * Math.PI * 2;
+        return (
+          Math.sin(nx + time) + Math.cos(ny - time * 0.7) + Math.sin((nx + ny) * 0.6 + time * 0.35)
+        ) * Math.PI * 0.9;
+      }
+
+      function step() {
+        time += 0.004;
+        const speed = parseInt(controls.speed.value, 10) / 100;
+        const fade = 0.35 - ((parseInt(controls.trail.value, 10) - 1) / 23) * 0.33;
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = `rgba(2, 4, 12, ${fade})`;
+        ctx.fillRect(0, 0, width, height);
+        if (obstacles.length) {
+          obstacles.forEach((obstacle) => {
+            ctx.beginPath();
+            ctx.arc(obstacle.x, obstacle.y, obstacle.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,180,84,0.09)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,180,84,0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          });
+        }
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineWidth = 1.1;
+
+        particles.forEach((particle, index) => {
+          particle.px = particle.x;
+          particle.py = particle.y;
+          const angle = fieldAngle(particle.x, particle.y);
+          particle.vx += Math.cos(angle) * 0.13 * speed;
+          particle.vy += Math.sin(angle) * 0.13 * speed;
+
+          if (mouse.active) {
+            const dx = mouse.x - particle.x;
+            const dy = mouse.y - particle.y;
+            const distanceSq = dx * dx + dy * dy + 60;
+            const force = (attract ? 1 : -1) * 26 / distanceSq;
+            particle.vx += dx * force;
+            particle.vy += dy * force;
+          }
+
+          particle.vx *= 0.94;
+          particle.vy *= 0.94;
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+          for (let o = 0; o < obstacles.length; o += 1) {
+            const obstacle = obstacles[o];
+            const dx = particle.x - obstacle.x, dy = particle.y - obstacle.y;
+            const minDistance = obstacle.r + 2;
+            if (Math.abs(dx) >= minDistance || Math.abs(dy) >= minDistance) continue;
+            const distanceSq = dx * dx + dy * dy;
+            if (distanceSq >= minDistance * minDistance || distanceSq < 0.0001) continue;
+            const distance = Math.sqrt(distanceSq);
+            const nx = dx / distance, ny = dy / distance;
+            particle.x = obstacle.x + nx * minDistance;
+            particle.y = obstacle.y + ny * minDistance;
+            const impact = particle.vx * nx + particle.vy * ny;
+            if (impact < 0) {
+              particle.vx -= 1.8 * impact * nx;
+              particle.vy -= 1.8 * impact * ny;
+            }
+          }
+          particle.life -= 1;
+
+          if (particle.x < 0 || particle.x > width || particle.y < 0 || particle.y > height || particle.life <= 0) {
+            particles[index] = makeParticle();
+            return;
+          }
+
+          const alpha = Math.min(0.75, particle.life / particle.maxLife + 0.12);
+          ctx.strokeStyle = palette[particle.colorIndex];
+          ctx.globalAlpha = alpha;
+          ctx.beginPath();
+          ctx.moveTo(particle.px, particle.py);
+          ctx.lineTo(particle.x, particle.y);
+          ctx.stroke();
+        });
+
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
+      function loop() {
+        rafId = 0;
+        if (paused) return;
+        step();
+        frames += 1;
+        const now = performance.now();
+        if (now - lastFps > 700) {
+          fpsLabel.textContent = `${Math.round(frames * 1000 / (now - lastFps))} FPS`;
+          frames = 0;
+          lastFps = now;
+        }
+        rafId = requestAnimationFrame(loop);
+      }
+
+      function startLoop() {
+        if (!rafId && !paused) rafId = requestAnimationFrame(loop);
+      }
+
+      function stopLoop() {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+
+      function refreshLabels() {
+        values.count.textContent = controls.count.value;
+        values.scale.textContent = (controls.scale.value / 100).toFixed(1);
+        values.speed.textContent = (controls.speed.value / 100).toFixed(1);
+        values.trail.textContent = `${Math.round((parseInt(controls.trail.value, 10) - 1) / 23 * 100)}%`;
+        hudField.textContent = `FIELD ${fieldPreset.options[fieldPreset.selectedIndex].textContent}`;
+      }
+
+      Object.keys(values).forEach((key) => {
+        controls[key].addEventListener('input', () => {
+          refreshLabels();
+          if (key === 'count') setCount();
+        });
+      });
+
+      controls.palette.addEventListener('change', () => { palette = palettes[controls.palette.value]; });
+      fieldPreset.addEventListener('change', refreshLabels);
+      emitter.addEventListener('change', () => {
+        particles = [];
+        setCount();
+        ctx.fillStyle = '#02040c';
+        ctx.fillRect(0, 0, width, height);
+      });
+      obstacleBtn.addEventListener('click', () => {
+        showObstacles = !showObstacles;
+        obstacleBtn.classList.toggle('active', showObstacles);
+        stage.classList.toggle('obstacles', showObstacles);
+      });
+      saveBtn.addEventListener('click', () => {
+        try {
+          const link = document.createElement('a');
+          link.download = 'particle_field.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        } catch (_) {
+          hudField.textContent = 'PNG NIEDOSTĘPNY';
+        }
+      });
+
+      modeBtn.addEventListener('click', () => {
+        attract = !attract;
+        modeBtn.textContent = attract ? 'ATTRACT' : 'REPEL';
+        modeBtn.classList.toggle('active', attract);
+        hudMode.textContent = attract ? 'ATTRACT' : 'REPEL';
+      });
+
+      pauseBtn.addEventListener('click', () => {
+        paused = !paused;
+        pauseBtn.textContent = paused ? 'RESUME' : 'PAUSE';
+        pauseBtn.classList.toggle('active', paused);
+        if (paused) stopLoop();
+        else startLoop();
+      });
+
+      resetBtn.addEventListener('click', () => {
+        particles = [];
+        obstacles = [];
+        setCount();
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#02040c';
+        ctx.fillRect(0, 0, width, height);
+      });
+
+      canvas.addEventListener('pointermove', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        mouse.x = event.clientX - rect.left;
+        mouse.y = event.clientY - rect.top;
+        mouse.active = true;
+      });
+      canvas.addEventListener('pointerleave', () => { mouse.active = false; });
+      canvas.addEventListener('pointerdown', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        if (showObstacles) {
+          const near = obstacles.findIndex((obstacle) => Math.hypot(obstacle.x - x, obstacle.y - y) < obstacle.r + 6);
+          if (near >= 0) {
+            obstacles.splice(near, 1);
+          } else {
+            const radius = Math.round(random(14, 26));
+            obstacles.push({ x, y, r: radius });
+            if (obstacles.length > 40) obstacles.shift();
+            drawingObstacle = true;
+          }
+          canvas.setPointerCapture(event.pointerId);
+          return;
+        }
+        for (let i = 0; i < 120; i += 1) {
+          const particle = makeParticle(x + random(-20, 20), y + random(-20, 20));
+          const angle = random(0, Math.PI * 2);
+          particle.vx = Math.cos(angle) * random(2, 7);
+          particle.vy = Math.sin(angle) * random(2, 7);
+          particles.push(particle);
+        }
+        if (particles.length > parseInt(controls.count.value, 10) + 500) particles.splice(0, particles.length - parseInt(controls.count.value, 10) - 500);
+      });
+      canvas.addEventListener('pointermove', (event) => {
+        if (!drawingObstacle) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const last = obstacles[obstacles.length - 1];
+        if (!last || Math.hypot(last.x - x, last.y - y) < last.r * 0.9) return;
+        const radius = Math.round(random(12, 22));
+        obstacles.push({ x, y, r: radius });
+        if (obstacles.length > 40) obstacles.shift();
+      });
+      canvas.addEventListener('pointerup', () => { drawingObstacle = false; });
+      canvas.addEventListener('pointercancel', () => { drawingObstacle = false; });
+
+      window.addEventListener('resize', resize);
+      resize();
+      refreshLabels();
+      step();
+      startLoop();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0b0806">
+  <meta name="description" content="RAYCASTER // silnik renderu 3D w czasie rzeczywistym na canvas 2D z algorytmem DDA, teksturami i minimapą.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230b0806'/%3E%3Cpath d='M8 44 L32 12 L56 44 Z' fill='none' stroke='%23ffb454' stroke-width='4'/%3E%3C/svg%3E">
+  <title>RAYCASTER // DDA ENGINE</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      padding: clamp(0.75rem, 2vw, 1.5rem);
+      display: flex; justify-content: center; align-items: center;
+      background: radial-gradient(circle at 50% 0%, #1c1209 0%, #0b0806 55%, #050302 100%);
+      color: #d8c3a5; font: 13px/1.55 ui-monospace, "SFMono-Regular", Consolas, monospace;
+      overflow-x: hidden;
+    }
+    .app { width: 100%; max-width: 1100px; }
+    header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 0.9rem; }
+    h1 { margin: 0; font-size: clamp(1.3rem, 4vw, 2rem); letter-spacing: 0.3em; font-weight: 500; color: #ffd9a0; text-shadow: 0 0 22px rgba(255,180,84,0.35); }
+    .sub { color: #927452; font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; }
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 0.6rem 1rem; align-items: center;
+      padding: 0.65rem 0.85rem; margin-bottom: 0.8rem;
+      border: 1px solid #3a2a1a; border-radius: 5px; background: rgba(20,13,8,0.8);
+    }
+    label { display: flex; align-items: center; gap: 0.45rem; color: #a88a64; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    select, button {
+      font: inherit; color: #f0cf9e; background: #191009; border: 1px solid #4a3320;
+      border-radius: 4px; padding: 0.35rem 0.6rem; cursor: pointer;
+    }
+    button:hover, select:hover { border-color: #ffb454; color: #ffb454; }
+    .stage { position: relative; border: 1px solid #3a2a1a; border-radius: 5px; overflow: hidden; background: #000; box-shadow: 0 18px 55px rgba(0,0,0,0.6); }
+    #view { display: block; width: 100%; height: clamp(300px, 55vh, 520px); image-rendering: auto; cursor: crosshair; touch-action: none; }
+    #map {
+      position: absolute; right: 10px; top: 10px; width: 132px; height: 132px;
+      border: 2px solid rgba(255,180,84,0.5); border-radius: 3px; background: rgba(8,5,3,0.82);
+      pointer-events: none;
+    }
+    .stage.editing #map { pointer-events: auto; cursor: crosshair; border-color: #7df9ff; }
+    .stage.locked #view { cursor: none; }
+    .hud {
+      position: absolute; left: 10px; top: 10px; display: grid; gap: 2px;
+      padding: 0.5rem 0.7rem; background: rgba(8,5,3,0.72); border: 1px solid rgba(255,180,84,0.25);
+      border-radius: 3px; font-size: 0.7rem; color: #ffcf91; pointer-events: none; text-shadow: 0 1px 3px #000;
+    }
+    .hint { margin-top: 0.7rem; color: #8b6f50; font-size: 0.72rem; line-height: 1.7; }
+    kbd { border: 1px solid #4a3320; border-radius: 3px; padding: 0 0.3rem; color: #d8c3a5; font-family: inherit; }
+    :where(button, select):focus-visible { outline: 2px solid #ffb454; outline-offset: 2px; }
+    @media (max-width: 680px) { #map { width: 92px; height: 92px; } .hud { font-size: 0.62rem; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div><h1>RAYCASTER</h1><div class="sub">DDA RAYCASTING · CANVAS 2D</div></div>
+      <div class="sub" id="fps">-- FPS</div>
+    </header>
+
+    <div class="toolbar">
+      <label for="mapSelect">MAPA
+        <select id="mapSelect">
+          <option value="complex">KOMPLEKS</option>
+          <option value="pillars">FILARY</option>
+          <option value="arena">ARENA</option>
+        </select>
+      </label>
+      <label for="fov">FOV <input type="range" id="fov" min="50" max="110" value="66"><span id="fovValue" class="sub">66°</span></label>
+      <label for="fog">MGLŁA <input type="range" id="fog" min="0" max="100" value="55"><span id="fogValue" class="sub">55%</span></label>
+      <label for="mapZoom">ZOOM <input type="range" id="mapZoom" min="1" max="3" step="0.25" value="1"><span id="mapZoomValue" class="sub">1.0×</span></label>
+      <button type="button" id="respawnBtn">RESPAWN</button>
+      <button type="button" id="pauseBtn">PAUSE</button>
+      <button type="button" id="spritesBtn" class="active">SPRITY</button>
+      <button type="button" id="debugBtn">KOLIZJE</button>
+      <button type="button" id="mouseBtn">MOUSE LOOK</button>
+      <button type="button" id="editorBtn">EDYTOR MAPY</button>
+      <button type="button" id="shotBtn">SAVE PNG</button>
+    </div>
+
+    <div class="stage">
+      <canvas id="view" width="800" height="450" aria-label="Widok z pierwszej osoby w labiryncie 3D"></canvas>
+      <canvas id="map" width="160" height="160" aria-hidden="true"></canvas>
+      <div class="hud">
+        <span id="hudPos">X 2.50 · Y 1.50</span>
+        <span id="hudAng">ANG 0.00°</span>
+        <span id="hudMap">MAP KOMPLEKS</span>
+        <span id="hudMode">TRYB: GRANIE</span>
+      </div>
+    </div>
+
+    <div class="hint">
+      <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / strzałki — ruch · <kbd>Q</kbd><kbd>E</kbd> lub przeciąganie myszą — obrót · <kbd>Shift</kbd> — sprint · <kbd>R</kbd> — respawn.
+      <b>MOUSE LOOK</b> przełącza przechwytywanie myszy (ESC zwalnia). <b>EDYTOR MAPY</b> pozwala klikać w minimapę, aby stawiać i usuwać ściany. <b>KOLIZJE</b> pokazuje promienie i promień gracza.
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const view = document.getElementById('view');
+      const ctx = view.getContext('2d');
+      const mini = document.getElementById('map');
+      const mctx = mini.getContext('2d');
+      const mapSelect = document.getElementById('mapSelect');
+      const fovInput = document.getElementById('fov');
+      const fogInput = document.getElementById('fog');
+      const fovValue = document.getElementById('fovValue');
+      const fogValue = document.getElementById('fogValue');
+      const respawnBtn = document.getElementById('respawnBtn');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const fpsLabel = document.getElementById('fps');
+      const hudPos = document.getElementById('hudPos');
+      const hudAng = document.getElementById('hudAng');
+      const hudMap = document.getElementById('hudMap');
+      const hudMode = document.getElementById('hudMode');
+      const mapZoom = document.getElementById('mapZoom');
+      const mapZoomValue = document.getElementById('mapZoomValue');
+      const spritesBtn = document.getElementById('spritesBtn');
+      const debugBtn = document.getElementById('debugBtn');
+      const mouseBtn = document.getElementById('mouseBtn');
+      const editorBtn = document.getElementById('editorBtn');
+      const shotBtn = document.getElementById('shotBtn');
+      const stage = view.parentElement;
+      const W = view.width, H = view.height;
+      const TEX = 64;
+      const zBuffer = new Float32Array(W);
+
+      const mapStrings = {
+        complex: [
+          '1111111111111111',
+          '1000000000000001',
+          '1011110111110101',
+          '1000010100000101',
+          '1111010101111101',
+          '1000010001000001',
+          '1011111101011111',
+          '1000000001000001',
+          '1011110111110111',
+          '1000010100000011',
+          '1011010111111011',
+          '1001000000001001',
+          '1011101111101001',
+          '1000001000100001',
+          '1011111011101111',
+          '1111111111111111'
+        ],
+        pillars: [
+          '1111111111111111',
+          '1000000000000001',
+          '1020202020202001',
+          '1000000000000001',
+          '1030303030303001',
+          '1000000000000001',
+          '1020202020202001',
+          '1000000000000001',
+          '1030303030303001',
+          '1000000000000001',
+          '1020202020202001',
+          '1000000000000001',
+          '1030303030303001',
+          '1000000000000001',
+          '1000000000000001',
+          '1111111111111111'
+        ],
+        arena: [
+          '1111111111111111',
+          '1000000000000001',
+          '1000000000000001',
+          '1000111000111001',
+          '1000111000111001',
+          '1000000000000001',
+          '1000000000000001',
+          '1000000220000001',
+          '1000000220000001',
+          '1000000000000001',
+          '1000000000000001',
+          '1000111000111001',
+          '1000111000111001',
+          '1000000000000001',
+          '1000000000000001',
+          '1111111111111111'
+        ]
+      };
+
+      function makeTexture(kind) {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = TEX;
+        const g = canvas.getContext('2d');
+        let seed = kind * 7919 + 13;
+        const rnd = () => {
+          seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+          return seed / 4294967296;
+        };
+
+        if (kind === 1) {
+          g.fillStyle = '#241710';
+          g.fillRect(0, 0, TEX, TEX);
+          for (let row = 0; row < 4; row += 1) {
+            const offset = row % 2 ? 16 : 0;
+            for (let col = -1; col < 3; col += 1) {
+              const x = col * 32 + offset;
+              const y = row * 16;
+              const r = 88 + Math.floor(rnd() * 34);
+              const gr = 42 + Math.floor(rnd() * 18);
+              const b = 26 + Math.floor(rnd() * 12);
+              g.fillStyle = `rgb(${r},${gr},${b})`;
+              g.fillRect(x + 1, y + 1, 30, 14);
+              g.fillStyle = 'rgba(255,225,190,0.10)';
+              g.fillRect(x + 1, y + 1, 30, 2);
+            }
+          }
+        } else if (kind === 2) {
+          g.fillStyle = '#0b1a22';
+          g.fillRect(0, 0, TEX, TEX);
+          g.strokeStyle = '#1e4a5c';
+          g.lineWidth = 2;
+          for (let i = 0; i <= TEX; i += 16) {
+            g.beginPath(); g.moveTo(i + 0.5, 0); g.lineTo(i + 0.5, TEX); g.stroke();
+            g.beginPath(); g.moveTo(0, i + 0.5); g.lineTo(TEX, i + 0.5); g.stroke();
+          }
+          g.fillStyle = 'rgba(57,214,255,0.12)';
+          g.fillRect(0, 26, TEX, 12);
+          g.fillStyle = '#39d6ff';
+          for (let i = 0; i < 6; i += 1) g.fillRect(6 + Math.floor(rnd() * 50), 6 + Math.floor(rnd() * 50), 3, 3);
+        } else if (kind === 3) {
+          g.fillStyle = '#3b3a42';
+          g.fillRect(0, 0, TEX, TEX);
+          for (let i = 0; i < 240; i += 1) {
+            const value = 55 + Math.floor(rnd() * 75);
+            g.fillStyle = `rgba(${value},${value},${value + 8},${0.05 + rnd() * 0.2})`;
+            g.fillRect(Math.floor(rnd() * TEX), Math.floor(rnd() * TEX), 1 + Math.floor(rnd() * 4), 1 + Math.floor(rnd() * 4));
+          }
+          g.strokeStyle = 'rgba(0,0,0,0.35)';
+          g.lineWidth = 2;
+          g.beginPath(); g.moveTo(0, 32); g.lineTo(20, 28); g.lineTo(38, 36); g.lineTo(64, 30); g.stroke();
+        } else {
+          g.fillStyle = '#2a0a12';
+          g.fillRect(0, 0, TEX, TEX);
+          for (let x = 0; x < TEX; x += 8) {
+            g.fillStyle = `rgba(255,60,90,${0.25 + rnd() * 0.5})`;
+            g.fillRect(x, 0, 3, TEX);
+          }
+          g.fillStyle = 'rgba(255,190,210,0.55)';
+          g.fillRect(0, 28, TEX, 8);
+        }
+        return canvas;
+      }
+
+      function makeSprite(kind) {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = TEX;
+        const g = canvas.getContext('2d');
+        g.fillStyle = 'rgba(0,0,0,0.35)';
+        g.beginPath(); g.ellipse(32, 58, 20, 5, 0, 0, Math.PI * 2); g.fill();
+        const body = kind === 0 ? '#8c1c38' : '#14627a';
+        const trim = kind === 0 ? '#ff6b8f' : '#5fe0ff';
+        g.fillStyle = body;
+        g.fillRect(19, 14, 26, 38);
+        g.fillStyle = trim;
+        g.fillRect(19, 14, 26, 4);
+        g.fillRect(23, 20, 5, 3);
+        g.fillRect(36, 20, 5, 3);
+        g.fillStyle = '#ffe9a8';
+        g.fillRect(22, 25, 8, 5);
+        g.fillRect(34, 25, 8, 5);
+        g.fillStyle = '#1a0a10';
+        g.fillRect(25, 26, 3, 3);
+        g.fillRect(36, 26, 3, 3);
+        g.fillStyle = body;
+        g.fillRect(15, 30, 4, 20);
+        g.fillRect(45, 30, 4, 20);
+        g.fillStyle = trim;
+        g.fillRect(15, 46, 4, 4);
+        g.fillRect(45, 46, 4, 4);
+        return canvas;
+      }
+
+      const textures = [null, makeTexture(1), makeTexture(2), makeTexture(3), makeTexture(4)];
+      const sprites = [makeSprite(0), makeSprite(1)];
+      let grid = [];
+      let enemies = [];
+      let posX = 2.5, posY = 1.5, angle = 0;
+      let paused = false, last = performance.now(), frames = 0, fpsTime = last;
+      let dragging = false, dragX = 0;
+      let showSprites = true, showDebug = false, editing = false, mouseLook = false, clock = 0;
+      const keys = Object.create(null);
+
+      function loadMap(name) {
+        grid = mapStrings[name].map((row) => row.split('').map(Number));
+        const spawn = name === 'arena' ? { x: 2.5, y: 2.5 } : { x: 2.5, y: 1.5 };
+        posX = spawn.x;
+        posY = spawn.y;
+        angle = name === 'arena' ? 0.3 : 0;
+        hudMap.textContent = `MAP ${name.toUpperCase()}`;
+        const open = [];
+        for (let y = 1; y < grid.length - 1; y += 1) {
+          for (let x = 1; x < grid[0].length - 1; x += 1) {
+            if (!grid[y][x] && Math.hypot(x + 0.5 - posX, y + 0.5 - posY) > 2.5) open.push({ x: x + 0.5, y: y + 0.5 });
+          }
+        }
+        enemies = [];
+        [7, 31, 53].forEach((seed, index) => {
+          const cell = open[seed % open.length];
+          if (cell) enemies.push({ x: cell.x, y: cell.y, kind: index % sprites.length, phase: index * 2.1 });
+        });
+      }
+
+      function cell(x, y) {
+        const mx = Math.floor(x), my = Math.floor(y);
+        if (my < 0 || my >= grid.length || mx < 0 || mx >= grid[0].length) return 1;
+        return grid[my][mx];
+      }
+
+      function canStand(x, y) {
+        const radius = 0.18;
+        return !cell(x - radius, y - radius) && !cell(x + radius, y - radius) &&
+               !cell(x - radius, y + radius) && !cell(x + radius, y + radius);
+      }
+
+      function renderWorld() {
+        const planeLen = Math.tan((parseInt(fovInput.value, 10) * Math.PI / 180) / 2);
+        const fogAmount = parseInt(fogInput.value, 10) / 100;
+        const dirX = Math.cos(angle), dirY = Math.sin(angle);
+        const planeX = -dirY * planeLen, planeY = dirX * planeLen;
+
+        const sky = ctx.createLinearGradient(0, 0, 0, H / 2);
+        sky.addColorStop(0, '#0a0a14');
+        sky.addColorStop(1, '#241a16');
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, W, H / 2);
+        const floorGrad = ctx.createLinearGradient(0, H / 2, 0, H);
+        floorGrad.addColorStop(0, '#2a2018');
+        floorGrad.addColorStop(1, '#080605');
+        ctx.fillStyle = floorGrad;
+        ctx.fillRect(0, H / 2, W, H / 2);
+
+        for (let x = 0; x < W; x += 1) {
+          const cameraX = 2 * x / W - 1;
+          const rayX = dirX + planeX * cameraX;
+          const rayY = dirY + planeY * cameraX;
+          let mapX = Math.floor(posX), mapY = Math.floor(posY);
+          const deltaX = Math.abs(1 / (rayX || 1e-9));
+          const deltaY = Math.abs(1 / (rayY || 1e-9));
+          const stepX = rayX < 0 ? -1 : 1;
+          const stepY = rayY < 0 ? -1 : 1;
+          let sideX = (rayX < 0 ? posX - mapX : mapX + 1 - posX) * deltaX;
+          let sideY = (rayY < 0 ? posY - mapY : mapY + 1 - posY) * deltaY;
+          let hit = 0, side = 0, guard = 0;
+
+          while (!hit && guard < 64) {
+            if (sideX < sideY) { sideX += deltaX; mapX += stepX; side = 0; }
+            else { sideY += deltaY; mapY += stepY; side = 1; }
+            hit = cell(mapX, mapY);
+            guard += 1;
+          }
+          if (!hit) { zBuffer[x] = 1e6; continue; }
+
+          const distance = Math.max(0.05, side === 0 ? sideX - deltaX : sideY - deltaY);
+          zBuffer[x] = distance;
+          const lineHeight = Math.floor(H / distance);
+          const drawStart = Math.floor(-lineHeight / 2 + H / 2);
+          const drawEnd = Math.floor(lineHeight / 2 + H / 2);
+
+          let wallX = side === 0 ? posY + distance * rayY : posX + distance * rayX;
+          wallX -= Math.floor(wallX);
+          let texX = Math.floor(wallX * TEX);
+          if ((side === 0 && rayX > 0) || (side === 1 && rayY < 0)) texX = TEX - texX - 1;
+          texX = Math.max(0, Math.min(TEX - 1, texX));
+
+          ctx.drawImage(textures[hit] || textures[1], texX, 0, 1, TEX, x, drawStart, 1, lineHeight);
+
+          const shade = Math.min(0.92, distance / 16 * fogAmount + (side === 1 ? 0.16 : 0));
+          if (shade > 0.01) {
+            ctx.fillStyle = `rgba(5,3,2,${shade})`;
+            ctx.fillRect(x, drawStart, 1, lineHeight);
+          }
+        }
+        renderSprites(dirX, dirY, planeX, planeY, fogAmount);
+        if (showDebug) renderDebug();
+      }
+
+      function renderSprites(dirX, dirY, planeX, planeY, fogAmount) {
+        if (!showSprites) return;
+        const ordered = enemies
+          .map((enemy) => ({ enemy, distance: (enemy.x - posX) ** 2 + (enemy.y - posY) ** 2 }))
+          .sort((a, b) => b.distance - a.distance);
+        ordered.forEach(({ enemy, distance }) => {
+          const spriteX = enemy.x - posX, spriteY = enemy.y - posY;
+          const inverse = 1 / (planeX * dirY - dirX * planeY);
+          const transformX = inverse * (dirY * spriteX - dirX * spriteY);
+          const transformY = inverse * (-planeY * spriteX + planeX * spriteY);
+          if (transformY <= 0.15) return;
+          const screenX = Math.floor((W / 2) * (1 + transformX / transformY));
+          const spriteHeight = Math.abs(Math.floor(H / transformY * 0.82));
+          const bob = Math.sin(clock * 2 + enemy.phase) * 3;
+          const startY = Math.floor(-spriteHeight / 2 + H / 2 + bob);
+          const spriteWidth = spriteHeight * 0.75;
+          const startX = Math.floor(screenX - spriteWidth / 2);
+          const shade = Math.min(0.85, distance / 18 * fogAmount);
+          for (let stripe = Math.max(0, startX); stripe < Math.min(W, startX + spriteWidth); stripe += 1) {
+            if (transformY >= zBuffer[stripe]) continue;
+            const texX = Math.max(0, Math.min(TEX - 1, Math.floor((stripe - startX) / spriteWidth * TEX)));
+            ctx.globalAlpha = 1 - shade;
+            ctx.drawImage(sprites[enemy.kind], texX, 0, 1, TEX, stripe, startY, 1, spriteHeight);
+          }
+        });
+        ctx.globalAlpha = 1;
+      }
+
+      function renderDebug() {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(125,249,255,0.75)';
+        ctx.lineWidth = 1;
+        [0, 0.25, 0.5, 0.75, 0.999].forEach((fraction) => {
+          const x = Math.min(W - 1, Math.floor(W * fraction));
+          ctx.beginPath();
+          ctx.moveTo(W / 2, H / 2);
+          ctx.lineTo(x, H / 2);
+          ctx.stroke();
+          ctx.fillStyle = '#7df9ff';
+          ctx.fillRect(x - 1, H / 2 - 2, 3, 4);
+        });
+        ctx.strokeStyle = 'rgba(255,180,84,0.85)';
+        ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
+        ctx.fillStyle = '#ffcf91';
+        ctx.font = '11px ui-monospace, monospace';
+        ctx.fillText(`KOLIZJE · zbuf 0—${W}`, 10, H - 12);
+        ctx.restore();
+      }
+
+      function renderMap() {
+        const size = grid.length;
+        const scale = mini.width / size;
+        const zoom = parseFloat(mapZoom.value);
+        mctx.clearRect(0, 0, mini.width, mini.height);
+        mctx.save();
+        mctx.translate(mini.width / 2, mini.height / 2);
+        mctx.scale(zoom, zoom);
+        mctx.translate(-posX * scale, -posY * scale);
+        for (let y = 0; y < size; y += 1) {
+          for (let x = 0; x < size; x += 1) {
+            const value = grid[y][x];
+            if (!value) continue;
+            const colors = ['', '#6b3f24', '#1c6d85', '#555563', '#a12340'];
+            mctx.fillStyle = colors[value] || '#6b3f24';
+            mctx.fillRect(x * scale, y * scale, scale, scale);
+          }
+        }
+        if (showDebug) {
+          mctx.strokeStyle = 'rgba(125,249,255,0.28)';
+          mctx.lineWidth = 1 / zoom;
+          mctx.beginPath();
+          for (let i = 0; i <= size; i += 1) {
+            mctx.moveTo(i * scale, 0); mctx.lineTo(i * scale, size * scale);
+            mctx.moveTo(0, i * scale); mctx.lineTo(size * scale, i * scale);
+          }
+          mctx.stroke();
+          mctx.strokeStyle = '#ffb454';
+          mctx.beginPath();
+          mctx.arc(posX * scale, posY * scale, 0.18 * scale, 0, Math.PI * 2);
+          mctx.stroke();
+          enemies.forEach((enemy) => {
+            mctx.fillStyle = enemy.kind ? '#5fe0ff' : '#ff6b8f';
+            mctx.beginPath();
+            mctx.arc(enemy.x * scale, enemy.y * scale, 3 / zoom, 0, Math.PI * 2);
+            mctx.fill();
+          });
+        }
+        mctx.strokeStyle = '#ffb454';
+        mctx.lineWidth = 2 / zoom;
+        mctx.beginPath();
+        mctx.moveTo(posX * scale, posY * scale);
+        mctx.lineTo((posX + Math.cos(angle) * 0.8) * scale, (posY + Math.sin(angle) * 0.8) * scale);
+        mctx.stroke();
+        mctx.fillStyle = '#ffd9a0';
+        mctx.beginPath();
+        mctx.arc(posX * scale, posY * scale, 2.5 / zoom, 0, Math.PI * 2);
+        mctx.fill();
+        mctx.restore();
+        if (showDebug) {
+          mctx.fillStyle = '#7df9ff';
+          mctx.font = '9px ui-monospace, monospace';
+          mctx.fillText(`ZOOM ${zoom.toFixed(2)}×`, 4, mini.height - 4);
+        }
+      }
+
+      function update(dt) {
+        if (editing) return;
+        const turn = 2.3 * dt;
+        if (keys.ArrowLeft || keys.KeyQ) angle -= turn;
+        if (keys.ArrowRight || keys.KeyE) angle += turn;
+
+        let forward = 0, strafe = 0;
+        if (keys.KeyW || keys.ArrowUp) forward += 1;
+        if (keys.KeyS || keys.ArrowDown) forward -= 1;
+        if (keys.KeyA) strafe -= 1;
+        if (keys.KeyD) strafe += 1;
+        if (forward || strafe) {
+          const length = Math.hypot(forward, strafe);
+          forward /= length;
+          strafe /= length;
+          const speed = (keys.ShiftLeft || keys.ShiftRight ? 4.4 : 2.5) * dt;
+          const dirX = Math.cos(angle), dirY = Math.sin(angle);
+          const moveX = (dirX * forward - dirY * strafe) * speed;
+          const moveY = (dirY * forward + dirX * strafe) * speed;
+          if (canStand(posX + moveX, posY)) posX += moveX;
+          if (canStand(posX, posY + moveY)) posY += moveY;
+        }
+      }
+
+      function frame(now) {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        if (!paused) {
+          clock += dt;
+          update(dt);
+          renderWorld();
+          renderMap();
+          hudPos.textContent = `X ${posX.toFixed(2)} · Y ${posY.toFixed(2)}`;
+          hudAng.textContent = `ANG ${((angle * 180 / Math.PI) % 360).toFixed(0)}°`;
+          frames += 1;
+          if (now - fpsTime > 700) {
+            fpsLabel.textContent = `${Math.round(frames * 1000 / (now - fpsTime))} FPS`;
+            frames = 0;
+            fpsTime = now;
+          }
+        }
+        requestAnimationFrame(frame);
+      }
+
+      fovInput.addEventListener('input', () => { fovValue.textContent = `${fovInput.value}°`; });
+      fogInput.addEventListener('input', () => { fogValue.textContent = `${fogInput.value}%`; });
+      mapZoom.addEventListener('input', () => { mapZoomValue.textContent = `${parseFloat(mapZoom.value).toFixed(1)}×`; });
+      mapSelect.addEventListener('change', () => loadMap(mapSelect.value));
+      respawnBtn.addEventListener('click', () => loadMap(mapSelect.value));
+      pauseBtn.addEventListener('click', () => {
+        paused = !paused;
+        pauseBtn.textContent = paused ? 'RESUME' : 'PAUSE';
+        last = performance.now();
+      });
+
+      spritesBtn.addEventListener('click', () => {
+        showSprites = !showSprites;
+        spritesBtn.classList.toggle('active', showSprites);
+      });
+      debugBtn.addEventListener('click', () => {
+        showDebug = !showDebug;
+        debugBtn.classList.toggle('active', showDebug);
+        hudMode.textContent = showDebug ? 'TRYB: KOLIZJE' : (editing ? 'TRYB: EDYTOR' : 'TRYB: GRANIE');
+      });
+      mouseBtn.addEventListener('click', () => {
+        if (!mouseLook) {
+          if (!view.requestPointerLock) {
+            hudMode.textContent = 'MOUSE LOOK niedostępny';
+            return;
+          }
+          editing = false;
+          stage.classList.remove('editing');
+          editorBtn.classList.remove('active');
+          try {
+            const request = view.requestPointerLock();
+            if (request && typeof request.catch === 'function') request.catch(() => { hudMode.textContent = 'MOUSE LOOK zablokowany'; });
+          } catch (_) {
+            hudMode.textContent = 'MOUSE LOOK zablokowany';
+            return;
+          }
+          mouseLook = true;
+          hudMode.textContent = 'TRYB: MOUSE LOOK · ESC zwalnia';
+        } else {
+          mouseLook = false;
+          if (document.exitPointerLock) document.exitPointerLock();
+          hudMode.textContent = 'TRYB: GRANIE';
+        }
+        mouseBtn.classList.toggle('active', mouseLook);
+        stage.classList.toggle('locked', mouseLook);
+      });
+      document.addEventListener('pointerlockchange', () => {
+        if (document.pointerLockElement !== view && mouseLook) {
+          mouseLook = false;
+          mouseBtn.classList.remove('active');
+          stage.classList.remove('locked');
+          hudMode.textContent = 'TRYB: GRANIE';
+        }
+      });
+      document.addEventListener('mousemove', (event) => {
+        if (mouseLook && document.pointerLockElement === view) angle += event.movementX * 0.0022;
+      });
+      editorBtn.addEventListener('click', () => {
+        editing = !editing;
+        stage.classList.toggle('editing', editing);
+        editorBtn.classList.toggle('active', editing);
+        if (editing && mouseLook) {
+          mouseLook = false;
+          if (document.exitPointerLock) document.exitPointerLock();
+          mouseBtn.classList.remove('active');
+          stage.classList.remove('locked');
+        }
+        hudMode.textContent = editing ? 'EDYTOR: kliknij minimapę' : 'TRYB: GRANIE';
+      });
+      mini.addEventListener('click', (event) => {
+        if (!editing) return;
+        const rect = mini.getBoundingClientRect();
+        const sx = (event.clientX - rect.left) / rect.width * mini.width;
+        const sy = (event.clientY - rect.top) / rect.height * mini.height;
+        const scale = mini.width / grid.length;
+        const zoom = parseFloat(mapZoom.value);
+        const cellX = Math.floor(posX + (sx - mini.width / 2) / (scale * zoom));
+        const cellY = Math.floor(posY + (sy - mini.height / 2) / (scale * zoom));
+        if (cellY < 0 || cellY >= grid.length || cellX < 0 || cellX >= grid[0].length) return;
+        const previous = grid[cellY][cellX];
+        grid[cellY][cellX] = previous ? 0 : 1;
+        if (!canStand(posX, posY) || enemies.some((enemy) => cell(enemy.x, enemy.y))) {
+          grid[cellY][cellX] = previous;
+          hudMode.textContent = 'EDYTOR: miejsce zajęte';
+          return;
+        }
+        hudMode.textContent = `EDYTOR: (${cellX},${cellY}) → ${grid[cellY][cellX] ? 'ściana' : 'droga'}`;
+      });
+      shotBtn.addEventListener('click', () => {
+        try {
+          const link = document.createElement('a');
+          link.download = 'raycaster.png';
+          link.href = view.toDataURL('image/png');
+          link.click();
+        } catch (_) {
+          hudMode.textContent = 'PNG niedostępny';
+        }
+      });
+
+      window.addEventListener('keydown', (event) => {
+        keys[event.code] = true;
+        if (event.code === 'KeyR') loadMap(mapSelect.value);
+        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space'].includes(event.code)) event.preventDefault();
+      });
+      window.addEventListener('keyup', (event) => { keys[event.code] = false; });
+      window.addEventListener('blur', () => { for (const key of Object.keys(keys)) keys[key] = false; });
+
+      view.addEventListener('pointerdown', (event) => {
+        if (mouseLook || editing) return;
+        dragging = true;
+        dragX = event.clientX;
+        view.setPointerCapture(event.pointerId);
+      });
+      view.addEventListener('pointermove', (event) => {
+        if (!dragging) return;
+        angle += (event.clientX - dragX) * 0.006;
+        dragX = event.clientX;
+      });
+      view.addEventListener('pointerup', () => { dragging = false; });
+      view.addEventListener('pointercancel', () => { dragging = false; });
+
+      loadMap('complex');
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>

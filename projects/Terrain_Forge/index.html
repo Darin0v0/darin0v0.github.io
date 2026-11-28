@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0d100e">
+  <meta name="description" content="TERRAIN FORGE // proceduralny generator terenu: szum Perlina fBm, erozja hydrauliczna kroplowa, cieniowanie relieFU i eksport PNG.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230d100e'/%3E%3Cpath d='M4 48l16-22 10 12 10-18 20 28z' fill='none' stroke='%23e8c07a' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <title>Terrain Forge — generator terenu</title>
+  <style>
+    :root {
+      --bg:#0d100e; --panel:#151a17; --panel2:#1c231e; --border:#2b342c;
+      --text:#edf1ea; --muted:#8b9a8d; --sand:#e8c07a; --teal:#5ecad0; --lime:#a3c96b;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; height:100%; }
+    body {
+      background:var(--bg); color:var(--text);
+      font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    header {
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:9px 13px;
+      background:#121713; border-bottom:1px solid var(--border);
+    }
+    .brand { font-weight:700; font-size:13px; letter-spacing:.03em; margin-right:6px; }
+    .brand span { color:var(--sand); }
+    button, select, input {
+      font:inherit; color:var(--text); background:#1c231e; border:1px solid var(--border);
+      border-radius:6px; padding:6px 9px; cursor:pointer;
+    }
+    button:hover, select:hover { border-color:#4d6352; background:#232c25; }
+    button.primary { background:var(--sand); color:#241a08; border-color:var(--sand); font-weight:700; }
+    input.seed { width:92px; font-family:ui-monospace,Consolas,monospace; }
+    input[type="range"] { accent-color:var(--sand); width:86px; }
+    .sep { width:1px; height:20px; background:var(--border); margin:0 3px; }
+    .label { color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.05em; }
+    .main { flex:1; display:grid; grid-template-columns:minmax(0,1fr) 268px; min-height:0; }
+    .stage { position:relative; min-width:0; background:#050706; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    canvas#view { image-rendering:auto; max-width:100%; max-height:100%; box-shadow:0 18px 60px rgba(0,0,0,.55); }
+    .badge {
+      position:absolute; left:14px; top:12px; background:rgba(10,14,11,.78); border:1px solid var(--border);
+      border-radius:6px; padding:5px 9px; font-size:10px; color:var(--muted); pointer-events:none;
+    }
+    .badge b { color:var(--sand); }
+    aside { background:var(--panel); border-left:1px solid var(--border); padding:12px; overflow:auto; }
+    .card { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:11px; margin-bottom:10px; }
+    .card h3 { margin:0 0 9px; font-size:10px; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); }
+    .row { display:flex; justify-content:space-between; gap:8px; padding:3px 0; }
+    .row span { color:var(--muted); }
+    .row b { font-variant-numeric:tabular-nums; font-weight:600; }
+    .gold { color:var(--sand); } .cyan { color:var(--teal); } .green { color:var(--lime); }
+    .slider-row { display:grid; grid-template-columns:1fr auto; gap:4px; margin-bottom:9px; }
+    .slider-row label { grid-column:1/-1; color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.04em; display:flex; justify-content:space-between; }
+    .slider-row label b { color:var(--sand); font-variant-numeric:tabular-nums; }
+    .slider-row input { width:100%; }
+    canvas#hist { display:block; width:100%; height:64px; background:#101511; border:1px solid var(--border); border-radius:5px; }
+    .legend { height:10px; border-radius:4px; margin-top:7px; }
+    .legend-labels { display:flex; justify-content:space-between; color:var(--muted); font-size:9px; margin-top:3px; }
+    .note { color:var(--muted); font-size:10px; line-height:1.7; }
+    .status {
+      display:flex; gap:16px; flex-wrap:wrap; padding:7px 13px; background:#121713;
+      border-top:1px solid var(--border); color:var(--muted); font-size:10px;
+    }
+    .status b { color:var(--text); font-variant-numeric:tabular-nums; }
+    :where(button,select,input):focus-visible { outline:2px solid var(--sand); outline-offset:1px; }
+    @media (max-width:880px) { .main { grid-template-columns:1fr; } aside { display:none; } }
+    @media (max-width:480px) {
+      header { gap:6px; padding:8px; }
+      input.seed { width:80px; }
+      input[type="range"] { width:74px; }
+      .badge { left:8px; top:8px; font-size:9px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">TERRAIN <span>FORGE</span></div>
+    <span class="label">Seed</span>
+    <input id="seed" class="seed" type="number" value="1337" aria-label="Ziarno generatora">
+    <button type="button" id="genBtn" class="primary">⛰ Generuj</button>
+    <select id="preset" aria-label="Biom">
+      <option value="alpine">Alpine · wysokogórski</option>
+      <option value="desert">Desert · pustynia</option>
+      <option value="archipelago">Archipelago · archipelag</option>
+      <option value="volcanic">Volcanic · wulkaniczny</option>
+    </select>
+    <select id="size" aria-label="Rozdzielczość">
+      <option value="128">128 × 128</option>
+      <option value="192" selected>192 × 192</option>
+      <option value="256">256 × 256</option>
+    </select>
+    <select id="palette" aria-label="Paleta kolorów">
+      <option value="auto">Paleta: biom</option>
+      <option value="alpine">Paleta: Alpine</option>
+      <option value="desert">Paleta: Desert</option>
+      <option value="archipelago">Paleta: Archipelago</option>
+      <option value="volcanic">Paleta: Volcanic</option>
+      <option value="mono">Paleta: Mono</option>
+      <option value="thermal">Paleta: Thermal</option>
+    </select>
+    <select id="viewMode" aria-label="Tryb widoku">
+      <option value="shaded">Widok: cieniowany</option>
+      <option value="height">Widok: wysokość</option>
+      <option value="normal">Widok: normalne</option>
+      <option value="slope">Widok: stoki</option>
+    </select>
+    <button type="button" id="exportBtn">⤓ Eksport PNG</button>
+    <button type="button" id="shareBtn">↗ Link</button>
+    <div class="sep"></div>
+    <button type="button" id="contourBtn" class="active">Linie poziomu</button>
+  </header>
+
+  <div class="main">
+    <div class="stage">
+      <canvas id="view" aria-label="Wygenerowany teren"></canvas>
+      <div class="badge">SEED <b id="seedBadge">1337</b> · <b id="presetBadge">ALPINE</b></div>
+    </div>
+    <aside>
+      <div class="card">
+        <h3>Parametry generacji</h3>
+        <div class="slider-row">
+          <label>Skala szumu <b id="scaleValue">3.2</b></label>
+          <input type="range" id="scale" min="1" max="8" step="0.1" value="3.2">
+        </div>
+        <div class="slider-row">
+          <label>Oktawy <b id="octavesValue">6</b></label>
+          <input type="range" id="octaves" min="1" max="9" step="1" value="6">
+        </div>
+        <div class="slider-row">
+          <label>Ridged noise <b id="ridgeValue">0.35</b></label>
+          <input type="range" id="ridge" min="0" max="1" step="0.01" value="0.35">
+        </div>
+        <div class="slider-row">
+          <label>Krople erozji <b id="dropsValue">14 000</b></label>
+          <input type="range" id="drops" min="0" max="120000" step="1000" value="14000">
+        </div>
+        <div class="slider-row">
+          <label>Poziom morza <b id="seaValue">0.34</b></label>
+          <input type="range" id="sea" min="0" max="0.7" step="0.01" value="0.34">
+        </div>
+        <div class="slider-row">
+          <label>Relief cienia <b id="reliefValue">3.0</b></label>
+          <input type="range" id="relief" min="0" max="8" step="0.1" value="3">
+        </div>
+      </div>
+      <div class="card">
+        <h3>Statystyki</h3>
+        <div class="row"><span>Wysokość min</span><b id="statMin">—</b></div>
+        <div class="row"><span>Wysokość max</span><b id="statMax">—</b></div>
+        <div class="row"><span>Średnia</span><b id="statMean">—</b></div>
+        <div class="row"><span>Ląd</span><b id="statLand" class="gold">—</b></div>
+        <div class="row"><span>Woda</span><b id="statWater" class="cyan">—</b></div>
+        <div class="row"><span>Erozja</span><b id="statErosion" class="green">—</b></div>
+      </div>
+      <div class="card">
+        <h3>Rozkład wysokości</h3>
+        <canvas id="hist"></canvas>
+        <div class="legend" id="legend"></div>
+        <div class="legend-labels"><span>0 · woda</span><span id="legendTop">1 · szczyt</span></div>
+      </div>
+      <div class="card note">
+        Wzniesienia z sumy oktaw szumu gradientowego Perlina z opcjonalnym domain warp. Erozja hydrauliczna przenosi osad kroplami podążającymi po gradiencie — tworzy doliny i osypiska, których sam szum nie potrafi wygenerować.
+      </div>
+    </aside>
+  </div>
+
+  <div class="status">
+    <span>Czas <b id="genTime">0 ms</b></span>
+    <span>Siatka <b id="gridInfo">192 × 192</b></span>
+    <span>Próbki szumu <b id="sampleInfo">—</b></span>
+    <span id="notice">Gotowe. Skrót: <b>G</b> — generuj, <b>R</b> — nowy seed.</span>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const $ = (id) => document.getElementById(id);
+      const view = $('view');
+      const vctx = view.getContext('2d');
+      const hist = $('hist');
+      const hctx = hist.getContext('2d');
+      const paletteSelect = $('palette');
+      const viewModeSelect = $('viewMode');
+      let heights = null;
+      let generationToken = 0;
+      let generating = false;
+      let lastStats = { min: 0, max: 1, mean: 0, samples: 0, elapsed: 0, erodeMs: 0, moved: 0 };
+      let size = 192;
+      let contour = true;
+      let renderCanvas = null;
+
+      const PALETTES = {
+        alpine: {
+          ramp: [[0.00,[12,40,64]],[0.28,[34,96,124]],[0.34,[201,180,138]],[0.42,[104,132,88]],[0.62,[105,105,98]],[0.80,[168,168,162]],[1.00,[242,245,247]]],
+          label: 'ALPINE'
+        },
+        desert: {
+          ramp: [[0.00,[20,48,74]],[0.26,[52,104,130]],[0.32,[217,178,111]],[0.52,[201,139,75]],[0.72,[138,90,59]],[0.90,[214,168,108]],[1.00,[240,220,176]]],
+          label: 'DESERT'
+        },
+        archipelago: {
+          ramp: [[0.00,[8,48,78]],[0.30,[28,100,140]],[0.34,[46,139,163]],[0.38,[230,212,163]],[0.46,[79,138,86]],[0.72,[122,154,102]],[1.00,[226,232,206]]],
+          label: 'ARCHIPELAGO'
+        },
+        volcanic: {
+          ramp: [[0.00,[14,18,24]],[0.30,[30,38,44]],[0.40,[59,58,56]],[0.58,[107,93,79]],[0.76,[64,52,46]],[0.88,[194,65,12]],[1.00,[245,158,11]]],
+          label: 'VOLCANIC'
+        },
+        mono: {
+          ramp: [[0.00,[8,10,9]],[0.5,[126,134,125]],[1.00,[244,248,242]]],
+          label: 'MONO'
+        },
+        thermal: {
+          ramp: [[0.00,[10,6,38]],[0.3,[42,20,110]],[0.55,[176,32,92]],[0.78,[246,124,34]],[1.00,[255,246,190]]],
+          label: 'THERMAL'
+        }
+      };
+
+      function makeRandom(seed) {
+        let state = (seed >>> 0) || 1;
+        return () => {
+          state = (state * 1664525 + 1013904223) >>> 0;
+          return state / 4294967296;
+        };
+      }
+
+      class Perlin {
+        constructor(seed) {
+          const random = makeRandom(seed);
+          const p = Array.from({ length: 256 }, (_, i) => i);
+          for (let i = 255; i > 0; i -= 1) {
+            const j = Math.floor(random() * (i + 1));
+            [p[i], p[j]] = [p[j], p[i]];
+          }
+          this.perm = new Uint8Array(512);
+          for (let i = 0; i < 512; i += 1) this.perm[i] = p[i & 255];
+        }
+        fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+        grad(hash, x, y) {
+          switch (hash & 3) {
+            case 0: return x + y;
+            case 1: return -x + y;
+            case 2: return x - y;
+            default: return -x - y;
+          }
+        }
+        noise(x, y) {
+          const xi = Math.floor(x) & 255, yi = Math.floor(y) & 255;
+          const xf = x - Math.floor(x), yf = y - Math.floor(y);
+          const u = this.fade(xf), v = this.fade(yf);
+          const p = this.perm;
+          const aa = p[p[xi] + yi], ab = p[p[xi] + yi + 1];
+          const ba = p[p[xi + 1] + yi], bb = p[p[xi + 1] + yi + 1];
+          const lerp = (a, b, t) => a + t * (b - a);
+          return lerp(
+            lerp(this.grad(aa, xf, yf), this.grad(ba, xf - 1, yf), u),
+            lerp(this.grad(ab, xf, yf - 1), this.grad(bb, xf - 1, yf - 1), u),
+            v
+          );
+        }
+      }
+
+      function buildHeights() {
+        const started = performance.now();
+        size = parseInt($('size').value, 10);
+        const seed = parseInt($('seed').value, 10) || 1;
+        const scale = parseFloat($('scale').value);
+        const octaves = parseInt($('octaves').value, 10);
+        const ridge = parseFloat($('ridge').value);
+        const perlin = new Perlin(seed);
+        const warp = new Perlin(seed + 7919);
+        const field = new Float32Array(size * size);
+        let samples = 0;
+        let min = Infinity, max = -Infinity, sum = 0;
+
+        for (let y = 0; y < size; y += 1) {
+          for (let x = 0; x < size; x += 1) {
+            const nx = x / size * scale, ny = y / size * scale;
+            const wx = nx + 0.42 * warp.noise(nx * 0.8 + 11, ny * 0.8 + 7);
+            const wy = ny + 0.42 * warp.noise(nx * 0.8 - 5, ny * 0.8 + 19);
+            let amplitude = 1, frequency = 1, value = 0, total = 0;
+            for (let o = 0; o < octaves; o += 1) {
+              const n = perlin.noise(wx * frequency, wy * frequency);
+              const ridged = 1 - Math.abs(n);
+              value += amplitude * (n * (1 - ridge) + (ridged * 2 - 1) * ridge);
+              total += amplitude;
+              amplitude *= 0.5; frequency *= 2;
+              samples += 1;
+            }
+            let normalized = value / total;
+            const falloffX = Math.abs(x / (size - 1) * 2 - 1);
+            const falloffY = Math.abs(y / (size - 1) * 2 - 1);
+            const edge = Math.pow(Math.max(falloffX, falloffY), 2.2) * 0.16;
+            normalized = Math.max(0, Math.min(1, normalized * 0.62 + 0.38 - edge));
+            field[y * size + x] = normalized;
+            min = Math.min(min, normalized); max = Math.max(max, normalized); sum += normalized;
+          }
+        }
+        return { field, min, max, mean: sum / (size * size), samples, elapsed: performance.now() - started };
+      }
+
+      function erode(field, drops, random) {
+        if (!drops) return 0;
+        const idx = (x, y) => y * size + x;
+        const heightAt = (x, y) => {
+          if (x < 1 || x >= size - 1 || y < 1 || y >= size - 1) return field[idx(Math.max(0, Math.min(size - 1, x)), Math.max(0, Math.min(size - 1, y)))];
+          return field[idx(x, y)];
+        };
+        let moved = 0;
+        for (let d = 0; d < drops; d += 1) {
+          let x = 2 + random() * (size - 4);
+          let y = 2 + random() * (size - 4);
+          let dx = 0, dy = 0, speed = 1, sediment = 0;
+          for (let life = 0; life < 34; life += 1) {
+            const cellX = Math.floor(x), cellY = Math.floor(y);
+            if (cellX < 1 || cellY < 1 || cellX >= size - 1 || cellY >= size - 1) break;
+            const center = field[idx(cellX, cellY)];
+            const gx = heightAt(cellX + 1, cellY) - heightAt(cellX - 1, cellY);
+            const gy = heightAt(cellX, cellY + 1) - heightAt(cellX, cellY - 1);
+            dx = dx * 0.32 - gx * 0.68;
+            dy = dy * 0.32 - gy * 0.68;
+            const length = Math.hypot(dx, dy);
+            if (length < 1e-5) break;
+            dx /= length; dy /= length;
+            const nx = x + dx, ny = y + dy;
+            const nextX = Math.floor(nx), nextY = Math.floor(ny);
+            if (nextX < 1 || nextY < 1 || nextX >= size - 1 || nextY >= size - 1) break;
+            const nextHeight = field[idx(nextX, nextY)];
+            const delta = nextHeight - center;
+            const capacity = Math.max(0, -delta) * speed * 2.4 + 0.0015;
+            if (sediment > capacity || delta > 0) {
+              const deposit = delta > 0 ? Math.min(sediment, delta) : (sediment - capacity) * 0.28;
+              sediment -= deposit;
+              field[idx(cellX, cellY)] += deposit;
+            } else {
+              const amount = Math.min((capacity - sediment) * 0.24, 0.012);
+              field[idx(cellX, cellY)] -= amount;
+              sediment += amount;
+              moved += amount;
+            }
+            speed = Math.sqrt(Math.max(0.04, speed * speed - delta * 4.2));
+            x = nx; y = ny;
+          }
+        }
+        return moved;
+      }
+
+      function rampColor(ramp, value) {
+        let lower = ramp[0], upper = ramp[ramp.length - 1];
+        for (let i = 0; i < ramp.length - 1; i += 1) {
+          if (value >= ramp[i][0] && value <= ramp[i + 1][0]) { lower = ramp[i]; upper = ramp[i + 1]; break; }
+        }
+        const span = upper[0] - lower[0] || 1;
+        const t = Math.max(0, Math.min(1, (value - lower[0]) / span));
+        return [
+          lower[1][0] + (upper[1][0] - lower[1][0]) * t,
+          lower[1][1] + (upper[1][1] - lower[1][1]) * t,
+          lower[1][2] + (upper[1][2] - lower[1][2]) * t
+        ];
+      }
+
+      function render(field, stats) {
+        const preset = PALETTES[paletteSelect.value === 'auto' ? $('preset').value : paletteSelect.value] || PALETTES[$('preset').value];
+        const mode = viewModeSelect.value;
+        const sea = parseFloat($('sea').value);
+        const relief = parseFloat($('relief').value);
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const c = canvas.getContext('2d');
+        const image = c.createImageData(size, size);
+        const bins = new Array(64).fill(0);
+        const light = [-0.55, -0.55, 0.72];
+        const lLen = Math.hypot(...light);
+        const lx = light[0] / lLen, ly = light[1] / lLen, lz = light[2] / lLen;
+
+        for (let y = 0; y < size; y += 1) {
+          for (let x = 0; x < size; x += 1) {
+            const i = y * size + x;
+            const h = field[i];
+            bins[Math.min(63, Math.floor(h * 64))] += 1;
+            const dx = (field[y * size + Math.min(size - 1, x + 1)] - field[y * size + Math.max(0, x - 1)]) * relief;
+            const dy = (field[Math.min(size - 1, y + 1) * size + x] - field[Math.max(0, y - 1) * size + x]) * relief;
+            const nLen = Math.hypot(dx, dy, 1);
+            const shade = Math.max(0.12, ((-dx * lx - dy * ly + lz) / nLen));
+            let color = rampColor(preset.ramp, h);
+            if (h < sea && mode !== 'normal') {
+              const depth = Math.min(1, (sea - h) / Math.max(0.05, sea));
+              color = color.map((v, k) => v * (1 - depth * 0.42) + [6, 18, 30][k] * depth * 0.42);
+            }
+            let r, g, b;
+            if (mode === 'normal') {
+              r = (-dx / nLen * 0.5 + 0.5) * 255;
+              g = (-dy / nLen * 0.5 + 0.5) * 255;
+              b = (lz / nLen * 0.5 + 0.5) * 255;
+            } else if (mode === 'slope') {
+              color = rampColor(preset.ramp, Math.min(1, Math.hypot(dx, dy) * 0.85));
+              r = color[0]; g = color[1]; b = color[2];
+            } else {
+              const lit = mode === 'height' ? 1 : 0.36 + 0.86 * shade;
+              r = color[0] * lit; g = color[1] * lit; b = color[2] * lit;
+              if (contour && mode === 'shaded' && h >= sea) {
+                const level = Math.floor(h * 22);
+                const right = Math.floor(field[y * size + Math.min(size - 1, x + 1)] * 22);
+                const down = Math.floor(field[Math.min(size - 1, y + 1) * size + x] * 22);
+                if (level !== right || level !== down) { r *= 0.78; g *= 0.78; b *= 0.78; }
+              }
+            }
+            const px = i * 4;
+            image.data[px] = r; image.data[px + 1] = g; image.data[px + 2] = b; image.data[px + 3] = 255;
+          }
+        }
+        c.putImageData(image, 0, 0);
+        renderCanvas = canvas;
+        const display = Math.min(view.parentElement.clientWidth - 24, view.parentElement.clientHeight - 24, 900);
+        view.width = size; view.height = size;
+        view.style.width = `${Math.max(120, display)}px`;
+        view.style.height = `${Math.max(120, display)}px`;
+        vctx.imageSmoothingEnabled = true;
+        vctx.clearRect(0, 0, size, size);
+        vctx.drawImage(canvas, 0, 0);
+
+        const maxBin = Math.max(...bins);
+        hctx.clearRect(0, 0, hist.width, hist.height);
+        hist.width = hist.clientWidth; hist.height = hist.clientHeight;
+        bins.forEach((count, i) => {
+          const h = (count / maxBin) * (hist.height - 4);
+          hctx.fillStyle = i / 64 < sea ? '#5ecad0' : '#e8c07a';
+          hctx.fillRect(i * hist.width / 64, hist.height - h, hist.width / 64 - 0.6, h);
+        });
+        const seaX = sea * hist.width;
+        hctx.strokeStyle = 'rgba(255,255,255,.55)';
+        hctx.beginPath(); hctx.moveTo(seaX, 0); hctx.lineTo(seaX, hist.height); hctx.stroke();
+
+        const legend = $('legend');
+        legend.style.background = `linear-gradient(90deg, ${preset.ramp.map(([p, col]) => `rgb(${col.join(',')}) ${p * 100}%`).join(', ')})`;
+        $('legendTop').textContent = `1 · ${preset.label} / ${mode.toUpperCase()}`;
+
+        let land = 0;
+        for (let i = 0; i < field.length; i += 1) if (field[i] >= sea) land += 1;
+        $('statMin').textContent = stats.min.toFixed(3);
+        $('statMax').textContent = stats.max.toFixed(3);
+        $('statMean').textContent = stats.mean.toFixed(3);
+        $('statLand').textContent = `${(land / field.length * 100).toFixed(1)}%`;
+        $('statWater').textContent = `${(100 - land / field.length * 100).toFixed(1)}%`;
+        $('statErosion').textContent = `${stats.moved.toFixed(1)} t`;
+        $('seedBadge').textContent = $('seed').value;
+        $('presetBadge').textContent = preset.label;
+        $('gridInfo').textContent = `${size} × ${size}`;
+        $('sampleInfo').textContent = stats.samples.toLocaleString('pl-PL').replace(/\s/g, ' ');
+        $('genTime').textContent = `${(stats.elapsed + stats.erodeMs).toFixed(0)} ms`;
+      }
+
+      const nextFrame = () => new Promise((resolve) => window.requestAnimationFrame(resolve));
+
+      async function generate() {
+        const token = ++generationToken;
+        generating = true;
+        const started = performance.now();
+        const stats = buildHeights();
+        if (token !== generationToken) return;
+        const drops = Math.min(120000, parseInt($('drops').value, 10) || 0);
+        const random = makeRandom(Math.round(parseFloat($('seed').value) * 31 + 17));
+        const chunk = 4000;
+        let moved = 0;
+        for (let done = 0; done < drops; done += chunk) {
+          const count = Math.min(chunk, drops - done);
+          moved += erode(stats.field, count, random);
+          $('notice').textContent = `Erozja ${Math.round((done + count) / drops * 100)}%…`;
+          await nextFrame();
+          if (token !== generationToken) return;
+        }
+        stats.moved = moved;
+        stats.erodeMs = performance.now() - started - stats.elapsed;
+        heights = stats.field;
+        lastStats = stats;
+        render(heights, stats);
+        generating = false;
+        writeHash();
+        $('notice').textContent = `Wygenerowano seed ${$('seed').value} · ${size}²`;
+      }
+
+      function writeHash() {
+        const params = new URLSearchParams({
+          seed: $('seed').value, bio: $('preset').value, res: $('size').value,
+          sc: $('scale').value, oc: $('octaves').value, rg: $('ridge').value,
+          dr: $('drops').value, se: $('sea').value, rl: $('relief').value,
+          pal: paletteSelect.value, vm: viewModeSelect.value
+        });
+        try {
+          window.history.replaceState(null, '', `${location.pathname}${location.search}#${params.toString()}`);
+        } catch (_) {
+          try { location.hash = params.toString(); } catch (ignored) { /* brak dostępu do hash */ }
+        }
+      }
+
+      function readHash() {
+        const raw = location.hash.replace(/^#/, '');
+        if (!raw) return;
+        const params = new URLSearchParams(raw);
+        const fields = {
+          seed: 'seed', bio: 'preset', res: 'size', sc: 'scale', oc: 'octaves',
+          rg: 'ridge', dr: 'drops', se: 'sea', rl: 'relief', pal: 'palette', vm: 'viewMode'
+        };
+        Object.keys(fields).forEach((key) => {
+          const value = params.get(key);
+          if (value === null) return;
+          const element = $(fields[key]);
+          if (!element) return;
+          if (element.tagName === 'SELECT') {
+            if ([...element.options].some((option) => option.value === value)) element.value = value;
+            return;
+          }
+          const number = parseFloat(value);
+          if (!Number.isFinite(number)) return;
+          const min = parseFloat(element.min);
+          const max = parseFloat(element.max);
+          element.value = String(clampHash(number, min, max));
+        });
+      }
+
+      function clampHash(value, min, max) {
+        let result = value;
+        if (Number.isFinite(min)) result = Math.max(min, result);
+        if (Number.isFinite(max)) result = Math.min(max, result);
+        return result;
+      }
+
+      async function shareLink() {
+        writeHash();
+        const url = location.href;
+        try {
+          await navigator.clipboard.writeText(url);
+          $('notice').textContent = 'Link do ustawień skopiowany.';
+        } catch (_) {
+          $('notice').textContent = `Link: ${url}`;
+        }
+      }
+
+      function refreshLabels() {
+        $('scaleValue').textContent = parseFloat($('scale').value).toFixed(1);
+        $('octavesValue').textContent = $('octaves').value;
+        $('ridgeValue').textContent = parseFloat($('ridge').value).toFixed(2);
+        $('dropsValue').textContent = parseInt($('drops').value, 10).toLocaleString('pl-PL').replace(/\s/g, ' ');
+        $('seaValue').textContent = parseFloat($('sea').value).toFixed(2);
+        $('reliefValue').textContent = parseFloat($('relief').value).toFixed(1);
+      }
+
+      $('genBtn').addEventListener('click', () => generate());
+      $('shareBtn').addEventListener('click', () => shareLink());
+      $('seed').addEventListener('keydown', (event) => { if (event.key === 'Enter') generate(); });
+      paletteSelect.addEventListener('change', () => { if (heights) render(heights, lastStats); writeHash(); });
+      viewModeSelect.addEventListener('change', () => { if (heights) render(heights, lastStats); writeHash(); });
+      document.addEventListener('keydown', (event) => {
+        if (event.altKey || event.ctrlKey || event.metaKey) return;
+        const tag = document.activeElement ? document.activeElement.tagName : '';
+        if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+        const key = event.key.toLowerCase();
+        if (key === 'g') generate();
+        else if (key === 'r') { $('seed').value = String(Math.floor(Math.random() * 1000000000)); generate(); }
+        else return;
+        event.preventDefault();
+      });
+      ['scale', 'octaves', 'ridge', 'drops', 'sea', 'relief'].forEach((id) => {
+        $(id).addEventListener('input', refreshLabels);
+        $(id).addEventListener('change', generate);
+      });
+      $('preset').addEventListener('change', () => { if (heights) render(heights, lastStats); });
+      $('contourBtn').addEventListener('click', () => {
+        contour = !contour;
+        $('contourBtn').classList.toggle('active', contour);
+        if (heights) render(heights, lastStats);
+      });
+      $('exportBtn').addEventListener('click', () => {
+        if (!renderCanvas) return;
+        try {
+          renderCanvas.toBlob((blob) => {
+            if (!blob) { $('notice').textContent = 'Eksport PNG nieudany.'; return; }
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `terrain-${$('seed').value}-${$('preset').value}-${viewModeSelect.value}.png`;
+            link.href = url;
+            link.click();
+            window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+            $('notice').textContent = 'PNG zapisany.';
+          }, 'image/png');
+        } catch (_) { $('notice').textContent = 'Eksport PNG niedostępny.'; }
+      });
+      window.addEventListener('resize', () => { if (heights) render(heights, lastStats); });
+
+      window.__TERRAIN_DEBUG__ = {
+        state: () => ({
+          seed: $('seed').value, preset: $('preset').value, palette: paletteSelect.value,
+          size, viewMode: viewModeSelect.value, drops: parseInt($('drops').value, 10),
+          samples: lastStats ? lastStats.samples : 0, generating
+        }),
+        setSeed: (value) => { $('seed').value = String(value); return generate(); },
+        generate: () => generate()
+      };
+
+      readHash();
+      refreshLabels();
+      generate();
+    })();
+  </script>
+</body>
+</html>

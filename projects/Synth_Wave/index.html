@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0a0714">
+  <meta name="description" content="SYNTH_WAVE // syntezator Web Audio z klawiaturą, sekwencerem 16-krokowym, filtrem, delayem i wizualizacją oscyloskopu oraz spektrum.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230a0714'/%3E%3Cpath d='M4 32 Q12 6 20 32 T36 32 T52 32 T60 32' fill='none' stroke='%23ff5fd2' stroke-width='4'/%3E%3C/svg%3E">
+  <title>SYNTH_WAVE // WEB AUDIO SYNTH</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; padding: clamp(0.75rem, 2vw, 1.5rem);
+      display: flex; justify-content: center; align-items: center;
+      background: radial-gradient(circle at 25% 15%, #22103a 0%, #0a0714 55%, #05030a 100%);
+      color: #d9cbe8; font: 13px/1.55 ui-monospace, "SFMono-Regular", Consolas, monospace;
+      overflow-x: hidden;
+    }
+    .app { width: 100%; max-width: 1100px; }
+    header { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 0.9rem; }
+    h1 { margin: 0; font-size: clamp(1.3rem, 4vw, 2rem); letter-spacing: 0.26em; font-weight: 500; color: #ffd9f4; text-shadow: 0 0 24px rgba(255,95,210,0.4); }
+    .sub { color: #8a729f; font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; }
+    .panel { border: 1px solid #33234a; border-radius: 6px; background: rgba(15,9,26,0.82); padding: 0.75rem 0.85rem; margin-bottom: 0.8rem; }
+    .panel-title { color: #b78cd8; font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 0.6rem; }
+    .controls { display: flex; flex-wrap: wrap; gap: 0.55rem 1rem; align-items: center; }
+    label { display: flex; align-items: center; gap: 0.4rem; color: #9e86b5; font-size: 0.71rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    input[type="range"] { accent-color: #ff5fd2; width: 92px; }
+    select, button {
+      font: inherit; color: #ecd9ff; background: #150d22; border: 1px solid #46305f;
+      border-radius: 4px; padding: 0.35rem 0.55rem; cursor: pointer;
+    }
+    button:hover, select:hover { border-color: #ff5fd2; color: #ff8fdf; }
+    button.primary { background: #ff5fd2; color: #170620; border-color: #ff5fd2; font-weight: bold; }
+    button.primary:hover { background: #ff8fdf; color: #120310; }
+    .val { color: #ff8fdf; min-width: 3.4em; font-variant-numeric: tabular-nums; }
+    .keys { display: flex; gap: 3px; flex-wrap: wrap; }
+    .key {
+      flex: 1 1 52px; min-width: 42px; height: 74px; border: 1px solid #4a3466;
+      border-radius: 0 0 5px 5px; background: linear-gradient(#efe0fa, #cbb4de); color: #2a1538;
+      font-weight: bold; font-size: 0.72rem; display: flex; flex-direction: column;
+      justify-content: flex-end; align-items: center; padding-bottom: 0.4rem; gap: 0.15rem;
+    }
+    .key.black { background: linear-gradient(#3a234f, #170c24); color: #e9c9ff; border-color: #5d3a7d; height: 60px; flex-basis: 38px; min-width: 34px; }
+    .key.active { background: #ff5fd2; color: #170620; box-shadow: 0 0 18px rgba(255,95,210,0.6); }
+    .key small { font-weight: normal; opacity: 0.7; font-size: 0.62rem; }
+    .steps { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; }
+    .step { position: relative; padding: 0.4rem 0 0.65rem; font-size: 0.66rem; text-align: center; min-width: 0; overflow: hidden; }
+    .step::after { content: ''; position: absolute; left: 2px; bottom: 2px; width: var(--vel, 85%); height: 2px; background: #7df9ff; opacity: 0.75; }
+    .step.on { background: #ff5fd2; color: #170620; border-color: #ff8fdf; }
+    .step.on::after { background: #170620; opacity: 0.55; }
+    .step.play { outline: 2px solid #7df9ff; outline-offset: 1px; }
+    #scope { display: block; width: 100%; height: 170px; border: 1px solid #33234a; border-radius: 5px; background: #05030a; }
+    .hint { color: #7d688f; font-size: 0.72rem; margin-top: 0.7rem; line-height: 1.7; }
+    :where(button, select, input):focus-visible { outline: 2px solid #ff5fd2; outline-offset: 2px; }
+    @media (max-width: 680px) { .steps { grid-template-columns: repeat(8, minmax(0, 1fr)); } .key { min-width: 30px; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div><h1>SYNTH WAVE</h1><div class="sub">WEB AUDIO · POLYPHONIC SYNTHESIZER</div></div>
+      <div class="sub" id="audioStatus">AUDIO: IDLE</div>
+    </header>
+
+    <section class="panel">
+      <div class="panel-title">// BRÁNA · OSCYLATOR · FILTR · EFEKTY</div>
+      <div class="controls">
+        <label for="wave">WAVE
+          <select id="wave">
+            <option value="sine">SINE</option><option value="triangle">TRIANGLE</option>
+            <option value="sawtooth" selected>SAWTOOTH</option><option value="square">SQUARE</option>
+          </select>
+        </label>
+        <label for="filterType">FILTER
+          <select id="filterType">
+            <option value="lowpass" selected>LOWPASS</option><option value="highpass">HIGHPASS</option>
+            <option value="bandpass">BANDPASS</option>
+          </select>
+        </label>
+        <label for="cutoff">CUTOFF <input type="range" id="cutoff" min="200" max="12000" value="2600"><span class="val" id="cutoffValue">2600</span></label>
+        <label for="reso">RESO <input type="range" id="reso" min="0" max="20" step="0.5" value="4"><span class="val" id="resoValue">4.0</span></label>
+        <label for="attack">ATTACK <input type="range" id="attack" min="0.005" max="0.4" step="0.005" value="0.02"><span class="val" id="attackValue">0.02</span></label>
+        <label for="release">RELEASE <input type="range" id="release" min="0.05" max="1.5" step="0.05" value="0.3"><span class="val" id="releaseValue">0.30</span></label>
+        <label for="delay">DELAY <input type="range" id="delay" min="0" max="0.6" step="0.01" value="0.18"><span class="val" id="delayValue">0.18</span></label>
+        <label for="volume">VOLUME <input type="range" id="volume" min="0" max="1" step="0.05" value="0.55"><span class="val" id="volumeValue">0.55</span></label>
+        <button type="button" id="panicBtn">PANIC</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">// KLAWIATURA · A–K / W E T Y U</div>
+      <div class="keys" id="keys"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">// SEQUENCER · 16 KROKÓW</div>
+      <div class="controls" style="margin-bottom:0.6rem">
+        <button type="button" id="playBtn" class="primary">▶ PLAY</button>
+        <label for="tempo">BPM <input type="range" id="tempo" min="60" max="220" value="120"><span class="val" id="tempoValue">120</span></label>
+        <label for="pattern">PATTERN
+          <select id="pattern">
+            <option value="pulse">PULSE</option><option value="arpeggio">ARPEGGIO</option>
+            <option value="bass">BASS</option><option value="house">HOUSE</option>
+            <option value="breakbeat">BREAKBEAT</option><option value="waltz">WALTZ 3/4</option>
+            <option value="random">RANDOM</option><option value="empty">EMPTY</option>
+          </select>
+        </label>
+        <label for="transpose">TRANSPOSE
+          <select id="transpose" aria-label="Transpozycja w półtonach">
+            <option value="-12">-12</option><option value="-7">-7</option><option value="-5">-5</option>
+            <option value="-3">-3</option><option value="-2">-2</option><option value="-1">-1</option>
+            <option value="0" selected>0</option><option value="1">+1</option><option value="2">+2</option>
+            <option value="3">+3</option><option value="5">+5</option><option value="7">+7</option>
+            <option value="12">+12</option>
+          </select>
+        </label>
+        <label for="arp">ARP
+          <select id="arp" aria-label="Tryb arpeggiatora">
+            <option value="off">OFF</option><option value="up">UP</option>
+            <option value="down">DOWN</option><option value="updown">UP / DOWN</option>
+          </select>
+        </label>
+        <button type="button" id="clearBtn">CLEAR</button>
+      </div>
+      <div class="steps" id="steps" aria-label="16 kroków sekwencera"></div>
+      <div class="controls" style="margin-top:0.6rem">
+        <input type="text" id="presetName" value="Mój preset" aria-label="Nazwa presetu" style="max-width:150px">
+        <button type="button" id="savePresetBtn">ZAPISZ</button>
+        <button type="button" id="loadPresetBtn">WCZYTAJ</button>
+        <button type="button" id="recordBtn" title="Renderuj 2 takty do pliku WAV offline">REC WAV</button>
+        <span class="val" id="presetStatus" role="status" style="min-width:8em"></span>
+      </div>
+    </section>
+
+    <canvas id="scope" width="1000" height="170" aria-label="Oscyloskop i spektrum dźwięku"></canvas>
+    <div class="hint">Kliknij klawisz lub użyj klawiatury komputera. W sekwencerze klik zmienia nutę, <b>Shift+klik</b> zmienia prędkość (jasny pasek pod krokiem), <b>Alt+klik</b> wyłącza krok. ARP gra przytrzymane klawisze w wybranym PORZĄDKU. <b>REC WAV</b> renderuje 2 takty offline. Dźwięk startuje po pierwszej interakcji (zasada autoplay przeglądarki).</div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const noteDefs = [
+        { key: 'a', midi: 60, name: 'C4' }, { key: 'w', midi: 61, name: 'C#4', black: true },
+        { key: 's', midi: 62, name: 'D4' }, { key: 'e', midi: 63, name: 'D#4', black: true },
+        { key: 'd', midi: 64, name: 'E4' }, { key: 'f', midi: 65, name: 'F4' },
+        { key: 't', midi: 66, name: 'F#4', black: true }, { key: 'g', midi: 67, name: 'G4' },
+        { key: 'y', midi: 68, name: 'G#4', black: true }, { key: 'h', midi: 69, name: 'A4' },
+        { key: 'u', midi: 70, name: 'A#4', black: true }, { key: 'j', midi: 71, name: 'B4' },
+        { key: 'k', midi: 72, name: 'C5' }
+      ];
+      const stepNotes = [null, 60, 63, 65, 67, 69, 72, 75];
+      const patterns = {
+        pulse: [60, null, 60, null, 67, null, 63, null, 60, null, 65, null, 67, null, 72, null],
+        arpeggio: [60, 63, 67, 72, 67, 63, 60, 63, 65, 69, 72, 76, 72, 69, 65, 69],
+        bass: [48, null, 48, 55, 48, null, 51, null, 48, null, 55, null, 46, null, 51, null],
+        house: [60, null, 63, null, 60, null, 67, null, 60, null, 63, null, 65, null, 67, null],
+        breakbeat: [36, null, null, 48, null, 36, null, null, 43, null, 36, null, null, 48, null, 41],
+        waltz: [60, null, null, 64, null, null, 67, null, null, 65, null, null, 62, null, null],
+        random: [72, null, 67, null, null, 63, 70, null, 65, null, null, 60, 67, null, 63, null],
+        empty: new Array(16).fill(null)
+      };
+      const noteName = (midi) => {
+        const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        return `${names[midi % 12]}${Math.floor(midi / 12) - 1}`;
+      };
+
+      const $ = (id) => document.getElementById(id);
+      const keysEl = $('keys');
+      const stepsEl = $('steps');
+      const scope = $('scope');
+      const sctx = scope.getContext('2d');
+      const statusEl = $('audioStatus');
+      const playBtn = $('playBtn');
+      const tempoInput = $('tempo');
+      const controls = ['wave', 'filterType', 'cutoff', 'reso', 'attack', 'release', 'delay', 'volume'];
+      const display = {
+        cutoff: $('cutoffValue'), reso: $('resoValue'), attack: $('attackValue'),
+        release: $('releaseValue'), delay: $('delayValue'), volume: $('volumeValue'), tempo: $('tempoValue')
+      };
+
+      let audio = null, master = null, analyser = null, delayNode = null, delayGain = null;
+      let sequence = patterns.pulse.slice();
+      let velocities = new Array(16).fill(0.85);
+      let playing = false, stepIndex = 0, nextNoteTime = 0, schedulerId = 0, playhead = -1;
+      let arpIndex = 0, arpDir = 1;
+      const activeKeys = new Map();
+      const storageKey = 'synthwave.presets.v1';
+
+      function ensureAudio() {
+        if (!audio) {
+          const AudioCtor = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtor) {
+            statusEl.textContent = 'AUDIO: UNSUPPORTED';
+            return false;
+          }
+          audio = new AudioCtor();
+          master = audio.createGain();
+          master.gain.value = parseFloat($('volume').value) * 0.5;
+          analyser = audio.createAnalyser();
+          analyser.fftSize = 2048;
+          analyser.smoothingTimeConstant = 0.78;
+          master.connect(analyser);
+          analyser.connect(audio.destination);
+
+          delayNode = audio.createDelay(1);
+          delayNode.delayTime.value = 0.22;
+          const feedback = audio.createGain();
+          feedback.gain.value = 0.32;
+          delayGain = audio.createGain();
+          delayGain.gain.value = parseFloat($('delay').value);
+          delayNode.connect(feedback);
+          feedback.connect(delayNode);
+          delayNode.connect(delayGain);
+          delayGain.connect(master);
+        }
+        if (audio.state === 'suspended') audio.resume();
+        statusEl.textContent = 'AUDIO: RUNNING';
+        return true;
+      }
+
+      function playNote(midi, velocity = 1, hold = 0.22) {
+        if (!ensureAudio()) return;
+        const now = audio.currentTime;
+        const shifted = Math.max(0, Math.min(127, midi + parseInt($('transpose').value, 10)));
+        const osc = audio.createOscillator();
+        osc.type = $('wave').value;
+        osc.frequency.value = 440 * Math.pow(2, (shifted - 69) / 12);
+        const filter = audio.createBiquadFilter();
+        filter.type = $('filterType').value;
+        filter.frequency.value = parseFloat($('cutoff').value);
+        filter.Q.value = parseFloat($('reso').value);
+        const env = audio.createGain();
+        const attack = parseFloat($('attack').value);
+        const release = parseFloat($('release').value);
+        env.gain.setValueAtTime(0.0001, now);
+        env.gain.linearRampToValueAtTime(velocity * 0.42, now + attack);
+        env.gain.exponentialRampToValueAtTime(0.0001, now + attack + hold + release);
+        osc.connect(filter);
+        filter.connect(env);
+        env.connect(master);
+        env.connect(delayNode);
+        osc.start(now);
+        osc.stop(now + attack + hold + release + 0.05);
+        osc.onended = () => { osc.disconnect(); filter.disconnect(); env.disconnect(); };
+      }
+
+      function buildKeys() {
+        noteDefs.forEach((def) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = `key${def.black ? ' black' : ''}`;
+          button.dataset.midi = String(def.midi);
+          button.dataset.key = def.key;
+          button.setAttribute('aria-label', `${def.name}, klawisz ${def.key.toUpperCase()}`);
+          const label = document.createElement('span');
+          label.textContent = def.name;
+          const shortcut = document.createElement('small');
+          shortcut.textContent = def.key.toUpperCase();
+          button.append(label, shortcut);
+          button.addEventListener('pointerdown', (event) => {
+            event.preventDefault();
+            pressKey(def.midi, def.key);
+          });
+          button.addEventListener('pointerup', () => releaseKey(def.key));
+          button.addEventListener('pointerleave', () => releaseKey(def.key));
+          keysEl.appendChild(button);
+        });
+      }
+
+      function pressKey(midi, key) {
+        if (activeKeys.has(key)) return;
+        activeKeys.set(key, true);
+        const button = keysEl.querySelector(`[data-key="${key}"]`);
+        if (button) button.classList.add('active');
+        playNote(midi);
+      }
+
+      function releaseKey(key) {
+        activeKeys.delete(key);
+        const button = keysEl.querySelector(`[data-key="${key}"]`);
+        if (button) button.classList.remove('active');
+      }
+
+      function renderSteps() {
+        stepsEl.replaceChildren();
+        sequence.forEach((midi, index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = `step${midi ? ' on' : ''}${playhead === index ? ' play' : ''}`;
+          button.textContent = midi ? noteName(midi) : '·';
+          button.style.setProperty('--vel', `${Math.round((velocities[index] || 0.85) * 100)}%`);
+          button.title = `${midi ? noteName(midi) : 'wyłączony'} · velocity ${Math.round((velocities[index] || 0.85) * 100)}% · Shift+klik zmienia velocity`;
+          button.setAttribute('aria-label', button.title);
+          button.addEventListener('click', (event) => {
+            if (event.altKey) {
+              sequence[index] = null;
+            } else if (event.shiftKey) {
+              const levels = [0.35, 0.6, 0.85, 1];
+              const current = levels.indexOf(velocities[index]);
+              velocities[index] = levels[(current + 1) % levels.length];
+            } else {
+              const position = stepNotes.indexOf(sequence[index]);
+              sequence[index] = stepNotes[(position + 1) % stepNotes.length];
+            }
+            renderSteps();
+          });
+          button.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+            sequence[index] = null;
+            renderSteps();
+          });
+          stepsEl.appendChild(button);
+        });
+      }
+
+      function setPlayhead(index) {
+        if (playhead === index) return;
+        const nodes = stepsEl.children;
+        if (playhead >= 0 && nodes[playhead]) nodes[playhead].classList.remove('play');
+        if (nodes[index]) nodes[index].classList.add('play');
+        playhead = index;
+      }
+
+      function scheduler() {
+        if (!playing || !audio) return;
+        const stepDuration = 60 / parseInt(tempoInput.value, 10) / 4;
+        while (nextNoteTime < audio.currentTime + 0.12) {
+          const midi = sequence[stepIndex];
+          const arp = $('arp').value;
+          const held = arp === 'off' ? [] : [...activeKeys.keys()]
+            .map((key) => noteDefs.find((def) => def.key === key))
+            .filter(Boolean)
+            .map((def) => def.midi)
+            .sort((a, b) => a - b);
+          if (held.length) {
+            playNote(held[arpIndex % held.length], 0.85, stepDuration * 0.75);
+            if (arp === 'up') arpIndex = (arpIndex + 1) % held.length;
+            else if (arp === 'down') arpIndex = (arpIndex - 1 + held.length) % held.length;
+            else {
+              arpIndex += arpDir;
+              if (arpIndex >= held.length) { arpDir = -1; arpIndex = Math.max(0, held.length - 2); }
+              else if (arpIndex < 0) { arpDir = 1; arpIndex = Math.min(held.length - 1, 1); }
+            }
+          } else if (midi) {
+            playNote(midi, velocities[stepIndex], stepDuration * 0.75);
+            arpIndex = 0;
+            arpDir = 1;
+          }
+          setPlayhead(stepIndex);
+          stepIndex = (stepIndex + 1) % 16;
+          nextNoteTime += stepDuration;
+        }
+      }
+
+      function togglePlay() {
+        if (playing) {
+          playing = false;
+          window.clearInterval(schedulerId);
+          schedulerId = 0;
+          playBtn.textContent = '▶ PLAY';
+          playhead = -1;
+          renderSteps();
+          return;
+        }
+        if (!ensureAudio()) return;
+        playing = true;
+        stepIndex = 0;
+        arpIndex = 0;
+        arpDir = 1;
+        nextNoteTime = audio.currentTime + 0.06;
+        schedulerId = window.setInterval(scheduler, 25);
+        playBtn.textContent = '■ STOP';
+      }
+
+      function drawScope() {
+        const rect = scope.getBoundingClientRect();
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.round(rect.width * ratio);
+        const height = Math.round(rect.height * ratio);
+        if (scope.width !== width || scope.height !== height) {
+          scope.width = width;
+          scope.height = height;
+        }
+        const w = scope.width, h = scope.height;
+        sctx.fillStyle = '#05030a';
+        sctx.fillRect(0, 0, w, h);
+        sctx.strokeStyle = 'rgba(255,95,210,0.12)';
+        sctx.lineWidth = 1;
+        for (let i = 1; i < 4; i += 1) {
+          const y = h * i / 4;
+          sctx.beginPath(); sctx.moveTo(0, y); sctx.lineTo(w, y); sctx.stroke();
+        }
+        if (!analyser) {
+          sctx.fillStyle = '#6d5580';
+          sctx.font = `${Math.round(12 * ratio)}px monospace`;
+          sctx.fillText('> NACIŚNIJ KLAWISZ LUB PLAY, ABY AKTYWOWAĆ AUDIO', 14 * ratio, h / 2);
+          requestAnimationFrame(drawScope);
+          return;
+        }
+
+        const wave = new Uint8Array(analyser.fftSize);
+        analyser.getByteTimeDomainData(wave);
+        const mid = h * 0.42;
+        sctx.beginPath();
+        for (let i = 0; i < wave.length; i += 1) {
+          const x = i / (wave.length - 1) * w;
+          const y = mid + ((wave[i] - 128) / 128) * (h * 0.34);
+          if (i === 0) sctx.moveTo(x, y); else sctx.lineTo(x, y);
+        }
+        sctx.strokeStyle = '#ff5fd2';
+        sctx.lineWidth = 2 * ratio;
+        sctx.shadowBlur = 12 * ratio;
+        sctx.shadowColor = '#ff5fd2';
+        sctx.stroke();
+        sctx.shadowBlur = 0;
+
+        const bins = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(bins);
+        const bars = 64;
+        const barWidth = w / bars;
+        for (let i = 0; i < bars; i += 1) {
+          const value = bins[Math.floor(Math.pow(i / bars, 1.7) * bins.length * 0.5)] / 255;
+          const barHeight = value * h * 0.28;
+          sctx.fillStyle = `rgba(${120 + Math.round(value * 135)},${90},${210 + Math.round(value * 45)},0.85)`;
+          sctx.fillRect(i * barWidth + 1, h - barHeight, barWidth - 2, barHeight);
+        }
+        requestAnimationFrame(drawScope);
+      }
+
+      function encodeWav(buffer) {
+        const channels = Math.min(2, buffer.numberOfChannels);
+        const length = buffer.length;
+        const bytes = 44 + length * channels * 2;
+        const view = new DataView(new ArrayBuffer(bytes));
+        const writeText = (offset, text) => {
+          for (let i = 0; i < text.length; i += 1) view.setUint8(offset + i, text.charCodeAt(i));
+        };
+        writeText(0, 'RIFF');
+        view.setUint32(4, bytes - 8, true);
+        writeText(8, 'WAVE');
+        writeText(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, channels, true);
+        view.setUint32(24, buffer.sampleRate, true);
+        view.setUint32(28, buffer.sampleRate * channels * 2, true);
+        view.setUint16(32, channels * 2, true);
+        view.setUint16(34, 16, true);
+        writeText(36, 'data');
+        view.setUint32(40, length * channels * 2, true);
+        const data = [];
+        for (let c = 0; c < channels; c += 1) data.push(buffer.getChannelData(c));
+        let offset = 44;
+        for (let i = 0; i < length; i += 1) {
+          for (let c = 0; c < channels; c += 1) {
+            const value = Math.max(-1, Math.min(1, data[c][i]));
+            view.setInt16(offset, value < 0 ? value * 0x8000 : value * 0x7fff, true);
+            offset += 2;
+          }
+        }
+        return new Blob([view.buffer], { type: 'audio/wav' });
+      }
+
+      function recordWav() {
+        const OfflineCtor = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+        if (!OfflineCtor) {
+          $('presetStatus').textContent = 'OfflineAudioContext niedostępny';
+          return;
+        }
+        const stepDuration = 60 / parseInt(tempoInput.value, 10) / 4;
+        const tail = parseFloat($('release').value) + parseFloat($('attack').value) + 0.3;
+        const sampleRate = 44100;
+        const frames = Math.ceil((32 * stepDuration + tail) * sampleRate);
+        let offline;
+        try {
+          offline = new OfflineCtor(2, frames, sampleRate);
+        } catch (_) {
+          $('presetStatus').textContent = 'Nie udało się utworzyć renderu';
+          return;
+        }
+        const out = offline.createGain();
+        out.gain.value = parseFloat($('volume').value) * 0.5;
+        out.connect(offline.destination);
+        const delay = offline.createDelay(1);
+        delay.delayTime.value = 0.22;
+        const feedback = offline.createGain();
+        feedback.gain.value = 0.32;
+        const wet = offline.createGain();
+        wet.gain.value = parseFloat($('delay').value);
+        delay.connect(feedback);
+        feedback.connect(delay);
+        delay.connect(wet);
+        wet.connect(out);
+
+        const attack = parseFloat($('attack').value);
+        const release = parseFloat($('release').value);
+        const hold = stepDuration * 0.75;
+        const transpose = parseInt($('transpose').value, 10);
+        for (let step = 0; step < 32; step += 1) {
+          const midi = sequence[step % 16];
+          if (!midi) continue;
+          const shifted = Math.max(0, Math.min(127, midi + transpose));
+          const start = step * stepDuration;
+          const osc = offline.createOscillator();
+          osc.type = $('wave').value;
+          osc.frequency.value = 440 * Math.pow(2, (shifted - 69) / 12);
+          const filter = offline.createBiquadFilter();
+          filter.type = $('filterType').value;
+          filter.frequency.value = parseFloat($('cutoff').value);
+          filter.Q.value = parseFloat($('reso').value);
+          const env = offline.createGain();
+          env.gain.setValueAtTime(0.0001, start);
+          env.gain.linearRampToValueAtTime(velocities[step % 16] * 0.42, start + attack);
+          env.gain.exponentialRampToValueAtTime(0.0001, start + attack + hold + release);
+          osc.connect(filter);
+          filter.connect(env);
+          env.connect(out);
+          env.connect(delay);
+          osc.start(start);
+          osc.stop(start + attack + hold + release + 0.05);
+        }
+
+        let done = false;
+        const finish = (buffer) => {
+          if (done) return;
+          done = true;
+          try {
+            const url = URL.createObjectURL(encodeWav(buffer));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'synth_wave_2bars.wav';
+            link.click();
+            window.setTimeout(() => URL.revokeObjectURL(url), 5000);
+            $('presetStatus').textContent = 'WAV gotowy · 2 takty';
+          } catch (_) {
+            $('presetStatus').textContent = 'Błąd zapisu WAV';
+          }
+        };
+        const fail = () => {
+          if (done) return;
+          done = true;
+          $('presetStatus').textContent = 'Błąd renderu WAV';
+        };
+        $('presetStatus').textContent = 'Renderowanie WAV…';
+        offline.oncomplete = (event) => finish(event.renderedBuffer);
+        try {
+          const rendering = offline.startRendering();
+          if (rendering && typeof rendering.then === 'function') rendering.then(finish).catch(fail);
+        } catch (_) {
+          fail();
+        }
+      }
+
+      function savePreset() {
+        const name = $('presetName').value.trim() || 'Preset';
+        const data = {
+          name, sequence: sequence.slice(), velocities: velocities.slice(),
+          tempo: tempoInput.value, transpose: $('transpose').value, arp: $('arp').value
+        };
+        controls.forEach((id) => { data[id] = $(id).value; });
+        try {
+          const bag = JSON.parse(localStorage.getItem(storageKey) || '{}');
+          bag[name] = data;
+          localStorage.setItem(storageKey, JSON.stringify(bag));
+          $('presetStatus').textContent = `Zapisano: ${name}`;
+        } catch (_) {
+          $('presetStatus').textContent = 'Brak dostępu do localStorage';
+        }
+      }
+
+      function loadPreset() {
+        let data;
+        try {
+          const bag = JSON.parse(localStorage.getItem(storageKey) || '{}');
+          data = bag[$('presetName').value.trim()];
+        } catch (_) {
+          $('presetStatus').textContent = 'Brak dostępu do localStorage';
+          return;
+        }
+        if (!data || typeof data !== 'object') {
+          $('presetStatus').textContent = 'Nie znaleziono presetu';
+          return;
+        }
+        if (Array.isArray(data.sequence) && data.sequence.length === 16) {
+          sequence = data.sequence.map((value) => (Number.isFinite(value) ? value : null));
+        }
+        if (Array.isArray(data.velocities) && data.velocities.length === 16) {
+          velocities = data.velocities.map((value) => Math.max(0.1, Math.min(1, Number(value) || 0.85)));
+        }
+        if (Number.isFinite(Number(data.tempo))) {
+          tempoInput.value = Math.max(60, Math.min(220, Number(data.tempo)));
+          display.tempo.textContent = tempoInput.value;
+        }
+        controls.forEach((id) => {
+          if (data[id] === undefined) return;
+          $(id).value = data[id];
+          $(id).dispatchEvent(new Event('input'));
+        });
+        if (data.transpose && $('transpose').querySelector(`option[value="${data.transpose}"]`)) $('transpose').value = data.transpose;
+        if (data.arp && $('arp').querySelector(`option[value="${data.arp}"]`)) $('arp').value = data.arp;
+        renderSteps();
+        $('pattern').value = 'empty';
+        $('presetStatus').textContent = `Wczytano: ${data.name || 'preset'}`;
+      }
+
+      controls.forEach((id) => {
+        $(id).addEventListener('input', () => {
+          if (display[id]) display[id].textContent = id === 'reso' || id === 'attack' || id === 'release' || id === 'delay' || id === 'volume'
+            ? parseFloat($(id).value).toFixed(2) : $(id).value;
+          if (id === 'volume' && master) master.gain.value = parseFloat($(id).value) * 0.5;
+          if (id === 'delay' && delayGain) delayGain.gain.value = parseFloat($(id).value);
+        });
+      });
+
+      tempoInput.addEventListener('input', () => { display.tempo.textContent = tempoInput.value; });
+      $('pattern').addEventListener('change', (event) => {
+        sequence = patterns[event.target.value].slice();
+        renderSteps();
+      });
+      $('clearBtn').addEventListener('click', () => {
+        sequence = new Array(16).fill(null);
+        velocities = new Array(16).fill(0.85);
+        renderSteps();
+      });
+      $('savePresetBtn').addEventListener('click', savePreset);
+      $('loadPresetBtn').addEventListener('click', loadPreset);
+      $('recordBtn').addEventListener('click', recordWav);
+      playBtn.addEventListener('click', togglePlay);
+      $('panicBtn').addEventListener('click', () => {
+        playing = false;
+        window.clearInterval(schedulerId);
+        schedulerId = 0;
+        playBtn.textContent = '▶ PLAY';
+        activeKeys.clear();
+        keysEl.querySelectorAll('.key').forEach((key) => key.classList.remove('active'));
+        statusEl.textContent = 'AUDIO: PANIC / RESET';
+      });
+
+      window.addEventListener('keydown', (event) => {
+        if (event.repeat || event.ctrlKey || event.metaKey || event.altKey ||
+            ['INPUT', 'SELECT', 'BUTTON', 'TEXTAREA'].includes(event.target.tagName)) return;
+        const def = noteDefs.find((item) => item.key === event.key.toLowerCase());
+        if (def) {
+          event.preventDefault();
+          pressKey(def.midi, def.key);
+        }
+        if (event.code === 'Space') {
+          event.preventDefault();
+          togglePlay();
+        }
+      });
+      window.addEventListener('keyup', (event) => {
+        const def = noteDefs.find((item) => item.key === event.key.toLowerCase());
+        if (def) releaseKey(def.key);
+      });
+      window.addEventListener('blur', () => {
+        activeKeys.clear();
+        keysEl.querySelectorAll('.key').forEach((key) => key.classList.remove('active'));
+      });
+
+      buildKeys();
+      renderSteps();
+      requestAnimationFrame(drawScope);
+    })();
+  </script>
+</body>
+</html>

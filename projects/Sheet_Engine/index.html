@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="SHEET_ENGINE // arkusz kalkulacyjny z własnym parserem formuł, wykresami i obsługą CSV.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%232f6fed'/%3E%3Cpath d='M12 14h40v36H12z' fill='white'/%3E%3Cpath d='M12 26h40M12 38h40M26 14v36M40 14v36' stroke='%232f6fed'/%3E%3C/svg%3E">
+  <title>Sheet Engine — arkusz kalkulacyjny</title>
+  <style>
+    :root {
+      --bg: #f4f6f9; --surface: #ffffff; --border: #e1e5ea; --text: #1f2430;
+      --muted: #6b7280; --accent: #2f6fed; --accent-soft: #eaf1ff; --error: #d92d20;
+      --header: #f8fafc;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      background: var(--bg); color: var(--text);
+      font: 13px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      padding: clamp(12px, 2vw, 28px);
+    }
+    .app {
+      max-width: 1440px; margin: 0 auto; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(20,30,50,0.08); overflow: hidden;
+    }
+    header {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      padding: 14px 18px; border-bottom: 1px solid var(--border);
+    }
+    .brand { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
+    .brand span { color: var(--accent); }
+    .toolbar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    button, select, input {
+      font: inherit; color: var(--text); background: #fff;
+      border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; cursor: pointer;
+    }
+    button:hover { background: var(--accent-soft); border-color: #b8d0ff; color: var(--accent); }
+    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    button.primary:hover { background: #245dd6; color: #fff; }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .spacer { flex: 1; }
+    .formula-bar { display: flex; align-items: stretch; border-bottom: 1px solid var(--border); }
+    .name-box {
+      width: 84px; flex: none; display: flex; align-items: center; justify-content: center;
+      font-weight: 600; color: var(--accent); border-right: 1px solid var(--border); background: var(--header);
+    }
+    .formula-input {
+      flex: 1; min-width: 0; border: 0; border-radius: 0; padding: 9px 12px; outline: none;
+      font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+    }
+    .formula-input:focus { background: #fbfdff; }
+    .main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; min-width: 0; }
+    .sheet-wrap { overflow: auto; max-height: 62vh; min-width: 0; }
+    table { border-collapse: separate; border-spacing: 0; table-layout: fixed; min-width: 100%; }
+    th, td { border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 0; height: 27px; }
+    thead th {
+      position: sticky; top: 0; z-index: 3; background: var(--header); color: var(--muted);
+      font-size: 11px; font-weight: 600; text-align: center; width: 88px; min-width: 88px;
+    }
+    tbody th {
+      position: sticky; left: 0; z-index: 2; background: var(--header); color: var(--muted);
+      font-size: 11px; font-weight: 500; width: 42px; min-width: 42px; text-align: center;
+    }
+    tbody tr.frozen td, tbody tr.frozen th { position: sticky; top: 27px; z-index: 2; background: #fff; box-shadow: 0 1px 0 var(--border); }
+    .col-resize {
+      position: absolute; right: -3px; top: 0; width: 7px; height: 100%;
+      cursor: col-resize; z-index: 6;
+    }
+    .col-resize:hover { background: var(--accent); opacity: .35; }
+    thead th:first-child { left: 0; z-index: 4; width: 42px; min-width: 42px; }
+    td {
+      position: relative; padding: 4px 7px; white-space: nowrap; overflow: hidden;
+      text-overflow: ellipsis; font-variant-numeric: tabular-nums; user-select: none;
+    }
+    td.num { text-align: right; }
+    td.err { color: var(--error); font-weight: 600; }
+    td.in-range { background: #f0f6ff; }
+    td.selected { outline: 2px solid var(--accent); outline-offset: -2px; background: #fff; z-index: 1; }
+    td:hover:not(.selected) { background: #f7f9fc; }
+    .cell-editor {
+      position: absolute; inset: 0; width: 100%; height: 100%; border: 2px solid var(--accent);
+      border-radius: 0; padding: 3px 6px; z-index: 5; font: inherit;
+    }
+    aside { border-left: 1px solid var(--border); display: flex; flex-direction: column; min-width: 0; }
+    .panel-head {
+      padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 11px;
+      text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 650;
+    }
+    .ranges-box { padding: 12px 14px; display: grid; gap: 8px; }
+    .range-controls { display: flex; gap: 6px; }
+    .range-controls input { min-width: 0; flex: 1; }
+    .range-controls button { flex: none; }
+    .ranges-box select { width: 100%; }
+    .range-list { display: flex; flex-wrap: wrap; gap: 5px; }
+    .range-item {
+      display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px;
+      background: var(--accent-soft); border-radius: 12px; font-size: 11px; color: var(--accent);
+    }
+    .range-item button { padding: 0 4px; border: 0; background: transparent; color: inherit; font-size: 12px; }
+    .chart-box { padding: 14px; }
+    canvas { display: block; width: 100%; height: 190px; }
+    .chart-controls { display: flex; gap: 6px; margin-top: 10px; }
+    .chart-controls button { flex: 1; padding: 5px; font-size: 11px; }
+    .info { padding: 12px 14px; border-top: 1px solid var(--border); font-size: 11px; color: var(--muted); line-height: 1.7; }
+    .info code { background: #f1f3f6; padding: 1px 4px; border-radius: 3px; color: var(--text); }
+    .status {
+      display: flex; gap: 18px; flex-wrap: wrap; padding: 9px 16px; border-top: 1px solid var(--border);
+      background: var(--header); color: var(--muted); font-size: 11px;
+    }
+    .status b { color: var(--text); font-weight: 600; }
+    .toast {
+      position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #1f2430; color: #fff; padding: 9px 16px; border-radius: 8px; font-size: 12px;
+      opacity: 0; pointer-events: none; transition: .2s; z-index: 20;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    :where(button, select, input):focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    @media (max-width: 900px) { .main { grid-template-columns: 1fr; } aside { border-left: 0; border-top: 1px solid var(--border); } }
+    @media (max-width: 520px) {
+      header { gap: 8px; padding: 10px 12px; }
+      .name-box { width: 64px; }
+      .status { gap: 6px 12px; padding: 8px 12px; }
+      .info { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">Sheet <span>Engine</span></div>
+      <div class="toolbar">
+        <button type="button" id="undoBtn" title="Ctrl+Z">↶ Cofnij</button>
+        <button type="button" id="redoBtn" title="Ctrl+Y">↷ Ponów</button>
+        <button type="button" id="demoBtn">Przykładowe dane</button>
+        <button type="button" id="clearBtn">Wyczyść</button>
+        <button type="button" id="freezeBtn" aria-pressed="false">Zamroź wiersz 1</button>
+      </div>
+      <div class="spacer"></div>
+      <div class="toolbar">
+        <input type="file" id="fileInput" accept=".csv,text/csv" hidden>
+        <input type="file" id="jsonInput" accept=".json,application/json" hidden>
+        <button type="button" id="importBtn">Import CSV</button>
+        <button type="button" id="exportBtn">Eksport CSV</button>
+        <button type="button" id="importJsonBtn">Import JSON</button>
+        <button type="button" id="exportJsonBtn">Eksport JSON</button>
+      </div>
+    </header>
+
+    <div class="formula-bar">
+      <div class="name-box" id="nameBox">A1</div>
+      <input class="formula-input" id="formulaInput" spellcheck="false" list="formulaList" placeholder="Wpisz wartość lub formułę, np. =SUM(B2:B7)">
+      <datalist id="formulaList"></datalist>
+    </div>
+
+    <div class="main">
+      <div class="sheet-wrap" id="sheetWrap"><table id="sheet"></table></div>
+      <aside>
+        <div class="panel-head">Zakresy nazwane</div>
+        <div class="ranges-box">
+          <div class="range-controls">
+            <input id="rangeName" placeholder="Nazwa, np. DANE" aria-label="Nazwa zakresu">
+            <button type="button" id="defineRangeBtn">Dodaj</button>
+          </div>
+          <select id="rangeJump" aria-label="Przejdź do zakresu"><option value="">Przejdź do zakresu…</option></select>
+          <div class="range-list" id="rangeList"></div>
+        </div>
+        <div class="panel-head">Wykres zaznaczenia</div>
+        <div class="chart-box">
+          <canvas id="chart" width="560" height="380" aria-label="Wykres wartości z zaznaczonego zakresu"></canvas>
+          <div class="chart-controls">
+            <button type="button" id="barBtn" class="primary">Słupki</button>
+            <button type="button" id="lineBtn">Linia</button>
+            <button type="button" id="areaBtn">Obszar</button>
+          </div>
+        </div>
+        <div class="info">
+          <b>Funkcje:</b> <code>SUM AVERAGE MIN MAX COUNT IF ROUND ABS SQRT LEN UPPER LOWER CONCAT</code><br>
+          <b>Operatory:</b> <code>+ - * / ^ % &amp; = &lt;&gt; &lt; &gt; &lt;= &gt;=</code><br>
+          Zaznacz zakres przeciągnięciem myszy, aby narysować wykres.
+        </div>
+      </aside>
+    </div>
+
+    <div class="status">
+      <span>Komórka: <b id="statusCell">A1</b></span>
+      <span>Wartość: <b id="statusValue">—</b></span>
+      <span>Formuły: <b id="statusFormulas">0</b></span>
+      <span id="statusHint">Podwójny klik lub pisanie — edycja · Enter — zatwierdzenie · Shift+strzałki — zaznaczenie · Ctrl+Z — cofnij</span>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const COLS = 18, ROWS = 26;
+      const cells = Object.create(null);
+      const cellEls = Object.create(null);
+      const namedRanges = Object.create(null);
+      const colWidths = new Array(COLS).fill(88);
+      const FUNCTION_NAMES = ['SUM', 'AVERAGE', 'MIN', 'MAX', 'COUNT', 'IF', 'ROUND', 'ABS', 'SQRT', 'LEN', 'UPPER', 'LOWER', 'CONCAT'];
+      let frozenRow = false;
+      let cache = new Map();
+      let selected = { row: 0, col: 0 };
+      let rangeEnd = null;
+      let selecting = false;
+      let editing = false;
+      let chartType = 'bar';
+      const undoStack = [], redoStack = [];
+
+      const $ = (id) => document.getElementById(id);
+      const colName = (index) => {
+        let name = '';
+        let value = index;
+        while (value >= 0) { name = String.fromCharCode(65 + value % 26) + name; value = Math.floor(value / 26) - 1; }
+        return name;
+      };
+      const keyOf = (row, col) => `${colName(col)}${row + 1}`;
+      const parseKey = (key) => {
+        const match = key.match(/^([A-Z]+)(\d+)$/);
+        if (!match) return null;
+        let col = 0;
+        for (const char of match[1]) col = col * 26 + char.charCodeAt(0) - 64;
+        return { row: parseInt(match[2], 10) - 1, col: col - 1 };
+      };
+
+      function tokenize(source) {
+        const tokens = [];
+        let i = 0;
+        while (i < source.length) {
+          const char = source[i];
+          if (/\s/.test(char)) { i += 1; continue; }
+          if (/[0-9]/.test(char)) {
+            let j = i;
+            while (/\d|\./.test(source[j] || '')) j += 1;
+            const value = parseFloat(source.slice(i, j));
+            if (Number.isNaN(value)) throw new Error('Błędna liczba');
+            tokens.push({ t: 'num', v: value }); i = j; continue;
+          }
+          if (char === '"') {
+            let j = i + 1, text = '';
+            while (j < source.length && source[j] !== '"') {
+              if (source[j] === '\\' && j + 1 < source.length) { text += source[j + 1]; j += 2; }
+              else text += source[j++];
+            }
+            if (source[j] !== '"') throw new Error('Niezamknięty ciąg');
+            tokens.push({ t: 'str', v: text }); i = j + 1; continue;
+          }
+          if (/[A-Za-z_$]/.test(char)) {
+            let j = i;
+            while (/[A-Za-z0-9_$]/.test(source[j] || '')) j += 1;
+            tokens.push({ t: 'id', v: source.slice(i, j) }); i = j; continue;
+          }
+          if ('+-*/^%&()<>,=:'.includes(char)) {
+            const pair = source.slice(i, i + 2);
+            if (['<=', '>=', '<>', '!='].includes(pair)) { tokens.push({ t: 'op', v: pair }); i += 2; }
+            else { tokens.push({ t: 'op', v: char }); i += 1; }
+            continue;
+          }
+          throw new Error(`Nieznany znak "${char}"`);
+        }
+        tokens.push({ t: 'eof', v: '' });
+        return tokens;
+      }
+
+      const CELL_REF = /^\$?[A-Z]+\$?\d+$/i;
+
+      class Parser {
+        constructor(tokens) { this.tokens = tokens; this.pos = 0; }
+        peek() { return this.tokens[this.pos]; }
+        eat(value) { if (this.peek().v === value) { this.pos += 1; return true; } return false; }
+        expect(value) { if (!this.eat(value)) throw new Error(`Oczekiwano "${value}"`); }
+        parse() {
+          const node = this.comparison();
+          if (this.peek().t !== 'eof') throw new Error(`Nieoczekiwany token "${this.peek().v}"`);
+          return node;
+        }
+        comparison() {
+          let node = this.concat();
+          while (['=', '<>', '!=', '<', '>', '<=', '>='].includes(this.peek().v)) {
+            const op = this.tokens[this.pos++].v;
+            node = { type: 'bin', op, left: node, right: this.concat() };
+          }
+          return node;
+        }
+        concat() {
+          let node = this.additive();
+          while (this.eat('&')) node = { type: 'bin', op: '&', left: node, right: this.additive() };
+          return node;
+        }
+        additive() {
+          let node = this.multiplicative();
+          while (this.peek().v === '+' || this.peek().v === '-') {
+            const op = this.tokens[this.pos++].v;
+            node = { type: 'bin', op, left: node, right: this.multiplicative() };
+          }
+          return node;
+        }
+        multiplicative() {
+          let node = this.power();
+          while (this.peek().v === '*' || this.peek().v === '/' || this.peek().v === '%') {
+            const op = this.tokens[this.pos++].v;
+            node = { type: 'bin', op, left: node, right: this.power() };
+          }
+          return node;
+        }
+        power() {
+          const base = this.unary();
+          return this.eat('^') ? { type: 'bin', op: '^', left: base, right: this.power() } : base;
+        }
+        unary() {
+          if (this.eat('-')) return { type: 'unary', op: '-', arg: this.unary() };
+          if (this.eat('+')) return this.unary();
+          return this.primary();
+        }
+        primary() {
+          const token = this.peek();
+          if (token.t === 'num') { this.pos += 1; return { type: 'num', value: token.v }; }
+          if (token.t === 'str') { this.pos += 1; return { type: 'str', value: token.v }; }
+          if (this.eat('(')) {
+            const node = this.comparison();
+            this.expect(')');
+            return node;
+          }
+          if (token.t === 'id') {
+            this.pos += 1;
+            const upper = token.v.toUpperCase();
+            if (this.peek().v === '(' && !CELL_REF.test(token.v)) {
+              this.pos += 1;
+              const args = [];
+              if (this.peek().v !== ')') {
+                do { args.push(this.comparison()); } while (this.eat(','));
+              }
+              this.expect(')');
+              return { type: 'func', name: upper, args };
+            }
+            if (upper === 'TRUE') return { type: 'num', value: 1 };
+            if (upper === 'FALSE') return { type: 'num', value: 0 };
+            const key = token.v.replace(/\$/g, '').toUpperCase();
+            if (CELL_REF.test(key)) {
+              if (this.eat(':')) {
+                const next = this.peek();
+                if (next.t !== 'id' || !CELL_REF.test(next.v)) throw new Error('Oczekiwano komórki po ":"');
+                this.pos += 1;
+                return { type: 'range', from: key, to: next.v.replace(/\$/g, '').toUpperCase() };
+              }
+              return { type: 'cell', key };
+            }
+            const named = namedRanges[upper];
+            if (named) {
+              const [from, to] = named.split(':');
+              if (CELL_REF.test(from) && CELL_REF.test(to)) {
+                return from === to ? { type: 'cell', key: from } : { type: 'range', from, to };
+              }
+            }
+            throw new Error(`Nieznany identyfikator "${token.v}"`);
+          }
+          throw new Error(`Nieoczekiwany token "${token.v}"`);
+        }
+      }
+
+      function expandRange(from, to) {
+        const a = parseKey(from), b = parseKey(to);
+        if (!a || !b) throw new Error('Błędny zakres');
+        const values = [];
+        for (let row = Math.min(a.row, b.row); row <= Math.max(a.row, b.row); row += 1) {
+          for (let col = Math.min(a.col, b.col); col <= Math.max(a.col, b.col); col += 1) {
+            values.push(evalCell(keyOf(row, col), new Set()));
+          }
+        }
+        return values;
+      }
+
+      const isError = (value) => typeof value === 'string' && value.startsWith('#');
+      const toNumber = (value) => {
+        if (isError(value)) throw new Error(value);
+        if (typeof value === 'number') return value;
+        if (Array.isArray(value)) throw new Error('#ARG!');
+        if (value === '' || value === null) return 0;
+        const number = Number(value);
+        if (Number.isNaN(number)) throw new Error('#VALUE!');
+        return number;
+      };
+      const truthy = (value) => (typeof value === 'number' ? value !== 0 : Boolean(value));
+      const flatten = (args) => args.flatMap((item) => (Array.isArray(item) ? item : [item]));
+
+      function callFunction(name, args) {
+        const values = flatten(args);
+        const numbers = () => values.map(toNumber);
+        switch (name) {
+          case 'SUM': return numbers().reduce((a, b) => a + b, 0);
+          case 'AVERAGE': return numbers().length ? numbers().reduce((a, b) => a + b, 0) / numbers().length : 0;
+          case 'MIN': return numbers().length ? Math.min(...numbers()) : 0;
+          case 'MAX': return numbers().length ? Math.max(...numbers()) : 0;
+          case 'COUNT': return values.filter((value) => typeof value === 'number' || (typeof value === 'string' && value.trim() !== '' && Number.isFinite(Number(value)))).length;
+          case 'ROUND': {
+            const digits = values.length > 1 ? toNumber(values[1]) : 0;
+            const factor = Math.pow(10, digits);
+            return Math.round(toNumber(values[0]) * factor) / factor;
+          }
+          case 'ABS': return Math.abs(toNumber(values[0]));
+          case 'SQRT': {
+            const value = toNumber(values[0]);
+            return value < 0 ? '#NUM!' : Math.sqrt(value);
+          }
+          case 'IF': return truthy(values[0]) ? (values[1] ?? '') : (values[2] ?? '');
+          case 'LEN': return String(values[0] ?? '').length;
+          case 'UPPER': return String(values[0] ?? '').toUpperCase();
+          case 'LOWER': return String(values[0] ?? '').toLowerCase();
+          case 'CONCAT': return values.map((value) => String(value ?? '')).join('');
+          default: throw new Error(`#NAME? ${name}`);
+        }
+      }
+
+      function evaluate(node, stack) {
+        switch (node.type) {
+          case 'num': return node.value;
+          case 'str': return node.value;
+          case 'cell': return evalCell(node.key, stack);
+          case 'range': return expandRange(node.from, node.to);
+          case 'unary': return -toNumber(evaluate(node.arg, stack));
+          case 'func': return callFunction(node.name, node.args.map((arg) => evaluate(arg, stack)));
+          case 'bin': {
+            if (node.op === '&') {
+              const left = evaluate(node.left, stack), right = evaluate(node.right, stack);
+              if (isError(left)) return left;
+              if (isError(right)) return right;
+              return String(left ?? '') + String(right ?? '');
+            }
+            const left = toNumber(evaluate(node.left, stack));
+            const right = toNumber(evaluate(node.right, stack));
+            switch (node.op) {
+              case '+': return left + right;
+              case '-': return left - right;
+              case '*': return left * right;
+              case '/': return right === 0 ? '#DIV/0!' : left / right;
+              case '%': return right === 0 ? '#DIV/0!' : left % right;
+              case '^': return Math.pow(left, right);
+              case '=': return left === right ? 1 : 0;
+              case '<>': case '!=': return left !== right ? 1 : 0;
+              case '<': return left < right ? 1 : 0;
+              case '>': return left > right ? 1 : 0;
+              case '<=': return left <= right ? 1 : 0;
+              case '>=': return left >= right ? 1 : 0;
+              default: return '#ERROR!';
+            }
+          }
+          default: return '#ERROR!';
+        }
+      }
+
+      function coerce(raw) {
+        if (raw === '' || raw === null || raw === undefined) return '';
+        const trimmed = String(raw).trim();
+        if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
+        return String(raw);
+      }
+
+      function evalCell(key, stack) {
+        if (cache.has(key)) return cache.get(key);
+        if (stack.has(key)) return '#CYCLE!';
+        stack.add(key);
+        const raw = cells[key] ?? '';
+        let value;
+        if (typeof raw === 'string' && raw.startsWith('=')) {
+          try { value = evaluate(new Parser(tokenize(raw.slice(1))).parse(), stack); }
+          catch (error) { value = isError(error.message) ? error.message : '#ERROR!'; }
+        } else {
+          value = coerce(raw);
+        }
+        stack.delete(key);
+        cache.set(key, value);
+        return value;
+      }
+
+      function displayValue(value) {
+        if (isError(value)) return value;
+        if (typeof value === 'number') {
+          if (!Number.isFinite(value)) return '#NUM!';
+          return String(Math.round(value * 1e6) / 1e6);
+        }
+        return Array.isArray(value) ? '#ARRAY!' : String(value ?? '');
+      }
+
+      function applyColumnWidths() {
+        const cols = $('sheet').querySelectorAll('colgroup col');
+        cols.forEach((col, index) => { col.style.width = `${colWidths[index]}px`; });
+      }
+
+      function applyFreeze() {
+        const firstRow = $('sheet').querySelector('tbody tr');
+        if (firstRow) firstRow.classList.toggle('frozen', frozenRow);
+        $('freezeBtn').setAttribute('aria-pressed', String(frozenRow));
+      }
+
+      function validRange(text) {
+        const [from, to] = String(text).split(':');
+        return CELL_REF.test(from) && CELL_REF.test(to) && Boolean(parseKey(from)) && Boolean(parseKey(to));
+      }
+
+      function renderNamedRanges() {
+        const jump = $('rangeJump');
+        const list = $('rangeList');
+        jump.replaceChildren();
+        const placeholder = document.createElement('option');
+        placeholder.value = ''; placeholder.textContent = 'Przejdź do zakresu…';
+        jump.appendChild(placeholder);
+        list.replaceChildren();
+        Object.keys(namedRanges).sort().forEach((name) => {
+          const option = document.createElement('option');
+          option.value = name; option.textContent = `${name} · ${namedRanges[name]}`;
+          jump.appendChild(option);
+          const item = document.createElement('span');
+          item.className = 'range-item';
+          const label = document.createElement('span'); label.textContent = `${name}: ${namedRanges[name]}`;
+          const remove = document.createElement('button');
+          remove.type = 'button'; remove.textContent = '×'; remove.title = `Usuń zakres ${name}`;
+          remove.addEventListener('click', () => {
+            pushUndo();
+            delete namedRanges[name];
+            renderNamedRanges(); renderSheet();
+            toast(`Usunięto zakres ${name}`);
+          });
+          item.append(label, remove);
+          list.appendChild(item);
+        });
+      }
+
+      function updateFormulaSuggestions(value) {
+        const text = String(value);
+        const match = text.match(/(?:^|[,(=])([A-Za-z_][A-Za-z0-9_]*)$/);
+        const datalist = $('formulaList');
+        datalist.replaceChildren();
+        if (!match || match[1].length < 1) return;
+        const prefix = match[1].toUpperCase();
+        const candidates = [...FUNCTION_NAMES, ...Object.keys(namedRanges)]
+          .filter((name) => name.toUpperCase().startsWith(prefix))
+          .slice(0, 12);
+        candidates.forEach((name) => {
+          const option = document.createElement('option');
+          option.value = name;
+          datalist.appendChild(option);
+        });
+      }
+
+      function buildSheet() {
+        const table = $('sheet');
+        table.replaceChildren();
+        const colgroup = document.createElement('colgroup');
+        colWidths.forEach((width) => {
+          const col = document.createElement('col');
+          col.style.width = `${width}px`;
+          colgroup.appendChild(col);
+        });
+        table.appendChild(colgroup);
+        const head = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        const corner = document.createElement('th'); corner.textContent = '#'; headRow.appendChild(corner);
+        for (let col = 0; col < COLS; col += 1) {
+          const th = document.createElement('th'); th.textContent = colName(col);
+          const handle = document.createElement('span');
+          handle.className = 'col-resize';
+          handle.title = 'Zmień szerokość kolumny';
+          handle.addEventListener('mousedown', (event) => {
+            event.preventDefault(); event.stopPropagation();
+            pushUndo();
+            const startX = event.clientX, startWidth = colWidths[col];
+            const onMove = (move) => {
+              colWidths[col] = Math.max(48, Math.min(320, startWidth + move.clientX - startX));
+              applyColumnWidths();
+            };
+            const onUp = () => window.removeEventListener('mousemove', onMove);
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp, { once: true });
+          });
+          th.appendChild(handle);
+          headRow.appendChild(th);
+        }
+        head.appendChild(headRow); table.appendChild(head);
+
+        const body = document.createElement('tbody');
+        for (let row = 0; row < ROWS; row += 1) {
+          const tr = document.createElement('tr');
+          const th = document.createElement('th'); th.textContent = String(row + 1); tr.appendChild(th);
+          for (let col = 0; col < COLS; col += 1) {
+            const td = document.createElement('td');
+            td.dataset.key = keyOf(row, col);
+            td.addEventListener('mousedown', (event) => {
+              if (editing) return;
+              if (event.shiftKey) { rangeEnd = { row, col }; paintSelection(); }
+              else { selected = { row, col }; rangeEnd = null; selecting = true; paintSelection(); }
+            });
+            td.addEventListener('mouseenter', () => {
+              if (!selecting || editing) return;
+              rangeEnd = { row, col };
+              paintSelection();
+            });
+            td.addEventListener('dblclick', () => startEdit());
+            tr.appendChild(td);
+            cellEls[td.dataset.key] = td;
+          }
+          body.appendChild(tr);
+        }
+        table.appendChild(body);
+      }
+
+      function paintSelection() {
+        Object.values(cellEls).forEach((td) => td.classList.remove('selected', 'in-range'));
+        const end = rangeEnd || selected;
+        const r1 = Math.min(selected.row, end.row), r2 = Math.max(selected.row, end.row);
+        const c1 = Math.min(selected.col, end.col), c2 = Math.max(selected.col, end.col);
+        for (let row = r1; row <= r2; row += 1) {
+          for (let col = c1; col <= c2; col += 1) {
+            cellEls[keyOf(row, col)]?.classList.add(rangeEnd ? 'in-range' : 'selected');
+          }
+        }
+        cellEls[keyOf(selected.row, selected.col)]?.classList.add('selected');
+        const key = keyOf(selected.row, selected.col);
+        $('nameBox').textContent = key;
+        $('statusCell').textContent = rangeEnd ? `${key}:${keyOf(end.row, end.col)}` : key;
+        $('formulaInput').value = cells[key] ?? '';
+        $('statusValue').textContent = displayValue(cache.get(key) ?? coerce(cells[key] ?? ''));
+        drawChart();
+      }
+
+      function renderSheet() {
+        cache = new Map();
+        Object.keys(cellEls).forEach((key) => { evalCell(key, new Set()); });
+        Object.entries(cellEls).forEach(([key, td]) => {
+          const raw = cells[key] ?? '';
+          const value = cache.get(key) ?? coerce(raw);
+          const text = displayValue(value);
+          td.textContent = text;
+          td.title = raw.startsWith('=') ? `${raw} → ${text}` : raw;
+          td.classList.toggle('num', typeof value === 'number');
+          td.classList.toggle('err', isError(text));
+        });
+        $('statusFormulas').textContent = String(Object.values(cells).filter((value) => typeof value === 'string' && value.startsWith('=')).length);
+        paintSelection();
+      }
+
+      function snapshot() {
+        return { cells: { ...cells }, names: { ...namedRanges }, widths: colWidths.slice(), frozen: frozenRow };
+      }
+      function restoreSnapshot(state) {
+        Object.keys(cells).forEach((key) => delete cells[key]);
+        Object.assign(cells, state.cells || {});
+        Object.keys(namedRanges).forEach((key) => delete namedRanges[key]);
+        Object.assign(namedRanges, state.names || {});
+        if (Array.isArray(state.widths)) state.widths.forEach((width, index) => { if (index < COLS) colWidths[index] = width; });
+        frozenRow = Boolean(state.frozen);
+        applyColumnWidths(); applyFreeze(); renderNamedRanges(); renderSheet();
+      }
+      function pushUndo() {
+        undoStack.push(snapshot());
+        if (undoStack.length > 60) undoStack.shift();
+        redoStack.length = 0;
+        updateHistoryButtons();
+      }
+      function updateHistoryButtons() {
+        $('undoBtn').disabled = undoStack.length === 0;
+        $('redoBtn').disabled = redoStack.length === 0;
+      }
+
+      function commit(key, value) {
+        const normalized = value.trim();
+        if (normalized === (cells[key] ?? '')) return;
+        pushUndo();
+        if (normalized) cells[key] = normalized; else delete cells[key];
+        renderSheet();
+      }
+
+      function startEdit(initial) {
+        if (editing) return;
+        editing = true;
+        const key = keyOf(selected.row, selected.col);
+        rangeEnd = null;
+        const td = cellEls[key];
+        paintSelection();
+        const input = document.createElement('input');
+        input.className = 'cell-editor';
+        input.value = initial ?? (cells[key] ?? '');
+        input.setAttribute('list', 'formulaList');
+        input.addEventListener('input', () => updateFormulaSuggestions(input.value));
+        td.appendChild(input);
+        input.focus();
+        input.select();
+        let done = false;
+        const finish = (move) => {
+          if (done) return;
+          done = true;
+          const value = input.value;
+          input.remove();
+          editing = false;
+          commit(key, value);
+          if (move === 'down') selected.row = Math.min(ROWS - 1, selected.row + 1);
+          if (move === 'right') selected.col = Math.min(COLS - 1, selected.col + 1);
+          paintSelection();
+        };
+        input.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') { event.preventDefault(); finish('down'); }
+          else if (event.key === 'Tab') { event.preventDefault(); finish('right'); }
+          else if (event.key === 'Escape') { event.preventDefault(); done = true; input.remove(); editing = false; paintSelection(); }
+          event.stopPropagation();
+        });
+        input.addEventListener('blur', () => finish(null));
+      }
+
+      function drawChart() {
+        const canvas = $('chart');
+        const ctx = canvas.getContext('2d');
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = canvas.clientWidth || 270, height = canvas.clientHeight || 190;
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, width, height);
+        ctx.strokeStyle = '#eceff3'; ctx.lineWidth = 1;
+        for (let i = 1; i < 4; i += 1) {
+          const y = height * i / 4;
+          ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(width, y + 0.5); ctx.stroke();
+        }
+        const end = rangeEnd || selected;
+        const r1 = Math.min(selected.row, end.row), r2 = Math.max(selected.row, end.row);
+        const c1 = Math.min(selected.col, end.col), c2 = Math.max(selected.col, end.col);
+        const values = [];
+        const labels = [];
+        for (let row = r1; row <= r2; row += 1) {
+          for (let col = c1; col <= c2; col += 1) {
+            const key = keyOf(row, col);
+            const value = cache.get(key) ?? coerce(cells[key] ?? '');
+            if (typeof value === 'number' && Number.isFinite(value)) {
+              values.push(value);
+              labels.push(c1 === c2 ? String(row + 1) : colName(col));
+            }
+          }
+        }
+        if (!values.length) {
+          ctx.fillStyle = '#9aa1ac'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText('Zaznacz komórki z wartościami liczbowymi', width / 2, height / 2);
+          return;
+        }
+        const shown = values.slice(0, 40);
+        const max = Math.max(...shown, 0), min = Math.min(...shown, 0);
+        const range = max - min || 1;
+        const baseY = height - 26;
+        const plotHeight = baseY - 16;
+        const step = Math.max(4, (width - 20) / shown.length);
+        const xAt = (i) => 10 + i * step + step / 2;
+        const yAt = (value) => 12 + plotHeight - (value - min) / range * plotHeight;
+        if (chartType === 'bar') {
+          const barWidth = Math.max(2, step - 3);
+          shown.forEach((value, index) => {
+            const y = yAt(value);
+            ctx.fillStyle = '#2f6fed';
+            ctx.fillRect(xAt(index) - barWidth / 2, Math.min(y, baseY), barWidth, Math.max(1, baseY - y));
+          });
+        } else {
+          if (chartType === 'area') {
+            ctx.beginPath();
+            ctx.moveTo(xAt(0), baseY);
+            shown.forEach((value, index) => ctx.lineTo(xAt(index), yAt(value)));
+            ctx.lineTo(xAt(shown.length - 1), baseY);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(47,111,237,0.18)';
+            ctx.fill();
+          }
+          ctx.beginPath();
+          shown.forEach((value, index) => {
+            const x = xAt(index), y = yAt(value);
+            if (index === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          });
+          ctx.strokeStyle = '#2f6fed'; ctx.lineWidth = 2; ctx.stroke();
+          shown.forEach((value, index) => {
+            ctx.beginPath(); ctx.arc(xAt(index), yAt(value), 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#2f6fed'; ctx.fill();
+          });
+        }
+        ctx.fillStyle = '#6b7280'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+        shown.forEach((_, index) => {
+          if (index % Math.ceil(shown.length / 12) === 0) ctx.fillText(labels[index] ?? '', xAt(index), height - 8);
+        });
+      }
+
+      const sample = () => {
+        Object.keys(cells).forEach((key) => delete cells[key]);
+        const data = [
+          ['Miesiąc', 'Sprzedaż', 'Koszt', 'Zysk', 'Marża'],
+          ['Sty', 1200, 740, '=B2-C2', '=D2/B2'],
+          ['Lut', 1450, 810, '=B3-C3', '=D3/B3'],
+          ['Mar', 1310, 790, '=B4-C4', '=D4/B4'],
+          ['Kwi', 1780, 950, '=B5-C5', '=D5/B5'],
+          ['Maj', 1620, 880, '=B6-C6', '=D6/B6'],
+          ['Cze', 2040, 1050, '=B7-C7', '=D7/B7'],
+          ['SUMA', '=SUM(B2:B7)', '=SUM(C2:C7)', '=SUM(D2:D7)', '=D8/B8'],
+          ['ŚREDNIA', '=AVERAGE(B2:B7)', '=AVERAGE(C2:C7)', '=AVERAGE(D2:D7)', '=D9/B9']
+        ];
+        data.forEach((row, r) => row.forEach((value, c) => { if (value !== '') cells[keyOf(r, c)] = String(value); }));
+        cells.J1 = '=IF(D8>5000,"CELEK","PONIŻEJ")';
+        cells.J2 = '=ROUND(E8*100,1)&"%"';
+        cells.J3 = '=MAX(B2:B7)';
+        cells.J4 = '=MIN(B2:B7)';
+        cells.J5 = '=COUNT(B2:B7)';
+        pushUndo();
+        renderSheet();
+      };
+
+      function toast(message) {
+        const element = $('toast');
+        element.textContent = message;
+        element.classList.add('show');
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(() => element.classList.remove('show'), 2200);
+      }
+
+      $('undoBtn').addEventListener('click', () => {
+        if (!undoStack.length) return;
+        redoStack.push(snapshot());
+        restoreSnapshot(undoStack.pop());
+        updateHistoryButtons(); toast('Cofnięto');
+      });
+      $('redoBtn').addEventListener('click', () => {
+        if (!redoStack.length) return;
+        undoStack.push(snapshot());
+        restoreSnapshot(redoStack.pop());
+        updateHistoryButtons(); toast('Ponowiono');
+      });
+      $('freezeBtn').addEventListener('click', () => {
+        pushUndo();
+        frozenRow = !frozenRow;
+        applyFreeze();
+        toast(frozenRow ? 'Wiersz 1 zamrożony' : 'Wiersz 1 odmrożony');
+      });
+      $('defineRangeBtn').addEventListener('click', () => {
+        const name = $('rangeName').value.trim().toUpperCase();
+        if (!/^[A-Z_][A-Z0-9_]*$/.test(name) || CELL_REF.test(name) || FUNCTION_NAMES.includes(name) || ['TRUE', 'FALSE'].includes(name)) {
+          toast('Nazwa musi być identyfikatorem (np. DANE) i nie może kolidować z funkcją');
+          return;
+        }
+        const end = rangeEnd || selected;
+        const from = keyOf(Math.min(selected.row, end.row), Math.min(selected.col, end.col));
+        const to = keyOf(Math.max(selected.row, end.row), Math.max(selected.col, end.col));
+        pushUndo();
+        namedRanges[name] = from === to ? from : `${from}:${to}`;
+        $('rangeName').value = '';
+        renderNamedRanges(); renderSheet();
+        toast(`Zakres ${name} = ${namedRanges[name]}`);
+      });
+      $('rangeJump').addEventListener('change', (event) => {
+        const ref = namedRanges[event.target.value];
+        if (!ref) return;
+        const [from, to] = ref.split(':');
+        const start = parseKey(from), finish = parseKey(to);
+        if (!start || !finish) return;
+        selected = { row: start.row, col: start.col };
+        rangeEnd = { row: finish.row, col: finish.col };
+        paintSelection();
+        cellEls[from]?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        event.target.value = '';
+      });
+      $('formulaInput').addEventListener('input', (event) => updateFormulaSuggestions(event.target.value));
+      $('demoBtn').addEventListener('click', sample);
+      $('clearBtn').addEventListener('click', () => {
+        pushUndo();
+        Object.keys(cells).forEach((key) => delete cells[key]);
+        renderSheet();
+      });
+      $('formulaInput').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          commit(keyOf(selected.row, selected.col), $('formulaInput').value);
+          selected.row = Math.min(ROWS - 1, selected.row + 1);
+          paintSelection();
+        }
+      });
+      $('barBtn').addEventListener('click', () => {
+        chartType = 'bar';
+        $('barBtn').classList.add('primary'); $('lineBtn').classList.remove('primary'); $('areaBtn').classList.remove('primary'); drawChart();
+      });
+      $('lineBtn').addEventListener('click', () => {
+        chartType = 'line';
+        $('lineBtn').classList.add('primary'); $('barBtn').classList.remove('primary'); $('areaBtn').classList.remove('primary'); drawChart();
+      });
+      $('areaBtn').addEventListener('click', () => {
+        chartType = 'area';
+        $('areaBtn').classList.add('primary'); $('barBtn').classList.remove('primary'); $('lineBtn').classList.remove('primary'); drawChart();
+      });
+      $('importBtn').addEventListener('click', () => $('fileInput').click());
+      $('fileInput').addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+        const text = await file.text();
+        const rows = [];
+        let row = [], field = '', quoted = false;
+        for (let i = 0; i < text.length; i += 1) {
+          const char = text[i];
+          if (quoted) {
+            if (char === '"' && text[i + 1] === '"') { field += '"'; i += 1; }
+            else if (char === '"') quoted = false;
+            else field += char;
+          } else if (char === '"') quoted = true;
+          else if (char === ',') { row.push(field); field = ''; }
+          else if (char === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+          else if (char !== '\r') field += char;
+        }
+        if (field || row.length) { row.push(field); rows.push(row); }
+        pushUndo();
+        Object.keys(cells).forEach((key) => delete cells[key]);
+        rows.slice(0, ROWS).forEach((values, r) => values.slice(0, COLS).forEach((value, c) => { if (value !== '') cells[keyOf(r, c)] = value; }));
+        renderSheet();
+        toast(`Zaimportowano ${Math.min(rows.length, ROWS)} wierszy`);
+        } catch (error) { toast(`Błąd importu CSV: ${error.message}`); }
+        event.target.value = '';
+      });
+      $('exportBtn').addEventListener('click', () => {
+        const lines = [];
+        for (let row = 0; row < ROWS; row += 1) {
+          const values = [];
+          for (let col = 0; col < COLS; col += 1) {
+            const raw = cells[keyOf(row, col)] ?? '';
+            const text = displayValue(cache.get(keyOf(row, col)) ?? coerce(raw));
+            values.push(/[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text);
+          }
+          if (values.some((value) => value !== '') || row < 9) lines.push(values.join(','));
+        }
+        const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'sheet_export.csv';
+        link.click();
+        URL.revokeObjectURL(link.href);
+        toast('CSV wyeksportowany');
+      });
+
+      $('exportJsonBtn').addEventListener('click', () => {
+        const data = {
+          format: 'SHEET_ENGINE_JSON/1',
+          exportedAt: new Date().toISOString(),
+          rows: ROWS,
+          columns: COLS,
+          cells: { ...cells },
+          namedRanges: { ...namedRanges },
+          colWidths: colWidths.slice(),
+          frozenRow
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'sheet_export.json';
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        toast('JSON wyeksportowany');
+      });
+      $('importJsonBtn').addEventListener('click', () => $('jsonInput').click());
+      $('jsonInput').addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+          const data = JSON.parse(await file.text());
+          if (!data || typeof data.cells !== 'object' || data.cells === null || Array.isArray(data.cells)) throw new Error('Błędny plik JSON');
+          pushUndo();
+          Object.keys(cells).forEach((key) => delete cells[key]);
+          Object.entries(data.cells).forEach(([key, value]) => { if (CELL_REF.test(key)) cells[key.toUpperCase()] = String(value); });
+          Object.keys(namedRanges).forEach((key) => delete namedRanges[key]);
+          if (data.namedRanges && typeof data.namedRanges === 'object') {
+            Object.entries(data.namedRanges).forEach(([name, ref]) => {
+              if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(name) && validRange(String(ref))) namedRanges[name.toUpperCase()] = String(ref).toUpperCase();
+            });
+          }
+          if (Array.isArray(data.colWidths)) data.colWidths.slice(0, COLS).forEach((width, index) => {
+            if (Number.isFinite(Number(width))) colWidths[index] = Math.max(48, Math.min(320, Number(width)));
+          });
+          frozenRow = Boolean(data.frozenRow);
+          applyColumnWidths(); applyFreeze(); renderNamedRanges(); renderSheet();
+          toast('Arkusz JSON wczytany');
+        } catch (error) { toast(`Błąd importu JSON: ${error.message}`); }
+        event.target.value = '';
+      });
+
+      window.addEventListener('keydown', (event) => {
+        if (editing || event.target === $('formulaInput')) return;
+        const move = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }[event.key];
+        if (move) {
+          event.preventDefault();
+          const row = Math.max(0, Math.min(ROWS - 1, selected.row + move[0]));
+          const col = Math.max(0, Math.min(COLS - 1, selected.col + move[1]));
+          if (event.shiftKey) { rangeEnd = { row, col }; }
+          else { selected = { row, col }; rangeEnd = null; }
+          paintSelection(); return;
+        }
+        if (event.key === 'Home' || event.key === 'End' || event.key === 'PageUp' || event.key === 'PageDown') {
+          event.preventDefault();
+          if (event.key === 'Home') selected = { row: event.ctrlKey || event.metaKey ? 0 : selected.row, col: 0 };
+          if (event.key === 'End') selected = { row: selected.row, col: COLS - 1 };
+          if (event.key === 'PageUp') selected.row = Math.max(0, selected.row - 10);
+          if (event.key === 'PageDown') selected.row = Math.min(ROWS - 1, selected.row + 10);
+          rangeEnd = null; paintSelection(); return;
+        }
+        if (event.key === 'Escape') { rangeEnd = null; paintSelection(); return; }
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+          event.preventDefault(); $(event.shiftKey ? 'redoBtn' : 'undoBtn').click(); return;
+        }
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
+          event.preventDefault(); $('redoBtn').click(); return;
+        }
+        if (event.key === 'Delete' || event.key === 'Backspace') {
+          event.preventDefault();
+          commit(keyOf(selected.row, selected.col), ''); return;
+        }
+        if (event.key === 'F2') { event.preventDefault(); startEdit(); return; }
+        if (event.key.length === 1 && !event.ctrlKey && !event.metaKey) {
+          event.preventDefault();
+          startEdit(event.key);
+        }
+      });
+
+      window.addEventListener('mouseup', () => { selecting = false; });
+      buildSheet();
+      applyColumnWidths();
+      applyFreeze();
+      renderNamedRanges();
+      sample();
+      updateHistoryButtons();
+      undoStack.length = 0;
+      updateHistoryButtons();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="QUERY_LAB // wbudowany silnik SQL z tokenizerem, parserem, planem zapytania, JOIN, GROUP BY i agregatami.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%232f6fed'/%3E%3Cellipse cx='32' cy='18' rx='18' ry='7' fill='none' stroke='white' stroke-width='3'/%3E%3Cpath d='M14 18v28c0 4 8 7 18 7s18-3 18-7V18' fill='none' stroke='white' stroke-width='3'/%3E%3Cpath d='M14 32c0 4 8 7 18 7s18-3 18-7' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
+  <title>Query Lab — silnik SQL w przeglądarce</title>
+  <style>
+    :root { --bg:#f4f6f9; --surface:#fff; --border:#e1e5ea; --text:#1f2430; --muted:#6b7280; --accent:#2f6fed; }
+    * { box-sizing:border-box; }
+    html, body { margin:0; min-height:100%; }
+    body {
+      background:var(--bg); color:var(--text);
+      font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      padding:clamp(12px,2vw,26px);
+    }
+    .app {
+      max-width:1360px; margin:0 auto; background:var(--surface); border:1px solid var(--border);
+      border-radius:12px; box-shadow:0 12px 40px rgba(20,30,50,.08); overflow:hidden;
+    }
+    header { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:13px 16px; border-bottom:1px solid var(--border); }
+    .brand { font-size:15px; font-weight:650; margin-right:6px; }
+    .brand span { color:var(--accent); }
+    button, select {
+      font:inherit; color:var(--text); background:#fff; border:1px solid var(--border);
+      border-radius:6px; padding:6px 10px; cursor:pointer;
+    }
+    button:hover, select:hover { background:#f4f8ff; border-color:#b8d0ff; }
+    button.primary { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+    button.primary:hover { background:#245dd6; color:#fff; }
+    .spacer { flex:1; }
+    .badge { font-size:11px; color:var(--muted); background:#f3f5f8; padding:4px 9px; border-radius:20px; }
+    .main { display:grid; grid-template-columns:210px minmax(0,1fr); min-height:560px; }
+    aside { border-right:1px solid var(--border); overflow:auto; }
+    .panel-head {
+      padding:10px 14px; border-bottom:1px solid var(--border); background:#fafbfc;
+      font-size:11px; font-weight:650; color:var(--muted); letter-spacing:.06em; text-transform:uppercase;
+    }
+    .schema { padding:8px; }
+    .table-card { border:1px solid var(--border); border-radius:7px; margin-bottom:8px; overflow:hidden; }
+    .table-name { padding:7px 9px; background:#f7f9fc; font-weight:600; font-size:12px; }
+    .column {
+      display:flex; justify-content:space-between; gap:6px; padding:4px 9px; cursor:pointer; font-size:11px;
+      border-top:1px solid #f0f2f5;
+    }
+    .column:hover { background:#eef4ff; color:var(--accent); }
+    .column small { color:#9aa1ac; }
+    .content { display:flex; flex-direction:column; min-width:0; }
+    .editor-wrap { border-bottom:1px solid var(--border); }
+    .editor {
+      position:relative; height:170px; background:#fbfcfe;
+    }
+    .editor pre, .editor textarea {
+      position:absolute; inset:0; margin:0; padding:14px 16px; border:0;
+      font:13px/1.65 ui-monospace,"SFMono-Regular",Consolas,monospace;
+      white-space:pre-wrap; overflow:auto; word-break:break-word; tab-size:2;
+    }
+    .editor pre { pointer-events:none; color:var(--text); }
+    .editor textarea { background:transparent; color:transparent; caret-color:var(--text); resize:none; outline:none; }
+    .editor textarea::selection { background:rgba(47,111,237,.25); }
+    .k { color:#7c3aed; font-weight:600; }
+    .f { color:#0891b2; }
+    .s { color:#b45309; }
+    .n { color:#0f766e; }
+    .c { color:#9aa1ac; font-style:italic; }
+    .op { color:#6b7280; }
+    .results { flex:1; min-height:260px; overflow:auto; }
+    table { border-collapse:collapse; width:100%; font-size:12px; }
+    th, td { padding:7px 11px; border-bottom:1px solid #eceff3; text-align:left; white-space:nowrap; }
+    thead th { position:sticky; top:0; background:#f7f9fc; color:#4b5563; font-weight:600; z-index:1; }
+    tbody tr:hover { background:#f6f9ff; }
+    td.num { text-align:right; font-variant-numeric:tabular-nums; }
+    .status {
+      display:flex; gap:16px; flex-wrap:wrap; padding:9px 16px; border-top:1px solid var(--border);
+      background:#fafbfc; color:var(--muted); font-size:11px;
+    }
+    .status b { color:var(--text); font-weight:600; }
+    .status .error { color:#d92d20; font-weight:600; }
+    .status .ok { color:#059669; font-weight:600; }
+    .plan { padding:8px 16px; border-top:1px solid var(--border); background:#fff; font-size:11px; color:var(--muted); }
+    .plan code { background:#f1f3f6; padding:2px 5px; border-radius:3px; margin-right:5px; color:#374151; }
+    .plan-tree { padding:10px 16px 14px; border-top:1px solid var(--border); background:#fbfcfe; }
+    .plan-tree h4 { margin:0 0 8px; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+    .plan-node {
+      display:inline-flex; align-items:center; gap:7px; margin:2px 0 2px 16px; padding:4px 8px;
+      background:#fff; border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:5px;
+      font:11px ui-monospace,Consolas,monospace; color:var(--text); white-space:normal; overflow-wrap:anywhere;
+    }
+    .plan-node small { color:var(--accent); font-weight:700; }
+    .plan-node.child { margin-left:38px; border-left-color:#9aa1ac; color:var(--muted); }
+    .history { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:12px 16px; border-bottom:1px solid var(--border); background:#fbfcfe; }
+    .history h4 { margin:0 0 6px; font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+    .history-list { max-height:140px; overflow:auto; }
+    .history-item { display:flex; align-items:center; gap:6px; padding:4px 0; border-bottom:1px solid #eef1f5; }
+    .history-item button { flex:none; padding:3px 7px; font-size:11px; }
+    .history-item code { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:11px; color:#4b5563; }
+    .history-item small { color:#9aa1ac; font-size:10px; white-space:nowrap; }
+    .history input { min-width:0; width:100%; margin-bottom:6px; padding:5px 8px; font:inherit; border:1px solid var(--border); border-radius:6px; background:#fff; color:var(--text); }
+    th.sortable { cursor:pointer; user-select:none; }
+    th.sortable::after { content:' ↕'; color:#9aa1ac; }
+    th.sorted-asc::after { content:' ↑'; color:var(--accent); }
+    th.sorted-desc::after { content:' ↓'; color:var(--accent); }
+    .empty { padding:26px; text-align:center; color:#9aa1ac; }
+    :where(button,select,textarea,th[tabindex]):focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+    @media (max-width:820px) { .main { grid-template-columns:1fr; } aside { border-right:0; border-bottom:1px solid var(--border); max-height:180px; } .history { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">Query <span>Lab</span></div>
+      <select id="sampleSelect" aria-label="Przykładowe zapytanie">
+        <option value="basic">1 · Filtrowanie i sortowanie</option>
+        <option value="join">2 · JOIN dwóch tabel</option>
+        <option value="group">3 · GROUP BY i agregaty</option>
+        <option value="having">4 · HAVING i SUM</option>
+        <option value="expr">5 · Wyrażenia i funkcje</option>
+      </select>
+      <button type="button" id="runBtn" class="primary">▶ Uruchom zapytanie</button>
+      <button type="button" id="exportBtn">Eksport CSV</button>
+      <button type="button" id="explainBtn" aria-pressed="false">EXPLAIN</button>
+      <button type="button" id="historyBtn" aria-expanded="false">Historia</button>
+      <select id="savedSelect" aria-label="Zapisane zapytania"><option value="">— zapisane —</option></select>
+      <div class="spacer"></div>
+      <div class="badge">SQL engine · bez bibliotek</div>
+    </header>
+
+    <div class="history" id="historyPanel" hidden>
+      <div>
+        <h4>Ostatnie zapytania</h4>
+        <div class="history-list" id="historyList"></div>
+        <button type="button" id="clearHistoryBtn">Wyczyść historię</button>
+      </div>
+      <div>
+        <h4>Zapisane zapytania</h4>
+        <input id="saveName" type="text" aria-label="Nazwa zapisanego zapytania" placeholder="Nazwa zapytania">
+        <button type="button" id="saveBtn">Zapisz bieżące</button>
+        <div class="history-list" id="savedList"></div>
+      </div>
+    </div>
+
+    <div class="main">
+      <aside>
+        <div class="panel-head">Schemat bazy</div>
+        <div class="schema" id="schema"></div>
+      </aside>
+      <div class="content">
+        <div class="editor-wrap">
+          <div class="editor">
+            <pre id="highlight" aria-hidden="true"></pre>
+            <textarea id="sql" spellcheck="false" aria-label="Edytor zapytań SQL"></textarea>
+          </div>
+        </div>
+        <div class="results" id="results"></div>
+      </div>
+    </div>
+
+    <div class="status">
+      <span>Status: <b id="status">Gotowe.</b></span>
+      <span>Wiersze: <b id="rowCount">0</b></span>
+      <span>Czas: <b id="queryTime">0.00 ms</b></span>
+      <span>Kroki: <b id="planCount">0</b></span>
+    </div>
+    <div class="plan" id="plan">Plan zapytania pojawi się po uruchomieniu.</div>
+    <div class="plan-tree" id="planTree" hidden></div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const DATABASE = {
+        users: {
+          columns: ['id', 'name', 'age', 'city', 'plan'],
+          rows: [
+            { id: 1, name: 'Anna', age: 34, city: 'Warszawa', plan: 'pro' },
+            { id: 2, name: 'Piotr', age: 22, city: 'Kraków', plan: 'free' },
+            { id: 3, name: 'Kasia', age: 41, city: 'Warszawa', plan: 'pro' },
+            { id: 4, name: 'Tomek', age: 28, city: 'Gdańsk', plan: 'basic' },
+            { id: 5, name: 'Magda', age: 37, city: 'Kraków', plan: 'pro' },
+            { id: 6, name: 'Bartek', age: 19, city: 'Poznań', plan: 'free' },
+            { id: 7, name: 'Ewa', age: 45, city: 'Warszawa', plan: 'pro' },
+            { id: 8, name: 'Michał', age: 31, city: 'Gdańsk', plan: 'basic' },
+            { id: 9, name: 'Natalia', age: 26, city: 'Poznań', plan: 'free' },
+            { id: 10, name: 'Robert', age: 52, city: 'Kraków', plan: 'pro' },
+            { id: 11, name: 'Alicja', age: 29, city: 'Warszawa', plan: 'basic' },
+            { id: 12, name: 'Dawid', age: 38, city: 'Wrocław', plan: 'pro' }
+          ]
+        },
+        orders: {
+          columns: ['id', 'user_id', 'amount', 'status', 'date'],
+          rows: [
+            { id: 101, user_id: 1, amount: 250, status: 'paid', date: '2026-01-04' },
+            { id: 102, user_id: 3, amount: 480, status: 'paid', date: '2026-01-07' },
+            { id: 103, user_id: 2, amount: 120, status: 'pending', date: '2026-01-09' },
+            { id: 104, user_id: 1, amount: 610, status: 'paid', date: '2026-01-12' },
+            { id: 105, user_id: 5, amount: 340, status: 'paid', date: '2026-01-15' },
+            { id: 106, user_id: 4, amount: 95, status: 'cancelled', date: '2026-01-18' },
+            { id: 107, user_id: 7, amount: 720, status: 'paid', date: '2026-01-21' },
+            { id: 108, user_id: 3, amount: 215, status: 'pending', date: '2026-01-24' },
+            { id: 109, user_id: 8, amount: 430, status: 'paid', date: '2026-01-27' },
+            { id: 110, user_id: 10, amount: 890, status: 'paid', date: '2026-02-02' },
+            { id: 111, user_id: 12, amount: 305, status: 'paid', date: '2026-02-05' },
+            { id: 112, user_id: 6, amount: 60, status: 'cancelled', date: '2026-02-08' },
+            { id: 113, user_id: 9, amount: 175, status: 'pending', date: '2026-02-11' },
+            { id: 114, user_id: 11, amount: 525, status: 'paid', date: '2026-02-14' },
+            { id: 115, user_id: 5, amount: 260, status: 'paid', date: '2026-02-17' },
+            { id: 116, user_id: 1, amount: 410, status: 'paid', date: '2026-02-20' },
+            { id: 117, user_id: 2, amount: 85, status: 'pending', date: '2026-02-23' },
+            { id: 118, user_id: 7, amount: 640, status: 'paid', date: '2026-02-26' }
+          ]
+        }
+      };
+
+      const samples = {
+        basic: `SELECT name, age, city\nFROM users\nWHERE age >= 30\nORDER BY age DESC\nLIMIT 8;`,
+        join: `SELECT users.name, orders.amount, orders.status\nFROM users\nJOIN orders ON users.id = orders.user_id\nWHERE orders.amount > 300\nORDER BY orders.amount DESC\nLIMIT 12;`,
+        group: `SELECT city, COUNT(id) AS liczba, AVG(age) AS srednia\nFROM users\nGROUP BY city\nORDER BY liczba DESC;`,
+        having: `SELECT status, COUNT(id) AS zamowienia, SUM(amount) AS wartosc\nFROM orders\nGROUP BY status\nHAVING SUM(amount) > 1000\nORDER BY wartosc DESC;`,
+        expr: `SELECT name, age * 2 AS podwojne,\n       UPPER(city) AS miasto,\n       ROUND(age / 7, 2) AS wynik\nFROM users\nWHERE age > 25 AND city = 'Warszawa';`
+      };
+
+      const KEYWORDS = new Set(['SELECT','FROM','WHERE','JOIN','ON','GROUP','BY','HAVING','ORDER','ASC','DESC','LIMIT','AS','AND','OR','NOT','NULL','IS','COUNT','SUM','AVG','MIN','MAX','UPPER','LOWER','ROUND','ABS','LENGTH']);
+      const AGGREGATES = new Set(['COUNT','SUM','AVG','MIN','MAX']);
+      const FUNCTIONS = new Set([...AGGREGATES, 'UPPER', 'LOWER', 'ROUND', 'ABS', 'LENGTH']);
+
+      function tokenize(sql) {
+        const tokens = [];
+        let i = 0;
+        while (i < sql.length) {
+          const char = sql[i];
+          if (/\s/.test(char)) { i += 1; continue; }
+          if (sql.startsWith('--', i)) {
+            let end = sql.indexOf('\n', i);
+            if (end < 0) end = sql.length;
+            i = end; continue;
+          }
+          if (char === "'") {
+            let j = i + 1, text = '';
+            while (j < sql.length) {
+              if (sql[j] === "'" && sql[j + 1] === "'") { text += "'"; j += 2; }
+              else if (sql[j] === "'") { j += 1; break; }
+              else text += sql[j++];
+            }
+            tokens.push({ t: 'str', v: text }); i = j; continue;
+          }
+          if (/\d/.test(char)) {
+            let j = i;
+            while (/\d|\./.test(sql[j] || '')) j += 1;
+            tokens.push({ t: 'num', v: parseFloat(sql.slice(i, j)) }); i = j; continue;
+          }
+          if (/[A-Za-z_]/.test(char)) {
+            let j = i;
+            while (/[A-Za-z0-9_]/.test(sql[j] || '')) j += 1;
+            const word = sql.slice(i, j);
+            const upper = word.toUpperCase();
+            tokens.push(KEYWORDS.has(upper) ? { t: 'kw', v: upper } : { t: 'id', v: word });
+            i = j; continue;
+          }
+          const pair = sql.slice(i, i + 2);
+          if (['>=', '<=', '<>', '!='].includes(pair)) { tokens.push({ t: 'op', v: pair }); i += 2; continue; }
+          if ('=<>+-*/(),.;'.includes(char)) { tokens.push({ t: char === ';' ? 'eof' : 'sym', v: char }); i += 1; continue; }
+          throw new Error(`Nieznany znak "${char}" na pozycji ${i}`);
+        }
+        tokens.push({ t: 'eof', v: '' });
+        return tokens;
+      }
+
+      function expressionLabel(node) {
+        if (node.type === 'col') return node.name.split('.').pop();
+        if (node.type === 'func') return `${node.name.toLowerCase()}()`;
+        return 'wyrażenie';
+      }
+
+      class Parser {
+        constructor(tokens) { this.tokens = tokens; this.pos = 0; }
+        peek() { return this.tokens[this.pos]; }
+        match(type, value) {
+          const token = this.peek();
+          if (token.t === type && (value === undefined || token.v === value)) { this.pos += 1; return token; }
+          return null;
+        }
+        expect(type, value) {
+          const token = this.match(type, value);
+          if (!token) throw new Error(`Oczekiwano ${value || type}, znaleziono "${this.peek().v || 'koniec'}"`);
+          return token;
+        }
+        parse() {
+          const query = this.parseSelect();
+          return query;
+        }
+        parseSelect() {
+          this.expect('kw', 'SELECT');
+          const columns = [];
+          if (this.match('sym', '*')) {
+            columns.push({ expr: { type: 'star' }, alias: '*' });
+          } else {
+            do {
+              const expr = this.parseExpression();
+              let alias = null;
+              if (this.match('kw', 'AS')) alias = this.expect('id').v;
+              else if (this.peek().t === 'id') alias = this.tokens[this.pos++].v;
+              columns.push({ expr, alias: alias || expressionLabel(expr) });
+            } while (this.match('sym', ','));
+          }
+          this.expect('kw', 'FROM');
+          const table = this.parseTable();
+          const joins = [];
+          while (this.match('kw', 'JOIN')) {
+            const joined = this.parseTable();
+            this.expect('kw', 'ON');
+            joins.push({ table: joined, condition: this.parseExpression() });
+          }
+          let where = null;
+          if (this.match('kw', 'WHERE')) where = this.parseExpression();
+          const groupBy = [];
+          if (this.match('kw', 'GROUP')) {
+            this.expect('kw', 'BY');
+            do { groupBy.push(this.parseExpression()); } while (this.match('sym', ','));
+          }
+          let having = null;
+          if (this.match('kw', 'HAVING')) having = this.parseExpression();
+          const orderBy = [];
+          if (this.match('kw', 'ORDER')) {
+            this.expect('kw', 'BY');
+            do {
+              const expr = this.parseExpression();
+              let dir = 'ASC';
+              if (this.match('kw', 'DESC')) dir = 'DESC';
+              else this.match('kw', 'ASC');
+              orderBy.push({ expr, dir });
+            } while (this.match('sym', ','));
+          }
+          let limit = null;
+          if (this.match('kw', 'LIMIT')) limit = parseInt(this.expect('num').v, 10);
+          this.match('eof');
+          return { columns, table, joins, where, groupBy, having, orderBy, limit };
+        }
+        parseTable() {
+          const name = this.expect('id').v;
+          let alias = name;
+          if (this.match('kw', 'AS')) alias = this.expect('id').v;
+          else if (this.peek().t === 'id') alias = this.tokens[this.pos++].v;
+          return { name, alias };
+        }
+        parseExpression() { return this.parseOr(); }
+        parseOr() {
+          let node = this.parseAnd();
+          while (this.peek().t === 'kw' && this.peek().v === 'OR') {
+            this.pos += 1;
+            node = { type: 'logic', op: 'OR', left: node, right: this.parseAnd() };
+          }
+          return node;
+        }
+        parseAnd() {
+          let node = this.parseComparison();
+          while (this.peek().t === 'kw' && this.peek().v === 'AND') {
+            this.pos += 1;
+            node = { type: 'logic', op: 'AND', left: node, right: this.parseComparison() };
+          }
+          return node;
+        }
+        parseComparison() {
+          let node = this.parseAdditive();
+          while (['=', '<>', '!=', '<', '>', '<=', '>='].includes(this.peek().v)) {
+            const op = this.tokens[this.pos++].v;
+            node = { type: 'bin', op, left: node, right: this.parseAdditive() };
+          }
+          if (this.peek().t === 'kw' && this.peek().v === 'IS') {
+            this.pos += 1;
+            const negated = Boolean(this.match('kw', 'NOT'));
+            this.expect('kw', 'NULL');
+            node = { type: 'isnull', arg: node, negated };
+          }
+          return node;
+        }
+        parseAdditive() {
+          let node = this.parseMultiplicative();
+          while (this.peek().v === '+' || this.peek().v === '-') {
+            const op = this.tokens[this.pos++].v;
+            node = { type: 'bin', op, left: node, right: this.parseMultiplicative() };
+          }
+          return node;
+        }
+        parseMultiplicative() {
+          let node = this.parsePrimary();
+          while (this.peek().v === '*' || this.peek().v === '/') {
+            const op = this.tokens[this.pos++].v;
+            node = { type: 'bin', op, left: node, right: this.parsePrimary() };
+          }
+          return node;
+        }
+        parsePrimary() {
+          const token = this.peek();
+          if (token.t === 'num') { this.pos += 1; return { type: 'num', value: token.v }; }
+          if (token.t === 'str') { this.pos += 1; return { type: 'str', value: token.v }; }
+          if (this.match('sym', '(')) {
+            const node = this.parseExpression();
+            this.expect('sym', ')');
+            return node;
+          }
+          if (this.match('sym', '*')) return { type: 'star' };
+          if (token.t === 'id' || token.t === 'kw') {
+            const name = this.tokens[this.pos++].v;
+            const upper = name.toUpperCase();
+            if (this.peek().t === 'sym' && this.peek().v === '(' && FUNCTIONS.has(upper)) {
+              this.pos += 1;
+              const args = [];
+              if (this.match('sym', '*')) args.push({ type: 'star' });
+              else if (this.peek().v !== ')') {
+                do { args.push(this.parseExpression()); } while (this.match('sym', ','));
+              }
+              this.expect('sym', ')');
+              return { type: 'func', name: upper, args };
+            }
+            let column = name;
+            if (this.match('sym', '.')) column += `.${this.expect('id').v}`;
+            return { type: 'col', name: column };
+          }
+          throw new Error(`Nieoczekiwany token "${token.v || 'koniec'}"`);
+        }
+      }
+
+      function hasAggregate(node) {
+        if (!node || typeof node !== 'object') return false;
+        if (node.type === 'func' && AGGREGATES.has(node.name)) return true;
+        return Object.values(node).some((value) => Array.isArray(value) ? value.some(hasAggregate) : hasAggregate(value));
+      }
+
+      function qualify(row, alias) {
+        const result = {};
+        Object.entries(row).forEach(([key, value]) => {
+          result[`${alias}.${key}`] = value;
+          result[key] = value;
+        });
+        return result;
+      }
+
+      function truthy(value) { return Boolean(value); }
+
+      function evalExpr(node, ctx) {
+        switch (node.type) {
+          case 'num': return node.value;
+          case 'str': return node.value;
+          case 'star': return '*';
+          case 'col': {
+            if (Object.prototype.hasOwnProperty.call(ctx.row, node.name)) return ctx.row[node.name];
+            if (!node.name.includes('.')) {
+              const matches = Object.keys(ctx.row).filter((key) => key.endsWith(`.${node.name}`));
+              if (matches.length === 1) return ctx.row[matches[0]];
+              if (matches.length > 1) throw new Error(`Niejednoznaczna kolumna "${node.name}"`);
+            }
+            throw new Error(`Nieznana kolumna "${node.name}"`);
+          }
+          case 'logic': {
+            if (node.op === 'AND') return truthy(evalExpr(node.left, ctx)) && truthy(evalExpr(node.right, ctx)) ? 1 : 0;
+            return truthy(evalExpr(node.left, ctx)) || truthy(evalExpr(node.right, ctx)) ? 1 : 0;
+          }
+          case 'isnull': {
+            const value = evalExpr(node.arg, ctx);
+            const isNull = value === null || value === undefined;
+            return (node.negated ? !isNull : isNull) ? 1 : 0;
+          }
+          case 'func': {
+            if (AGGREGATES.has(node.name)) {
+              const values = ctx.rows.map((row) => evalExpr(node.args[0], { row, rows: ctx.rows }));
+              if (node.name === 'COUNT') return values.filter((value) => value !== null && value !== undefined).length;
+              const numbers = values.map(Number).filter((value) => Number.isFinite(value));
+              if (node.name === 'SUM') return numbers.reduce((a, b) => a + b, 0);
+              if (node.name === 'AVG') return numbers.length ? numbers.reduce((a, b) => a + b, 0) / numbers.length : 0;
+              if (node.name === 'MIN') return numbers.length ? Math.min(...numbers) : null;
+              return numbers.length ? Math.max(...numbers) : null;
+            }
+            const args = node.args.map((arg) => evalExpr(arg, ctx));
+            if (node.name === 'UPPER') return String(args[0] ?? '').toUpperCase();
+            if (node.name === 'LOWER') return String(args[0] ?? '').toLowerCase();
+            if (node.name === 'LENGTH') return String(args[0] ?? '').length;
+            if (node.name === 'ABS') return Math.abs(Number(args[0]));
+            if (node.name === 'ROUND') {
+              const digits = args.length > 1 ? Number(args[1]) : 0;
+              const factor = Math.pow(10, digits);
+              return Math.round(Number(args[0]) * factor) / factor;
+            }
+            return null;
+          }
+          case 'bin': {
+            if (node.op === '=') return evalExpr(node.left, ctx) == evalExpr(node.right, ctx) ? 1 : 0;
+            if (node.op === '<>' || node.op === '!=') return evalExpr(node.left, ctx) != evalExpr(node.right, ctx) ? 1 : 0;
+            const left = evalExpr(node.left, ctx), right = evalExpr(node.right, ctx);
+            switch (node.op) {
+              case '<': return left < right ? 1 : 0;
+              case '>': return left > right ? 1 : 0;
+              case '<=': return left <= right ? 1 : 0;
+              case '>=': return left >= right ? 1 : 0;
+              case '+': return Number(left) + Number(right);
+              case '-': return Number(left) - Number(right);
+              case '*': return Number(left) * Number(right);
+              case '/': return Number(right) === 0 ? null : Number(left) / Number(right);
+              default: return null;
+            }
+          }
+          default: return null;
+        }
+      }
+
+      function execute(query) {
+        const plan = [];
+        if (!DATABASE[query.table.name]) throw new Error(`Nieznana tabela "${query.table.name}"`);
+        let rows = DATABASE[query.table.name].rows.map((row) => qualify(row, query.table.alias));
+        plan.push(`SCAN ${query.table.name}`);
+        if (rows.length && Object.prototype.hasOwnProperty.call(rows[0], 'id')) {
+          const table = DATABASE[query.table.name];
+          rows = DATABASE[query.table.name].rows.map((row) => {
+            const qualified = {};
+            table.columns.forEach((column) => { qualified[`${query.table.alias}.${column}`] = row[column]; });
+            table.columns.forEach((column) => { if (!(column in qualified)) qualified[column] = row[column]; });
+            return qualified;
+          });
+        }
+        plan.push(`→ ${rows.length} wierszy`);
+
+        query.joins.forEach((join) => {
+          const table = DATABASE[join.table.name];
+          if (!table) throw new Error(`Nieznana tabela "${join.table.name}"`);
+          const other = table.rows.map((row) => {
+            const qualified = {};
+            table.columns.forEach((column) => { qualified[`${join.table.alias}.${column}`] = row[column]; });
+            return qualified;
+          });
+          const combined = [];
+          rows.forEach((left) => other.forEach((right) => {
+            const merged = { ...left, ...right };
+            if (truthy(evalExpr(join.condition, { row: merged, rows: [merged] }))) combined.push(merged);
+          }));
+          rows = combined;
+          plan.push(`JOIN ${join.table.name} → ${rows.length}`);
+        });
+
+        if (query.where) {
+          rows = rows.filter((row) => truthy(evalExpr(query.where, { row, rows: [row] })));
+          plan.push(`WHERE → ${rows.length}`);
+        }
+
+        const starColumns = query.columns.some((column) => column.expr.type === 'star')
+          ? [query.table, ...query.joins.map((join) => join.table)].flatMap((table) =>
+              DATABASE[table.name].columns.map((column) => ({
+                expr: { type: 'col', name: `${table.alias}.${column}` },
+                alias: `${table.alias}.${column}`
+              })))
+          : [];
+        const outputColumns = [...starColumns, ...query.columns.filter((column) => column.expr.type !== 'star')];
+
+        const grouped = query.groupBy.length > 0 || query.having || outputColumns.some((column) => hasAggregate(column.expr));
+        let records = [];
+        const makeRecord = (ctx) => {
+          const out = outputColumns.map((column) => evalExpr(column.expr, ctx));
+          const aliases = Object.fromEntries(outputColumns.map((column, index) => [column.alias, out[index]]));
+          return { ctx, aliases, out };
+        };
+        if (grouped) {
+          const groups = new Map();
+          rows.forEach((row) => {
+            const key = query.groupBy.length
+              ? JSON.stringify(query.groupBy.map((expr) => evalExpr(expr, { row, rows: [row] })))
+              : '__ALL__';
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(row);
+          });
+          groups.forEach((group) => {
+            const ctx = { row: group[0], rows: group };
+            if (query.having && !truthy(evalExpr(query.having, ctx))) return;
+            records.push(makeRecord(ctx));
+          });
+          plan.push(`GROUP BY → ${records.length} grup`);
+        } else {
+          records = rows.map((row) => makeRecord({ row, rows: [row] }));
+        }
+
+        if (query.orderBy.length) {
+          const orderCtx = (record) => ({ row: { ...record.ctx.row, ...record.aliases }, rows: record.ctx.rows });
+          records.sort((first, second) => {
+            for (const { expr, dir } of query.orderBy) {
+              const a = evalExpr(expr, orderCtx(first)), b = evalExpr(expr, orderCtx(second));
+              const comparison = a === b ? 0 : (a === null ? -1 : b === null ? 1 : (a < b ? -1 : 1));
+              if (comparison) return dir === 'DESC' ? -comparison : comparison;
+            }
+            return 0;
+          });
+          plan.push('ORDER BY');
+        }
+        if (query.limit !== null) {
+          records = records.slice(0, query.limit);
+          plan.push(`LIMIT ${query.limit}`);
+        }
+        return { columns: outputColumns.map((column) => column.alias), rows: records.map((record) => record.out), plan };
+      }
+
+      function highlight(sql) {
+        const escaped = (text) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return sql.replace(/--[^\n]*|'(?:''|[^'])*'|\b\d+(?:\.\d+)?\b|\b[A-Za-z_]\w*\b|>=|<=|<>|!=|[=<>+*/(),.;-]/g, (match) => {
+          const upper = match.toUpperCase();
+          if (match.startsWith('--')) return `<span class="c">${escaped(match)}</span>`;
+          if (match.startsWith("'")) return `<span class="s">${escaped(match)}</span>`;
+          if (/^\d/.test(match)) return `<span class="n">${escaped(match)}</span>`;
+          if (KEYWORDS.has(upper)) return `<span class="k">${escaped(match)}</span>`;
+          if (FUNCTIONS.has(upper)) return `<span class="f">${escaped(match)}</span>`;
+          if ('=<>+-*/(),.;'.includes(match)) return `<span class="op">${escaped(match)}</span>`;
+          return escaped(match);
+        });
+      }
+
+      const $ = (id) => document.getElementById(id);
+      const sqlEditor = $('sql');
+      const highlightLayer = $('highlight');
+      const resultsEl = $('results');
+      let lastResult = null;
+      const STORE_HISTORY = 'queryLab.history.v1';
+      const STORE_SAVED = 'queryLab.saved.v1';
+      let queryHistory = [], savedQueries = [];
+      let sortState = null, viewRows = [];
+
+      function readStore(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          const value = raw ? JSON.parse(raw) : fallback;
+          return Array.isArray(value) ? value : fallback;
+        } catch (_) { return fallback; }
+      }
+      function writeStore(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch (_) { return false; }
+      }
+      queryHistory = readStore(STORE_HISTORY, []).filter((entry) => entry && typeof entry.sql === 'string');
+      savedQueries = readStore(STORE_SAVED, []).filter((entry) => entry && typeof entry.sql === 'string');
+
+      function syncHighlight() { highlightLayer.innerHTML = `${highlight(sqlEditor.value)}\n`; }
+      sqlEditor.addEventListener('input', syncHighlight);
+      sqlEditor.addEventListener('scroll', () => {
+        highlightLayer.scrollTop = sqlEditor.scrollTop;
+        highlightLayer.scrollLeft = sqlEditor.scrollLeft;
+      });
+      sqlEditor.addEventListener('keydown', (event) => {
+        if (event.key === 'Tab') {
+          event.preventDefault();
+          const start = sqlEditor.selectionStart;
+          sqlEditor.value = `${sqlEditor.value.slice(0, start)}  ${sqlEditor.value.slice(sqlEditor.selectionEnd)}`;
+          sqlEditor.selectionStart = sqlEditor.selectionEnd = start + 2;
+          syncHighlight();
+        }
+        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+          event.preventDefault();
+          run();
+        }
+      });
+
+      function renderSchema() {
+        const container = $('schema');
+        container.replaceChildren();
+        Object.entries(DATABASE).forEach(([name, table]) => {
+          const card = document.createElement('div');
+          card.className = 'table-card';
+          const title = document.createElement('div');
+          title.className = 'table-name';
+          title.textContent = `▦ ${name} (${table.rows.length})`;
+          card.appendChild(title);
+          table.columns.forEach((column) => {
+            const row = document.createElement('div');
+            row.className = 'column';
+            const label = document.createElement('span');
+            label.textContent = column;
+            const type = document.createElement('small');
+            type.textContent = typeof table.rows[0][column] === 'number' ? 'INT' : 'TEXT';
+            row.append(label, type);
+            row.addEventListener('click', () => {
+              const start = sqlEditor.selectionStart;
+              const insert = `${name}.${column}`;
+              sqlEditor.value = `${sqlEditor.value.slice(0, start)}${insert}${sqlEditor.value.slice(sqlEditor.selectionEnd)}`;
+              sqlEditor.focus();
+              sqlEditor.selectionStart = sqlEditor.selectionEnd = start + insert.length;
+              syncHighlight();
+            });
+            card.appendChild(row);
+          });
+          container.appendChild(card);
+        });
+      }
+
+      function sortedRows(rows, columns) {
+        if (!sortState) return rows;
+        const index = columns.findIndex((name) => name === sortState.col);
+        if (index < 0) return rows;
+        const direction = sortState.dir === 'desc' ? -1 : 1;
+        return rows.map((row, position) => ({ row, position })).sort((a, b) => {
+          const left = a.row[index], right = b.row[index];
+          if (left === null || left === undefined) return right === null || right === undefined ? a.position - b.position : 1;
+          if (right === null || right === undefined) return -1;
+          const comparison = typeof left === 'number' && typeof right === 'number'
+            ? left - right
+            : String(left).localeCompare(String(right), 'pl');
+          return comparison ? comparison * direction : a.position - b.position;
+        }).map((entry) => entry.row);
+      }
+
+      function renderResult(result) {
+        resultsEl.replaceChildren();
+        viewRows = result ? result.rows.slice() : [];
+        if (!result || !result.rows.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = 'Zapytanie zwróciło 0 wierszy.';
+          resultsEl.appendChild(empty);
+          return;
+        }
+        viewRows = sortedRows(result.rows, result.columns);
+        const table = document.createElement('table');
+        const head = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        result.columns.forEach((name) => {
+          const th = document.createElement('th');
+          th.textContent = name;
+          th.className = 'sortable';
+          th.tabIndex = 0;
+          if (sortState && sortState.col === name) {
+            th.classList.add(sortState.dir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+            th.setAttribute('aria-sort', sortState.dir === 'asc' ? 'ascending' : 'descending');
+          } else {
+            th.setAttribute('aria-sort', 'none');
+          }
+          const activate = () => {
+            sortState = {
+              col: name,
+              dir: sortState && sortState.col === name && sortState.dir === 'asc' ? 'desc' : 'asc'
+            };
+            renderResult(lastResult);
+            $('status').className = 'ok';
+            $('status').textContent = `Sortowanie widoku: ${name} ${sortState.dir === 'asc' ? 'rosnąco' : 'malejąco'}`;
+          };
+          th.addEventListener('click', activate);
+          th.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); activate(); }
+          });
+          headRow.appendChild(th);
+        });
+        head.appendChild(headRow); table.appendChild(head);
+        const body = document.createElement('tbody');
+        viewRows.forEach((row) => {
+          const tr = document.createElement('tr');
+          row.forEach((value) => {
+            const td = document.createElement('td');
+            td.textContent = value === null || value === undefined ? 'NULL' : String(value);
+            if (typeof value === 'number') td.className = 'num';
+            tr.appendChild(td);
+          });
+          body.appendChild(tr);
+        });
+        table.appendChild(body);
+        resultsEl.appendChild(table);
+      }
+
+      function renderPlanTree(steps) {
+        const host = $('planTree');
+        host.replaceChildren();
+        if (!steps || !steps.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = 'Plan niedostępny.';
+          host.appendChild(empty);
+          return;
+        }
+        const title = document.createElement('h4');
+        title.textContent = 'EXPLAIN · kolejność operatorów';
+        host.appendChild(title);
+        steps.forEach((step, index) => {
+          const node = document.createElement('div');
+          node.className = `plan-node${index ? ' child' : ''}`;
+          const badge = document.createElement('small');
+          badge.textContent = String(index + 1).padStart(2, '0');
+          node.append(badge, document.createTextNode(step));
+          host.appendChild(node);
+        });
+      }
+
+      function loadQuery(sql, label) {
+        sqlEditor.value = sql;
+        sqlEditor.scrollTop = 0;
+        syncHighlight();
+        run();
+        $('status').className = 'ok';
+        $('status').textContent = `${label} · zapytanie wykonane ponownie.`;
+      }
+
+      function renderHistory() {
+        const list = $('historyList');
+        list.replaceChildren();
+        if (!queryHistory.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.style.padding = '8px';
+          empty.textContent = 'Historia jest pusta.';
+          list.appendChild(empty);
+          return;
+        }
+        queryHistory.slice().reverse().forEach((entry) => {
+          const item = document.createElement('div');
+          item.className = 'history-item';
+          const load = document.createElement('button');
+          load.type = 'button';
+          load.textContent = '▶';
+          load.title = 'Wczytaj zapytanie';
+          load.addEventListener('click', () => loadQuery(entry.sql, 'Z historii'));
+          const code = document.createElement('code');
+          code.textContent = String(entry.sql || '').replace(/\s+/g, ' ').slice(0, 140);
+          const meta = document.createElement('small');
+          meta.textContent = `${entry.rows ?? 0} w. · ${entry.time || ''}`;
+          item.append(load, code, meta);
+          list.appendChild(item);
+        });
+      }
+
+      function renderSaved() {
+        const list = $('savedList');
+        const select = $('savedSelect');
+        list.replaceChildren();
+        select.replaceChildren();
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = '— zapisane —';
+        select.appendChild(placeholder);
+        if (!savedQueries.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.style.padding = '8px';
+          empty.textContent = 'Brak zapisanych zapytań.';
+          list.appendChild(empty);
+          return;
+        }
+        savedQueries.forEach((entry, index) => {
+          const option = document.createElement('option');
+          option.value = String(index);
+          option.textContent = entry.name;
+          select.appendChild(option);
+          const item = document.createElement('div');
+          item.className = 'history-item';
+          const load = document.createElement('button');
+          load.type = 'button';
+          load.textContent = '▶';
+          load.title = `Wczytaj "${entry.name}"`;
+          load.addEventListener('click', () => loadQuery(entry.sql, `Zapisane: ${entry.name}`));
+          const code = document.createElement('code');
+          code.textContent = `${entry.name}: ${String(entry.sql || '').replace(/\s+/g, ' ').slice(0, 110)}`;
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.textContent = '✕';
+          remove.title = `Usuń "${entry.name}"`;
+          remove.addEventListener('click', () => {
+            savedQueries.splice(index, 1);
+            writeStore(STORE_SAVED, savedQueries);
+            renderSaved();
+            $('status').textContent = `Usunięto zapytanie "${entry.name}".`;
+          });
+          item.append(load, code, remove);
+          list.appendChild(item);
+        });
+      }
+
+      function run() {
+        const started = performance.now();
+        const sql = sqlEditor.value.trim();
+        sortState = null;
+        try {
+          const tokens = tokenize(sqlEditor.value);
+          const query = new Parser(tokens).parse();
+          const result = execute(query);
+          lastResult = result;
+          renderResult(result);
+          $('status').className = 'ok';
+          $('status').textContent = 'Zapytanie wykonane pomyślnie';
+          $('rowCount').textContent = String(result.rows.length);
+          $('queryTime').textContent = `${(performance.now() - started).toFixed(2)} ms`;
+          $('planCount').textContent = String(result.plan.length);
+          const planEl = $('plan');
+          planEl.replaceChildren();
+          result.plan.forEach((step, index) => {
+            if (index) planEl.appendChild(document.createTextNode(' → '));
+            const code = document.createElement('code');
+            code.textContent = step;
+            planEl.appendChild(code);
+          });
+          renderPlanTree(result.plan);
+          if (sql) {
+            const previous = queryHistory[queryHistory.length - 1];
+            const entry = {
+              sql, rows: result.rows.length,
+              time: $('queryTime').textContent,
+              at: new Date().toLocaleTimeString('pl-PL')
+            };
+            if (previous && previous.sql === sql) Object.assign(previous, entry);
+            else {
+              queryHistory.push(entry);
+              if (queryHistory.length > 20) queryHistory.shift();
+            }
+            writeStore(STORE_HISTORY, queryHistory);
+            renderHistory();
+          }
+        } catch (error) {
+          lastResult = null;
+          renderResult(null);
+          $('status').className = 'error';
+          $('status').textContent = error.message;
+          $('rowCount').textContent = '0';
+          $('queryTime').textContent = `${(performance.now() - started).toFixed(2)} ms`;
+          $('planCount').textContent = '0';
+          $('plan').textContent = 'Plan niedostępny — zapytanie nie zostało wykonane.';
+          renderPlanTree([]);
+        }
+      }
+
+      $('runBtn').addEventListener('click', run);
+      $('sampleSelect').addEventListener('change', (event) => {
+        sqlEditor.value = samples[event.target.value];
+        syncHighlight();
+        run();
+      });
+      $('exportBtn').addEventListener('click', () => {
+        if (!lastResult) return;
+        const lines = [lastResult.columns.join(',')];
+        viewRows.forEach((row) => {
+          lines.push(row.map((value) => {
+            const text = value === null || value === undefined ? 'NULL' : String(value);
+            return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+          }).join(','));
+        });
+        const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'query_result.csv';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        $('status').className = 'ok';
+        $('status').textContent = `Eksportowano ${viewRows.length} wierszy do CSV${sortState ? ' (widok posortowany)' : ''}.`;
+      });
+
+      $('explainBtn').addEventListener('click', () => {
+        const tree = $('planTree');
+        tree.hidden = !tree.hidden;
+        $('explainBtn').setAttribute('aria-pressed', String(!tree.hidden));
+        $('explainBtn').classList.toggle('active', !tree.hidden);
+      });
+      $('historyBtn').addEventListener('click', () => {
+        const panel = $('historyPanel');
+        panel.hidden = !panel.hidden;
+        $('historyBtn').setAttribute('aria-expanded', String(!panel.hidden));
+      });
+      $('clearHistoryBtn').addEventListener('click', () => {
+        queryHistory = [];
+        writeStore(STORE_HISTORY, queryHistory);
+        renderHistory();
+        $('status').textContent = 'Historia zapytania wyczyszczona.';
+      });
+      $('saveBtn').addEventListener('click', () => {
+        const name = $('saveName').value.trim() || `Zapytanie ${savedQueries.length + 1}`;
+        savedQueries.push({ name, sql: sqlEditor.value });
+        if (savedQueries.length > 30) savedQueries.shift();
+        writeStore(STORE_SAVED, savedQueries);
+        $('saveName').value = '';
+        renderSaved();
+        $('status').className = 'ok';
+        $('status').textContent = `Zapisano zapytanie "${name}".`;
+      });
+      $('savedSelect').addEventListener('change', (event) => {
+        const index = Number(event.target.value);
+        if (event.target.value === '' || !savedQueries[index]) return;
+        loadQuery(savedQueries[index].sql, `Zapisane: ${savedQueries[index].name}`);
+        event.target.value = '';
+      });
+
+      renderSchema();
+      renderHistory();
+      renderSaved();
+      sqlEditor.value = samples.basic;
+      syncHighlight();
+      run();
+    })();
+  </script>
+</body>
+</html>

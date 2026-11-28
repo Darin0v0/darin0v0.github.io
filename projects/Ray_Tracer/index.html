@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#080a0f">
+  <meta name="description" content="RAY TRACER v3 // szybki progresywny path tracer CPU: NEE, słońce, 10 scen, turbo, orbit kamery, focus, denoising i eksport PNG.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23080a0f'/%3E%3Ccircle cx='26' cy='26' r='12' fill='none' stroke='%23fbbf24' stroke-width='3'/%3E%3Cpath d='M36 36l18 18' stroke='%2367e8f9' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <title>Ray Tracer v3 — szybki progresywny path tracer</title>
+  <style>
+    :root {
+      --bg:#080a0f; --panel:#10141c; --panel2:#161c27; --border:#252e3d;
+      --text:#e8edf6; --muted:#8492a6; --amber:#fbbf24; --cyan:#67e8f9;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; height:100%; }
+    body {
+      background:var(--bg); color:var(--text);
+      font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    header {
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:9px 13px;
+      background:#0c1017; border-bottom:1px solid var(--border);
+    }
+    .brand { font-weight:700; font-size:14px; letter-spacing:.05em; margin-right:4px; white-space:nowrap; }
+    .brand span { color:var(--amber); }
+    .brand sup { color:var(--cyan); font-size:9px; margin-left:2px; }
+    button, select {
+      font:inherit; color:var(--text); background:#161d28; border:1px solid var(--border);
+      border-radius:6px; padding:6px 9px; cursor:pointer;
+    }
+    button:hover, select:hover { border-color:#436078; background:#1d2736; }
+    button.primary { background:var(--amber); color:#2a1d03; border-color:var(--amber); font-weight:700; }
+    button.active { background:#3a2d10; color:var(--amber); border-color:#7a5f1c; }
+    button.turbo.active { background:#123a35; color:var(--cyan); border-color:#2c7d73; }
+    input[type="range"] { accent-color:var(--amber); width:100%; }
+    .sep { width:1px; height:20px; background:var(--border); margin:0 3px; }
+    .panel-toggle { display:none; }
+    .main { flex:1; display:grid; grid-template-columns:minmax(0,1fr) 286px; min-height:0; position:relative; overflow:hidden; }
+    .stage { position:relative; min-width:0; background:#030407; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+    #canvas { display:block; width:100%; height:100%; object-fit:contain; cursor:grab; touch-action:none; }
+    #canvas:active { cursor:grabbing; }
+    .overlay {
+      position:absolute; left:13px; top:11px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      background:rgba(8,10,15,.74); border:1px solid var(--border); border-radius:6px;
+      padding:5px 9px; font-size:10px; color:var(--muted); pointer-events:none;
+    }
+    .overlay b { color:var(--amber); font-variant-numeric:tabular-nums; }
+    .hint {
+      position:absolute; right:13px; bottom:12px; background:rgba(8,10,15,.7);
+      border:1px solid var(--border); border-radius:5px; padding:4px 8px;
+      font-size:9px; color:var(--muted); pointer-events:none;
+    }
+    .progress { position:absolute; left:0; bottom:0; height:2px; background:var(--border); width:100%; }
+    .progress i { display:block; height:100%; background:var(--amber); width:0; transition:width .15s linear; }
+    aside { background:var(--panel); border-left:1px solid var(--border); padding:12px; overflow:auto; }
+    .card { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:11px; margin-bottom:10px; }
+    .card h3 { margin:0 0 9px; font-size:10px; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); }
+    .row { display:flex; justify-content:space-between; gap:8px; padding:3px 0; }
+    .row span { color:var(--muted); }
+    .row b { font-variant-numeric:tabular-nums; font-weight:600; }
+    .amber { color:var(--amber); } .cyan { color:var(--cyan); }
+    .slider-row { display:grid; grid-template-columns:1fr auto; gap:4px; margin-bottom:9px; }
+    .slider-row label { grid-column:1/-1; color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.04em; display:flex; justify-content:space-between; }
+    .slider-row label b { color:var(--amber); font-variant-numeric:tabular-nums; }
+    .scenes { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+    .scene-card { padding:0; overflow:hidden; text-align:left; background:#111722; border-radius:6px; }
+    .scene-card i { display:block; height:29px; background:var(--g); }
+    .scene-card span { display:block; padding:5px 7px; font-size:9px; letter-spacing:.03em; color:var(--muted); }
+    .scene-card.active { border-color:var(--amber); }
+    .scene-card.active span { color:var(--amber); }
+    .toggles { display:flex; flex-wrap:wrap; gap:6px; }
+    .toggles button { font-size:10px; padding:5px 8px; }
+    .note { color:var(--muted); font-size:10px; line-height:1.7; }
+    .status {
+      display:flex; gap:16px; flex-wrap:wrap; padding:7px 13px; background:#0c1017;
+      border-top:1px solid var(--border); color:var(--muted); font-size:10px;
+    }
+    .status b { color:var(--text); font-variant-numeric:tabular-nums; }
+    :where(button,select,input,#canvas):focus-visible { outline:2px solid var(--amber); outline-offset:1px; }
+    @media (max-width:900px) {
+      .main { grid-template-columns:1fr; }
+      .panel-toggle { display:inline-flex; }
+      aside {
+        position:absolute; right:0; top:0; bottom:0; width:min(300px,84vw); z-index:4;
+        transform:translateX(101%); transition:transform .2s ease; box-shadow:-12px 0 40px rgba(0,0,0,.5);
+      }
+      .main.open aside { transform:none; }
+      .hint { display:none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">RAY <span>TRACER</span><sup>v3</sup></div>
+    <select id="scene" aria-label="Scena">
+      <option value="studio">Studio · złoto, szkło, światło</option>
+      <option value="nebula">Nebula · mgławica i emissywa</option>
+      <option value="corridor">Corridor · korytarz</option>
+      <option value="cornell">Cornell · pudełko kolorów</option>
+      <option value="monolith">Monolith · słońce i cienie</option>
+      <option value="orbit">Orbit · układ planet</option>
+      <option value="prism">Prism · załamanie i szkło</option>
+      <option value="temple">Temple · kolumny i światło</option>
+      <option value="aurora">Aurora · świetlne wstęgi</option>
+      <option value="voxel">Voxel · kolorowa architektura</option>
+    </select>
+    <select id="resolution" aria-label="Rozdzielczość renderu">
+      <option value="320">320 × 200</option>
+      <option value="480" selected>480 × 300</option>
+      <option value="640">640 × 400</option>
+      <option value="800">800 × 500</option>
+    </select>
+    <select id="target" aria-label="Liczba próbek na piksel">
+      <option value="8">8 spp · szybko</option>
+      <option value="16">16 spp · turbo</option>
+      <option value="32" selected>32 spp · standard</option>
+      <option value="96">96 spp · jakość</option>
+      <option value="256">256 spp · referencja</option>
+    </select>
+    <button type="button" id="turboBtn" class="turbo">⚡ Turbo</button>
+    <button type="button" id="randomBtn">🎲 Kąt</button>
+    <button type="button" id="pauseBtn">❚❚ Pauza</button>
+    <button type="button" id="resetBtn" class="primary">↺ Restart</button>
+    <button type="button" id="saveBtn">⤓ PNG</button>
+    <button type="button" id="panelBtn" class="panel-toggle" aria-label="Otwórz panel">⚙</button>
+  </header>
+
+  <div class="main" id="main">
+    <div class="stage">
+      <canvas id="canvas" tabindex="0" aria-label="Progresywnie renderowany obraz. Przeciągnij, aby obrócić kamerę, przewiń, aby przybliżyć, lub użyj strzałek."></canvas>
+      <div class="overlay"><span>SPP <b id="spp">0</b></span><span><b id="sceneBadge">STUDIO</b></span><span><b id="resBadge">480 × 300</b></span></div>
+      <div class="hint">przeciągnij · orbit &nbsp;|&nbsp; scroll · zoom &nbsp;|&nbsp; ↑↓←→ · kamera</div>
+      <div class="progress"><i id="progress"></i></div>
+    </div>
+    <aside id="panel">
+      <div class="card">
+        <h3>Sceny · 10</h3>
+        <div class="scenes" id="scenes"></div>
+      </div>
+      <div class="card">
+        <h3>Kamera i optyka</h3>
+        <div class="slider-row">
+          <label>FOV <b id="fovValue">45°</b></label>
+          <input type="range" id="fov" min="15" max="90" step="1" value="45">
+        </div>
+        <div class="slider-row">
+          <label>Aperture (DOF) <b id="apValue">0.030</b></label>
+          <input type="range" id="aperture" min="0" max="0.2" step="0.005" value="0.03">
+        </div>
+        <div class="slider-row">
+          <label>Focus <b id="focusValue">5.4</b></label>
+          <input type="range" id="focus" min="0.5" max="20" step="0.1" value="5.4">
+        </div>
+        <div class="slider-row">
+          <label>Ekspozycja <b id="expValue">1.10</b></label>
+          <input type="range" id="exposure" min="0.2" max="3" step="0.05" value="1.1">
+        </div>
+        <div class="slider-row">
+          <label>Moc światła <b id="lpValue">1.0×</b></label>
+          <input type="range" id="lightPower" min="0.2" max="3" step="0.1" value="1">
+        </div>
+        <div class="slider-row">
+          <label>Maks. odbicia <b id="bounceValue">6</b></label>
+          <input type="range" id="bounces" min="1" max="10" step="1" value="6">
+        </div>
+        <div class="slider-row">
+          <label>Rozmiar źródła <b id="lightValue">1.30</b></label>
+          <input type="range" id="lightSize" min="0.2" max="3" step="0.05" value="1.3">
+        </div>
+      </div>
+      <div class="card">
+        <h3>Jakość</h3>
+        <div class="toggles">
+          <button type="button" id="dofBtn" class="active">DOF</button>
+          <button type="button" id="acesBtn" class="active">ACES</button>
+          <button type="button" id="denoiseBtn" class="active">Denoise</button>
+          <button type="button" id="neeBtn" class="active">Światło NEE</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Statystyki renderu</h3>
+        <div class="row"><span>Próbki / piksel</span><b id="statSpp" class="amber">0</b></div>
+        <div class="row"><span>Promienie</span><b id="statRays">0</b></div>
+        <div class="row"><span>Prędkość</span><b id="statSpeed" class="cyan">—</b></div>
+        <div class="row"><span>Czas</span><b id="statTime">0.0 s</b></div>
+        <div class="row"><span>Pozostało</span><b id="statEta">—</b></div>
+        <div class="row"><span>Rozdzielczość</span><b id="statRes">480 × 300</b></div>
+        <div class="row"><span>Status</span><b id="statState">RENDERING</b></div>
+      </div>
+      <div class="card note" id="sceneInfo"></div>
+      <div class="card note">
+        Silnik próbkuje powierzchnie źródeł i tarczę słońca (NEE), więc cienie i odbicia zbiegają szybciej niż przy czystym path tracingu. Geometria jest spakowana w tablice `Float32Array`, tonemapping korzysta z LUT, a obraz odświeżany jest rzadziej niż liczone promienie — dzięki temu więcej czasu idzie na render, nie na interfejs.
+      </div>
+    </aside>
+  </div>
+
+  <div class="status">
+    <span>Silnik <b>CPU Monte Carlo · NEE + LUT + Float32Array</b></span>
+    <span>Scena <b id="bottomScene">STUDIO</b></span>
+    <span>Tonemap <b id="bottomTone">ACES filmic</b></span>
+    <span id="notice">Renderowanie progresywne</span>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const $ = (id) => document.getElementById(id);
+      const canvas = $('canvas');
+      const ctx = canvas.getContext('2d', { alpha: false });
+      const DIFF = 0, METAL = 1, GLASS = 2, CHECK = 3, GLOSSY = 4, LIGHT = 5;
+      const STRIDE = 12;
+
+      let W = 480, H = 300;
+      let acc = new Float32Array(W * H * 3);
+      let image = null, denoiseBuf = null;
+      let samples = 0, cursor = 0, rays = 0;
+      let running = true, raf = null;
+      let dof = true, aces = true, denoise = true, nee = true, turbo = false;
+      let startTime = performance.now(), lastDisplayAt = 0, lastStatsAt = 0;
+      let geo = new Float32Array(0), objMeta = [], shadowIdx = new Int32Array(0);
+      let lights = [], sun = null, skyNebula = false;
+      let view = null, camera = null;
+      let rngState = 1337;
+      let savedSettings = null;
+
+      const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+      const rand = () => {
+        rngState ^= rngState << 13; rngState ^= rngState >>> 17; rngState ^= rngState << 5;
+        return (rngState >>> 0) / 4294967296;
+      };
+      const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+      const norm = (a) => { const l = Math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+
+      function mat(type, color, extra = {}) {
+        return {
+          type, c: color, e: extra.emit || null, power: extra.power || 0,
+          rough: extra.rough || 0, c2: extra.color2 || null,
+          scale: extra.scale || 1.5, ior: extra.ior || 1.5
+        };
+      }
+      const sphere = (cx, cy, cz, r, m, light = false) => ({ kind: 0, cx, cy, cz, r, mat: m, light });
+      const plane = (axis, p, m) => ({ kind: 1, axis, p, mat: m });
+      const box = (mn, mx, m) => ({ kind: 2, mn, mx, mat: m });
+
+      const SCENES = {
+        studio: {
+          label: 'STUDIO', gradient: 'linear-gradient(135deg,#18202c,#e8b45c 58%,#67e8f9)',
+          info: 'Złota kula, matowa czerwień, szkło i szachownica oświetlone dużym softboxem. Klasyczny test odbić i cieni.',
+          camera: { target: [0, 0, -0.2], dist: 5.4, yaw: Math.PI / 2, pitch: 0.28, fov: 45 },
+          objects: [
+            sphere(0, 0, 0, 1, mat(METAL, [0.96, 0.74, 0.30], { rough: 0.05 })),
+            sphere(-2.1, -0.25, -0.6, 0.86, mat(DIFF, [0.86, 0.19, 0.17])),
+            sphere(2.05, -0.35, 0.1, 0.92, mat(GLASS, [0.68, 0.92, 1])),
+            sphere(-1.1, -0.76, 1.7, 0.42, mat(GLOSSY, [0.18, 0.8, 0.9], { rough: 0.12 })),
+            plane(1, -1.2, mat(CHECK, [0.78, 0.78, 0.78], { color2: [0.22, 0.24, 0.27], scale: 1.6 })),
+            sphere(0, 4.2, -1, 1.3, mat(LIGHT, [1, 0.93, 0.8], { emit: [1, 0.93, 0.8], power: 24 }), true)
+          ]
+        },
+        nebula: {
+          label: 'NEBULA', gradient: 'radial-gradient(circle at 70% 30%,#ff5f9e,#4c1d95 45%,#080a0f)',
+          info: 'Szklana kula w procedurally generowanej mgławicy. Kolorowe źródła punktowe i pierścień metalowych cząstek.',
+          camera: { target: [0, 0, 0], dist: 6.2, yaw: 1.9, pitch: 0.15, fov: 52 },
+          nebula: true,
+          objects: [
+            sphere(0, 0, 0, 1.25, mat(GLASS, [0.72, 0.86, 1], { ior: 1.45 })),
+            sphere(-2.4, 1.2, -1, 0.5, mat(LIGHT, [0.25, 0.8, 1], { emit: [0.25, 0.8, 1], power: 11 }), true),
+            sphere(2.5, -0.8, -0.5, 0.65, mat(LIGHT, [1, 0.3, 0.55], { emit: [1, 0.3, 0.55], power: 9 }), true),
+            sphere(1.1, 2.2, -2.5, 0.35, mat(LIGHT, [0.7, 0.4, 1], { emit: [0.7, 0.4, 1], power: 13 }), true),
+            sphere(-2.8, -1.9, 1, 0.9, mat(METAL, [0.55, 0.6, 0.7], { rough: 0.1 })),
+            ...Array.from({ length: 12 }, (_, i) => {
+              const a = i / 12 * Math.PI * 2;
+              return sphere(Math.cos(a) * 3.3, -0.8 + Math.sin(a * 2) * 0.22, Math.sin(a) * 3.3 - 0.4,
+                0.2, mat(METAL, [0.8, 0.65, 0.9], { rough: 0.07 }));
+            })
+          ]
+        },
+        corridor: {
+          label: 'CORRIDOR', gradient: 'linear-gradient(90deg,#b06b54,#304050 60%,#0c1017)',
+          info: 'Korytarz z kolorowymi ścianami, filarami, kulą metalu i szkłem. Światło lampy rzuca długie cienie.',
+          camera: { target: [0, 0, -2], dist: 6.6, yaw: Math.PI / 2, pitch: 0.1, fov: 55 },
+          objects: [
+            plane(1, -1.5, mat(CHECK, [0.55, 0.6, 0.65], { color2: [0.3, 0.34, 0.4], scale: 1.2 })),
+            plane(1, 2.2, mat(DIFF, [0.42, 0.45, 0.5])),
+            plane(0, -2.4, mat(DIFF, [0.72, 0.42, 0.32])),
+            plane(0, 2.4, mat(DIFF, [0.32, 0.55, 0.68])),
+            plane(2, -7, mat(DIFF, [0.35, 0.38, 0.45])),
+            box([-2.4, -1.5, -4.6], [-2.05, 2.2, -4.2], mat(METAL, [0.7, 0.6, 0.5], { rough: 0.15 })),
+            box([2.05, -1.5, -4.6], [2.4, 2.2, -4.2], mat(METAL, [0.7, 0.6, 0.5], { rough: 0.15 })),
+            sphere(-1.2, 0, -2.2, 0.8, mat(METAL, [0.9, 0.75, 0.5], { rough: 0.1 })),
+            sphere(1.2, -0.4, -3.5, 0.75, mat(GLASS, [0.8, 0.95, 1])),
+            sphere(0, 1.85, -1.2, 0.45, mat(LIGHT, [1, 0.9, 0.72], { emit: [1, 0.9, 0.72], power: 18 }), true)
+          ]
+        },
+        cornell: {
+          label: 'CORNELL', gradient: 'linear-gradient(135deg,#d94f4f,#e8e2d0 50%,#3aa76d)',
+          info: 'Klasyczne pudełko Cornella: czerwona i zielona ściana zabarwiają białe kule. Test color bleeding.',
+          camera: { target: [0, 0.9, -0.6], dist: 4.4, yaw: Math.PI / 2, pitch: 0.03, fov: 43 },
+          objects: [
+            plane(1, -0.5, mat(DIFF, [0.76, 0.76, 0.72])),
+            plane(1, 2.6, mat(DIFF, [0.76, 0.76, 0.72])),
+            plane(0, -1.6, mat(DIFF, [0.85, 0.12, 0.12])),
+            plane(0, 1.6, mat(DIFF, [0.12, 0.6, 0.25])),
+            plane(2, -2.4, mat(DIFF, [0.76, 0.76, 0.72])),
+            box([-0.6, -0.5, -1.6], [-0.08, 0.72, -1.05], mat(DIFF, [0.78, 0.7, 0.5])),
+            box([0.2, -0.5, -0.5], [0.78, 1.4, 0.05], mat(DIFF, [0.4, 0.6, 0.85])),
+            sphere(0, 2.3, -0.8, 0.75, mat(LIGHT, [1, 0.96, 0.9], { emit: [1, 0.96, 0.9], power: 14 }), true)
+          ]
+        },
+        monolith: {
+          label: 'MONOLITH', gradient: 'linear-gradient(160deg,#f59e0b,#1f2937 45%,#67e8f9)',
+          info: 'Czarny monument z niebieskim paskiem na tle słońca. Lustrzana posadzka i ostre cienie kierunkowe.',
+          camera: { target: [0, 0.4, -0.5], dist: 6, yaw: 1.75, pitch: 0.16, fov: 46 },
+          sun: { dir: norm([-0.45, 0.78, 0.44]), color: [1, 0.86, 0.68], power: 58, angle: 0.055 },
+          objects: [
+            plane(1, -1.1, mat(METAL, [0.15, 0.17, 0.21], { rough: 0.04 })),
+            box([-0.36, -1.1, -0.85], [0.36, 2.3, -0.15], mat(GLOSSY, [0.04, 0.05, 0.07], { rough: 0.14 })),
+            box([-0.38, 0.3, -0.87], [0.38, 0.36, -0.13], mat(LIGHT, [0.3, 0.8, 1], { emit: [0.3, 0.8, 1], power: 7 })),
+            sphere(-2.1, -0.35, 0.2, 0.75, mat(METAL, [0.95, 0.6, 0.2], { rough: 0.1 })),
+            sphere(2.2, -0.55, -0.4, 0.55, mat(CHECK, [0.85, 0.85, 0.85], { color2: [0.1, 0.1, 0.12], scale: 3 })),
+            sphere(-1.4, 2.6, -1.5, 0.5, mat(LIGHT, [1, 0.95, 0.85], { emit: [1, 0.95, 0.85], power: 16 }), true)
+          ]
+        },
+        orbit: {
+          label: 'ORBIT', gradient: 'radial-gradient(circle at 50% 60%,#fbbf24,#1e3a8a 55%,#05070c)',
+          info: 'Szklane słońce centralne i czternaście metalowych planet na ciemnej szachownicy. Oświetla je słońce i lampa.',
+          camera: { target: [0, 0, 0], dist: 7.2, yaw: 1.6, pitch: 0.34, fov: 46 },
+          sun: { dir: norm([0.35, 0.9, 0.25]), color: [1, 0.95, 0.86], power: 46, angle: 0.05 },
+          objects: [
+            sphere(0, 0, 0, 1.05, mat(GLASS, [0.86, 0.95, 1], { ior: 1.5 })),
+            plane(1, -1.3, mat(CHECK, [0.14, 0.16, 0.2], { color2: [0.06, 0.07, 0.09], scale: 2 })),
+            sphere(0, 3.5, 0, 1.1, mat(LIGHT, [1, 0.9, 0.75], { emit: [1, 0.9, 0.75], power: 22 }), true),
+            ...Array.from({ length: 14 }, (_, i) => {
+              const a = i / 14 * Math.PI * 2;
+              const palette = [[0.9, 0.6, 0.25], [0.3, 0.65, 0.95], [0.75, 0.35, 0.85], [0.4, 0.85, 0.6]];
+              return sphere(Math.cos(a) * 2.9, -0.72 + Math.sin(a * 3) * 0.16, Math.sin(a) * 2.9,
+                0.2 + (i % 3) * 0.045, mat(METAL, palette[i % 4], { rough: 0.08 }));
+            })
+          ]
+        },
+        prism: {
+          label: 'PRISM', gradient: 'linear-gradient(135deg,#e0f2fe,#a78bfa 50%,#fb7185)',
+          info: 'Szkło o trzech współczynnikach załamania i słońce. Kule i bryła załamują światło na jasnej posadzce.',
+          camera: { target: [0, 0, 0], dist: 6.4, yaw: 1.55, pitch: 0.18, fov: 48 },
+          sun: { dir: norm([-0.3, 0.85, 0.4]), color: [1, 0.96, 0.9], power: 38, angle: 0.035 },
+          objects: [
+            plane(1, -1.3, mat(DIFF, [0.82, 0.84, 0.88])),
+            box([-0.7, -1.3, -0.35], [0.7, 0.9, 0.35], mat(GLASS, [0.85, 0.95, 1], { ior: 1.45 })),
+            sphere(-2, -0.5, 0.5, 0.75, mat(GLASS, [1, 0.75, 0.9], { ior: 1.6 })),
+            sphere(2, -0.55, -0.2, 0.8, mat(GLASS, [0.7, 1, 0.85], { ior: 1.33 })),
+            sphere(0, -0.9, -2, 1.6, mat(METAL, [0.9, 0.9, 0.95], { rough: 0.02 })),
+            sphere(-1.5, 2.5, -1, 0.6, mat(LIGHT, [1, 0.98, 0.94], { emit: [1, 0.98, 0.94], power: 18 }), true)
+          ]
+        },
+        temple: {
+          label: 'TEMPLE', gradient: 'linear-gradient(160deg,#d6b47a,#7c5c3e 55%,#0f141c)',
+          info: 'Rząd kamiennych kolumn, szachownica i złota kula. Światło słońca przechodzi między filarami.',
+          camera: { target: [0, 0.4, -1], dist: 7, yaw: 1.62, pitch: 0.16, fov: 50 },
+          sun: { dir: norm([0.25, 0.9, -0.3]), color: [1, 0.88, 0.7], power: 45, angle: 0.045 },
+          objects: [
+            plane(1, -1.2, mat(CHECK, [0.7, 0.66, 0.58], { color2: [0.35, 0.32, 0.28], scale: 1.1 })),
+            ...Array.from({ length: 6 }, (_, i) => {
+              const z = -4 + i * 1.4, x = i % 2 ? 2 : -2;
+              return box([x - 0.28, -1.2, z - 0.28], [x + 0.28, 1.9, z + 0.28], mat(METAL, [0.8, 0.74, 0.62], { rough: 0.2 }));
+            }),
+            sphere(0, -0.45, -1.2, 0.75, mat(METAL, [0.95, 0.7, 0.25], { rough: 0.08 })),
+            sphere(1, -0.75, 1, 0.45, mat(GLASS, [0.6, 0.9, 1])),
+            sphere(-3.2, 3, -2, 0.6, mat(LIGHT, [1, 0.9, 0.75], { emit: [1, 0.9, 0.75], power: 20 }), true)
+          ]
+        },
+        aurora: {
+          label: 'AURORA', gradient: 'linear-gradient(180deg,#22d3ee,#4c1d95 45%,#05070c)',
+          info: 'Fale emissywnych wstęg nad lustrzaną wodą. Tylko część z nich realnie świeci — reszta odbija światło.',
+          camera: { target: [0, 1.2, -1], dist: 7, yaw: 1.6, pitch: 0.12, fov: 55 },
+          nebula: true,
+          objects: [
+            plane(1, -1.4, mat(METAL, [0.06, 0.12, 0.18], { rough: 0.03 })),
+            sphere(0, 0, 0, 1, mat(GLASS, [0.7, 0.9, 1], { ior: 1.3 })),
+            ...Array.from({ length: 18 }, (_, i) => {
+              const a = i / 18 * Math.PI * 2;
+              const y = 1.6 + Math.sin(i * 0.9) * 0.7;
+              const z = -1.2 + Math.cos(i * 0.6) * 1.4;
+              const col = i % 2 ? [0.2, 0.9, 0.7] : [0.5, 0.35, 1];
+              const glow = i % 6 === 0;
+              return sphere(Math.cos(a) * 3.4, y, z, 0.24,
+                glow ? mat(LIGHT, col, { emit: col, power: 12 }) : mat(GLOSSY, col, { rough: 0.1 }), glow);
+            })
+          ]
+        },
+        voxel: {
+          label: 'VOXEL', gradient: 'linear-gradient(135deg,#fb7185,#fbbf24 50%,#38bdf8)',
+          info: 'Wieża z dwudziestu czterech kolorowych bloków, szklana kula i ciepłe słońce. Test dużej liczby obiektów.',
+          camera: { target: [0, 0.4, 0], dist: 6.8, yaw: 1.7, pitch: 0.3, fov: 48 },
+          sun: { dir: norm([-0.5, 0.8, 0.3]), color: [1, 0.92, 0.8], power: 40, angle: 0.04 },
+          objects: [
+            plane(1, -1.2, mat(CHECK, [0.8, 0.82, 0.85], { color2: [0.2, 0.22, 0.25], scale: 1.4 })),
+            ...Array.from({ length: 24 }, (_, i) => {
+              const x = (i % 4 - 1.5) * 0.9, z = (Math.floor(i / 4) % 3 - 1) * 0.9, y = Math.floor(i / 12) * 0.9;
+              const cols = [[0.9, 0.3, 0.35], [0.25, 0.6, 0.9], [0.95, 0.75, 0.3], [0.4, 0.8, 0.5]];
+              return box([x - 0.42, y - 1.2, z - 0.42], [x + 0.42, y - 0.36, z + 0.42], mat(GLOSSY, cols[i % 4], { rough: 0.18 }));
+            }),
+            sphere(2.2, -0.6, 1, 0.55, mat(GLASS, [0.8, 0.95, 1])),
+            sphere(-2.3, 1.8, -1, 0.55, mat(LIGHT, [1, 0.95, 0.85], { emit: [1, 0.95, 0.85], power: 16 }), true)
+          ]
+        }
+      };
+
+      const hitA = { t: 0, x: 0, y: 0, z: 0, nx: 0, ny: 0, nz: 0, mat: null, light: false };
+      const hitB = { t: 0, x: 0, y: 0, z: 0, nx: 0, ny: 0, nz: 0, mat: null, light: false };
+      const rayBuf = [0, 0, 0, 0, 0, 0];
+      const radBuf = [0, 0, 0];
+      const directBuf = [0, 0, 0];
+      const bgBuf = [0, 0, 0];
+      const bounceDir = [0, 0, 0];
+
+      function trace(ox, oy, oz, dx, dy, dz, maxDist, out, shadow = false) {
+        rays += 1;
+        let best = maxDist, found = false;
+        const count = shadow ? shadowIdx.length : objMeta.length;
+        for (let k = 0; k < count; k += 1) {
+          const i = shadow ? shadowIdx[k] : k;
+          const b = i * STRIDE;
+          const kind = geo[b] | 0;
+          let t;
+          if (kind === 0) {
+            const cx = geo[b + 1], cy = geo[b + 2], cz = geo[b + 3], r = geo[b + 4];
+            const ocx = ox - cx, ocy = oy - cy, ocz = oz - cz;
+            const bb = ocx * dx + ocy * dy + ocz * dz;
+            const c = ocx * ocx + ocy * ocy + ocz * ocz - r * r;
+            const disc = bb * bb - c;
+            if (disc < 0) continue;
+            const root = Math.sqrt(disc);
+            t = -bb - root;
+            if (t < 1e-4) t = -bb + root;
+            if (t < 1e-4 || t >= best) continue;
+            const px = ox + dx * t, py = oy + dy * t, pz = oz + dz * t;
+            const inv = 1 / r;
+            out.x = px; out.y = py; out.z = pz;
+            out.nx = (px - cx) * inv; out.ny = (py - cy) * inv; out.nz = (pz - cz) * inv;
+          } else if (kind === 1) {
+            const axis = geo[b + 1], p = geo[b + 2];
+            const org = axis === 0 ? ox : axis === 1 ? oy : oz;
+            const dir = axis === 0 ? dx : axis === 1 ? dy : dz;
+            if (dir > -1e-7 && dir < 1e-7) continue;
+            t = (p - org) / dir;
+            if (t < 1e-4 || t >= best) continue;
+            out.x = ox + dx * t; out.y = oy + dy * t; out.z = oz + dz * t;
+            if (axis === 0) { out.nx = dir < 0 ? 1 : -1; out.ny = 0; out.nz = 0; }
+            else if (axis === 1) { out.nx = 0; out.ny = dir < 0 ? 1 : -1; out.nz = 0; }
+            else { out.nx = 0; out.ny = 0; out.nz = dir < 0 ? 1 : -1; }
+          } else {
+            let tmin = -Infinity, tmax = Infinity, axis = -1, sign = -1, ok = true;
+            for (let a = 0; a < 3; a += 1) {
+              const org = a === 0 ? ox : a === 1 ? oy : oz;
+              const dir = a === 0 ? dx : a === 1 ? dy : dz;
+              const lo = geo[b + 1 + a], hi = geo[b + 4 + a];
+              if (dir > -1e-8 && dir < 1e-8) {
+                if (org < lo || org > hi) { ok = false; break; }
+                continue;
+              }
+              let t1 = (lo - org) / dir, t2 = (hi - org) / dir, s = -1;
+              if (t1 > t2) { const tmp = t1; t1 = t2; t2 = tmp; s = 1; }
+              if (t1 > tmin) { tmin = t1; axis = a; sign = s; }
+              if (t2 < tmax) tmax = t2;
+              if (tmin > tmax) { ok = false; break; }
+            }
+            if (!ok) continue;
+            t = tmin > 1e-4 ? tmin : tmax;
+            if (t < 1e-4 || t >= best) continue;
+            out.x = ox + dx * t; out.y = oy + dy * t; out.z = oz + dz * t;
+            out.nx = 0; out.ny = 0; out.nz = 0;
+            if (axis === 0) out.nx = sign;
+            else if (axis === 1) out.ny = sign;
+            else if (axis === 2) out.nz = sign;
+          }
+          best = t; found = true;
+          out.t = t; out.mat = objMeta[i].mat; out.light = objMeta[i].light;
+        }
+        return found;
+      }
+
+      function hash3(x, y, z) {
+        let h = Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(z, 1274126177);
+        h = Math.imul(h ^ (h >>> 13), 1274126177);
+        return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
+      }
+      function noise3(x, y, z) {
+        const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+        const xf = x - xi, yf = y - yi, zf = z - zi;
+        const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf), w = zf * zf * (3 - 2 * zf);
+        const lerp = (a, b, t) => a + t * (b - a);
+        const c000 = hash3(xi, yi, zi), c100 = hash3(xi + 1, yi, zi);
+        const c010 = hash3(xi, yi + 1, zi), c110 = hash3(xi + 1, yi + 1, zi);
+        const c001 = hash3(xi, yi, zi + 1), c101 = hash3(xi + 1, yi, zi + 1);
+        const c011 = hash3(xi, yi + 1, zi + 1), c111 = hash3(xi + 1, yi + 1, zi + 1);
+        return lerp(
+          lerp(lerp(c000, c100, u), lerp(c010, c110, u), v),
+          lerp(lerp(c001, c101, u), lerp(c011, c111, u), v), w
+        );
+      }
+      function fbm(x, y, z) {
+        let value = 0, amplitude = 0.55;
+        for (let i = 0; i < 3; i += 1) {
+          value += amplitude * noise3(x, y, z);
+          x *= 2.07; y *= 2.07; z *= 2.07; amplitude *= 0.5;
+        }
+        return value;
+      }
+
+      function background(dx, dy, dz) {
+        const t = 0.5 * (dy + 1);
+        let r = (1 - t) * 0.055 + t * 0.012;
+        let g = (1 - t) * 0.075 + t * 0.022;
+        let b = (1 - t) * 0.125 + t * 0.045;
+        if (skyNebula) {
+          const n = fbm(dx * 3.4 + 4, dy * 3.4 - 2, dz * 3.4 + 7);
+          r += n * n * 0.42; g += n * 0.12; b += n * n * 0.55;
+          const s = Math.pow(Math.max(0, dx * 0.5 + dy * 0.3 + dz * 0.8), 18);
+          r += s * 0.5; g += s * 0.28; b += s * 0.6;
+        } else if (sun) {
+          const d = dx * sun.dir[0] + dy * sun.dir[1] + dz * sun.dir[2];
+          const glow = Math.pow(Math.max(0, d), 48);
+          r += glow * sun.color[0] * 0.35;
+          g += glow * sun.color[1] * 0.3;
+          b += glow * sun.color[2] * 0.22;
+        }
+        bgBuf[0] = r; bgBuf[1] = g; bgBuf[2] = b;
+        return bgBuf;
+      }
+
+      function cosineHemisphere(nx, ny, nz) {
+        const ax = Math.abs(nx) > 0.6 ? 0 : 1, ay = Math.abs(nx) > 0.6 ? 1 : 0;
+        let t1x = -nz * ay, t1y = nz * ax, t1z = ny * ax - nx * ay;
+        const t1len = Math.sqrt(t1x * t1x + t1y * t1y + t1z * t1z) || 1;
+        t1x /= t1len; t1y /= t1len; t1z /= t1len;
+        const t2x = ny * t1z - nz * t1y, t2y = nz * t1x - nx * t1z, t2z = nx * t1y - ny * t1x;
+        const phi = rand() * Math.PI * 2, r2 = rand(), r2s = Math.sqrt(r2), z = Math.sqrt(1 - r2);
+        const c = Math.cos(phi) * r2s, s = Math.sin(phi) * r2s;
+        bounceDir[0] = t1x * c + t2x * s + nx * z;
+        bounceDir[1] = t1y * c + t2y * s + ny * z;
+        bounceDir[2] = t1z * c + t2z * s + nz * z;
+        return bounceDir;
+      }
+
+      function sampleDirect(px, py, pz, nx, ny, nz, ar, ag, ab) {
+        let dr = 0, dg = 0, db = 0;
+        for (let i = 0; i < lights.length; i += 1) {
+          const light = lights[i];
+          let rx, ry, rz, len;
+          do {
+            rx = rand() * 2 - 1; ry = rand() * 2 - 1; rz = rand() * 2 - 1;
+            len = rx * rx + ry * ry + rz * rz;
+          } while (len > 1 || len < 1e-8);
+          const inv = 1 / Math.sqrt(len);
+          rx *= inv; ry *= inv; rz *= inv;
+          const lx = light.cx + rx * light.r, ly = light.cy + ry * light.r, lz = light.cz + rz * light.r;
+          const vx = lx - px, vy = ly - py, vz = lz - pz;
+          const dist = Math.sqrt(vx * vx + vy * vy + vz * vz);
+          if (dist < 1e-4) continue;
+          const wx = vx / dist, wy = vy / dist, wz = vz / dist;
+          const cosS = nx * wx + ny * wy + nz * wz;
+          const cosL = -(rx * wx + ry * wy + rz * wz);
+          if (cosS <= 0 || cosL <= 0) continue;
+          const blocked = trace(px + nx * 0.003, py + ny * 0.003, pz + nz * 0.003, wx, wy, wz, dist - 0.02, hitB, true);
+          if (blocked) continue;
+          const area = 4 * Math.PI * light.r * light.r;
+          const factor = area * cosS * cosL / (Math.PI * dist * dist);
+          const m = light.mat, power = m.power;
+          dr += ar * m.e[0] * power * factor;
+          dg += ag * m.e[1] * power * factor;
+          db += ab * m.e[2] * power * factor;
+        }
+        if (sun) {
+          const phi = rand() * Math.PI * 2;
+          const c = 1 - rand() * (1 - sun.cosAngle);
+          const s = Math.sqrt(Math.max(0, 1 - c * c));
+          const rx = Math.abs(sun.dir[1]) < 0.9 ? 0 : 1;
+          const ry = Math.abs(sun.dir[1]) < 0.9 ? 1 : 0;
+          let ux = ry * sun.dir[2], uy = -rx * sun.dir[2], uz = rx * sun.dir[1] - ry * sun.dir[0];
+          const ul = Math.sqrt(ux * ux + uy * uy + uz * uz) || 1;
+          ux /= ul; uy /= ul; uz /= ul;
+          const vx = sun.dir[1] * uz - sun.dir[2] * uy;
+          const vy = sun.dir[2] * ux - sun.dir[0] * uz;
+          const vz = sun.dir[0] * uy - sun.dir[1] * ux;
+          const cp = Math.cos(phi) * s, sp = Math.sin(phi) * s;
+          const wx = ux * cp + vx * sp + sun.dir[0] * c;
+          const wy = uy * cp + vy * sp + sun.dir[1] * c;
+          const wz = uz * cp + vz * sp + sun.dir[2] * c;
+          const cosS = nx * wx + ny * wy + nz * wz;
+          if (cosS > 0) {
+            const blocked = trace(px + nx * 0.003, py + ny * 0.003, pz + nz * 0.003, wx, wy, wz, 1e6, hitB, true);
+            if (!blocked) {
+              const factor = cosS * sun.solidAngle / Math.PI * sun.power;
+              dr += ar * sun.color[0] * factor;
+              dg += ag * sun.color[1] * factor;
+              db += ab * sun.color[2] * factor;
+            }
+          }
+        }
+        directBuf[0] = dr; directBuf[1] = dg; directBuf[2] = db;
+        return directBuf;
+      }
+
+      function refract(dx, dy, dz, nx, ny, nz, ratio) {
+        const cos = -(nx * dx + ny * dy + nz * dz);
+        const k = 1 - ratio * ratio * (1 - cos * cos);
+        if (k < 0) return false;
+        const f = ratio * cos - Math.sqrt(k);
+        bounceDir[0] = dx * ratio + nx * f;
+        bounceDir[1] = dy * ratio + ny * f;
+        bounceDir[2] = dz * ratio + nz * f;
+        return true;
+      }
+
+      function radiance(ox, oy, oz, dx, dy, dz) {
+        const maxDepth = parseInt($('bounces').value, 10);
+        let lr = 0, lg = 0, lb = 0, tr = 1, tg = 1, tb = 1, specular = true;
+        for (let depth = 0; depth < maxDepth; depth += 1) {
+          if (!trace(ox, oy, oz, dx, dy, dz, 1e20, hitA)) {
+            if (depth === 0 || specular) {
+              const bg = background(dx, dy, dz);
+              lr += tr * bg[0]; lg += tg * bg[1]; lb += tb * bg[2];
+            }
+            break;
+          }
+          const m = hitA.mat;
+          const px = hitA.x, py = hitA.y, pz = hitA.z;
+          const nx = hitA.nx, ny = hitA.ny, nz = hitA.nz;
+          if (m.type === LIGHT) {
+            if (depth === 0 || specular) {
+              lr += tr * m.e[0] * m.power; lg += tg * m.e[1] * m.power; lb += tb * m.e[2] * m.power;
+            }
+            break;
+          }
+          let ar = m.c[0], ag = m.c[1], ab = m.c[2];
+          if (m.type === CHECK) {
+            const check = (Math.floor(px * m.scale) + Math.floor(pz * m.scale)) & 1;
+            if (!check && m.c2) { ar = m.c2[0]; ag = m.c2[1]; ab = m.c2[2]; }
+          }
+          const into = dx * nx + dy * ny + dz * nz < 0;
+          if (m.type === METAL || m.type === GLASS) {
+            if (m.type === METAL) {
+              const dot = dx * nx + dy * ny + dz * nz;
+              let rx = dx - 2 * dot * nx, ry = dy - 2 * dot * ny, rz = dz - 2 * dot * nz;
+              if (m.rough > 0) {
+                let jx, jy, jz, len;
+                do {
+                  jx = rand() * 2 - 1; jy = rand() * 2 - 1; jz = rand() * 2 - 1;
+                  len = jx * jx + jy * jy + jz * jz;
+                } while (len > 1 || len < 1e-8);
+                rx += jx * m.rough; ry += jy * m.rough; rz += jz * m.rough;
+              }
+              const il = 1 / (Math.sqrt(rx * rx + ry * ry + rz * rz) || 1);
+              dx = rx * il; dy = ry * il; dz = rz * il;
+              tr *= ar; tg *= ag; tb *= ab;
+              specular = true;
+            } else {
+              const fn = into ? 1 : -1;
+              const nnx = nx * fn, nny = ny * fn, nnz = nz * fn;
+              const ni = into ? 1 : m.ior, nt = into ? m.ior : 1;
+              const r0 = ((ni - nt) / (ni + nt)) ** 2;
+              const cosTheta = Math.min(1, -(dx * nnx + dy * nny + dz * nnz));
+              const probability = r0 + (1 - r0) * (1 - cosTheta) ** 5;
+              if (rand() < probability || !refract(dx, dy, dz, nnx, nny, nnz, ni / nt)) {
+                const dot = dx * nnx + dy * nny + dz * nnz;
+                dx -= 2 * dot * nnx; dy -= 2 * dot * nny; dz -= 2 * dot * nnz;
+              } else { dx = bounceDir[0]; dy = bounceDir[1]; dz = bounceDir[2]; }
+              tr *= ar; tg *= ag; tb *= ab;
+              specular = true;
+            }
+          } else {
+            if (nee) {
+              const direct = sampleDirect(px, py, pz, nx, ny, nz, ar, ag, ab);
+              lr += tr * direct[0]; lg += tg * direct[1]; lb += tb * direct[2];
+            }
+            const dir = cosineHemisphere(nx, ny, nz);
+            dx = dir[0]; dy = dir[1]; dz = dir[2];
+            tr *= ar; tg *= ag; tb *= ab;
+            specular = false;
+          }
+          ox = px + dx * 0.004; oy = py + dy * 0.004; oz = pz + dz * 0.004;
+          if (depth >= 2) {
+            const p = clamp(Math.max(tr, tg, tb), 0.05, 0.95);
+            if (rand() > p) break;
+            const inv = 1 / p; tr *= inv; tg *= inv; tb *= inv;
+          }
+        }
+        radBuf[0] = lr; radBuf[1] = lg; radBuf[2] = lb;
+        return radBuf;
+      }
+
+      function cameraRay(x, y) {
+        const jx = (x + rand()) / W, jy = (y + rand()) / H;
+        const sx = (2 * jx - 1) * camera.half * (W / H);
+        const sy = (1 - 2 * jy) * camera.half;
+        let dx = camera.fx + camera.rx * sx + camera.ux * sy;
+        let dy = camera.fy + camera.ry * sx + camera.uy * sy;
+        let dz = camera.fz + camera.rz * sx + camera.uz * sy;
+        const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+        dx /= len; dy /= len; dz /= len;
+        let ox = camera.eye[0], oy = camera.eye[1], oz = camera.eye[2];
+        if (dof) {
+          const aperture = parseFloat($('aperture').value);
+          if (aperture > 0) {
+            const a = rand() * Math.PI * 2, r = Math.sqrt(rand()) * aperture;
+            const lx = Math.cos(a) * r, ly = Math.sin(a) * r;
+            ox += camera.rx * lx + camera.ux * ly;
+            oy += camera.ry * lx + camera.uy * ly;
+            oz += camera.rz * lx + camera.uz * ly;
+            const fd = view.focus / (dx * camera.fx + dy * camera.fy + dz * camera.fz);
+            const tx = camera.eye[0] + dx * fd - ox;
+            const ty = camera.eye[1] + dy * fd - oy;
+            const tz = camera.eye[2] + dz * fd - oz;
+            const tl = Math.sqrt(tx * tx + ty * ty + tz * tz) || 1;
+            dx = tx / tl; dy = ty / tl; dz = tz / tl;
+          }
+        }
+        rayBuf[0] = ox; rayBuf[1] = oy; rayBuf[2] = oz;
+        rayBuf[3] = dx; rayBuf[4] = dy; rayBuf[5] = dz;
+        return rayBuf;
+      }
+
+      const LUT_N = 4096, LUT_MAX = 16;
+      const toneLUT = new Uint8Array(LUT_N);
+      function buildToneLUT() {
+        const exposure = parseFloat($('exposure').value);
+        for (let i = 0; i < LUT_N; i += 1) {
+          let x = i / (LUT_N - 1) * LUT_MAX * exposure;
+          x = aces ? (x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14) : x / (1 + x);
+          toneLUT[i] = Math.round(255 * Math.pow(clamp(x, 0, 1), 1 / 2.2));
+        }
+      }
+      function tone(v) {
+        if (v <= 0) return 0;
+        const i = (v * ((LUT_N - 1) / LUT_MAX)) | 0;
+        return i >= LUT_N - 1 ? 255 : toneLUT[i];
+      }
+
+      function display() {
+        const scale = 1 / Math.max(1, samples);
+        const data = image.data;
+        const n = W * H;
+        for (let i = 0; i < n; i += 1) {
+          const j = i * 4, k = i * 3;
+          data[j] = tone(acc[k] * scale);
+          data[j + 1] = tone(acc[k + 1] * scale);
+          data[j + 2] = tone(acc[k + 2] * scale);
+          data[j + 3] = 255;
+        }
+        if (denoise && samples >= 2) {
+          denoiseBuf.set(data);
+          for (let y = 1; y < H - 1; y += 1) {
+            for (let x = 1; x < W - 1; x += 1) {
+              const i = y * W + x, j = i * 4;
+              const lc = (denoiseBuf[j] + denoiseBuf[j + 1] + denoiseBuf[j + 2]) / 3;
+              let wr = denoiseBuf[j], wg = denoiseBuf[j + 1], wb = denoiseBuf[j + 2], ws = 1;
+              const offsets = [-4, 4, -W * 4, W * 4];
+              for (let k = 0; k < 4; k += 1) {
+                const q = j + offsets[k];
+                const l = (denoiseBuf[q] + denoiseBuf[q + 1] + denoiseBuf[q + 2]) / 3;
+                const w = 1 / (1 + 14 * Math.abs(l - lc) / 255);
+                wr += denoiseBuf[q] * w; wg += denoiseBuf[q + 1] * w; wb += denoiseBuf[q + 2] * w; ws += w;
+              }
+              data[j] = wr / ws; data[j + 1] = wg / ws; data[j + 2] = wb / ws;
+            }
+          }
+        }
+        ctx.putImageData(image, 0, 0);
+      }
+
+      function refreshStats() {
+        const seconds = (performance.now() - startTime) / 1000;
+        const target = parseInt($('target').value, 10);
+        const remaining = Math.max(0, target - samples);
+        $('spp').textContent = String(samples);
+        $('statSpp').textContent = String(samples);
+        $('statRays').textContent = rays.toLocaleString('pl-PL').replace(/[\s\u00a0]/g, ' ');
+        $('statTime').textContent = `${seconds.toFixed(1)} s`;
+        $('statSpeed').textContent = seconds > 0 ? `${(rays / seconds / 1e6).toFixed(2)}M ray/s` : '—';
+        $('statEta').textContent = remaining > 0 && samples > 0 ? `${(seconds / samples * remaining).toFixed(1)} s` : '—';
+        $('progress').style.width = `${Math.min(100, samples / target * 100)}%`;
+      }
+
+      function finish() {
+        $('statState').textContent = 'GOTOWE';
+        $('notice').textContent = `Render zakończony · ${samples} spp · ${W}×${H}`;
+        refreshStats();
+      }
+
+      function frame() {
+        if (!running) { raf = null; return; }
+        const target = parseInt($('target').value, 10);
+        if (samples >= target) { display(); running = false; raf = null; finish(); return; }
+        const started = performance.now();
+        let processed = 0;
+        while (samples < target) {
+          if (cursor >= W * H) { cursor = 0; samples += 1; if (samples >= target) break; }
+          const ray = cameraRay(cursor % W, (cursor / W) | 0);
+          const value = radiance(ray[0], ray[1], ray[2], ray[3], ray[4], ray[5]);
+          const i = cursor * 3;
+          acc[i] += value[0]; acc[i + 1] += value[1]; acc[i + 2] += value[2];
+          cursor += 1; processed += 1;
+          if ((processed & 63) === 0 && performance.now() - started > 11) break;
+        }
+        const now = performance.now();
+        if (now - lastDisplayAt > 100 || samples >= target) { display(); lastDisplayAt = now; }
+        if (now - lastStatsAt > 160) { refreshStats(); lastStatsAt = now; }
+        if (samples >= target) { display(); running = false; raf = null; finish(); return; }
+        raf = requestAnimationFrame(frame);
+      }
+
+      function buildScene() {
+        const key = $('scene').value;
+        const def = SCENES[key];
+        const lightScale = parseFloat($('lightSize').value) / 1.3;
+        const powerScale = parseFloat($('lightPower').value);
+        const list = def.objects.map((o) => {
+          if (o.kind === 0 && o.light) return { ...o, r: o.r * lightScale, mat: { ...o.mat, power: o.mat.power * powerScale } };
+          if (o.mat && o.mat.type === LIGHT) return { ...o, mat: { ...o.mat, power: o.mat.power * powerScale } };
+          return o;
+        });
+        objMeta = list;
+        geo = new Float32Array(list.length * STRIDE);
+        const shadows = [];
+        for (let i = 0; i < list.length; i += 1) {
+          const o = list[i], b = i * STRIDE;
+          geo[b] = o.kind;
+          if (o.kind === 0) {
+            geo[b + 1] = o.cx; geo[b + 2] = o.cy; geo[b + 3] = o.cz; geo[b + 4] = o.r;
+          } else if (o.kind === 1) {
+            geo[b + 1] = o.axis; geo[b + 2] = o.p;
+          } else {
+            geo[b + 1] = o.mn[0]; geo[b + 2] = o.mn[1]; geo[b + 3] = o.mn[2];
+            geo[b + 4] = o.mx[0]; geo[b + 5] = o.mx[1]; geo[b + 6] = o.mx[2];
+          }
+          if (!o.light) shadows.push(i);
+        }
+        shadowIdx = Int32Array.from(shadows);
+        lights = list.filter((o) => o.light);
+        sun = def.sun ? {
+          ...def.sun, power: def.sun.power * powerScale,
+          cosAngle: Math.cos(def.sun.angle), solidAngle: 2 * Math.PI * (1 - Math.cos(def.sun.angle))
+        } : null;
+        skyNebula = !!def.nebula;
+        $('sceneBadge').textContent = def.label;
+        $('bottomScene').textContent = def.label;
+        $('sceneInfo').textContent = def.info;
+      }
+
+      function buildCamera() {
+        const yaw = view.yaw, pitch = view.pitch;
+        const cp = Math.cos(pitch), sp = Math.sin(pitch);
+        const eye = [
+          view.target[0] + view.dist * Math.cos(yaw) * cp,
+          view.target[1] + view.dist * sp,
+          view.target[2] + view.dist * Math.sin(yaw) * cp
+        ];
+        const fl = norm([view.target[0] - eye[0], view.target[1] - eye[1], view.target[2] - eye[2]]);
+        const right = norm(cross(fl, [0, 1, 0]));
+        const up = cross(right, fl);
+        const fov = parseFloat($('fov').value);
+        camera = {
+          eye, fx: fl[0], fy: fl[1], fz: fl[2],
+          rx: right[0], ry: right[1], rz: right[2],
+          ux: up[0], uy: up[1], uz: up[2],
+          half: Math.tan(fov * Math.PI / 360)
+        };
+      }
+
+      function clearRender() {
+        acc.fill(0); samples = 0; cursor = 0; rays = 0;
+        startTime = performance.now(); lastDisplayAt = 0; lastStatsAt = 0; rngState = 1337;
+        buildCamera();
+        if (!running) {
+          running = true;
+          $('pauseBtn').textContent = '❚❚ Pauza';
+          $('statState').textContent = 'RENDERING';
+          $('notice').textContent = 'Renderowanie progresywne';
+        }
+        if (!raf) raf = requestAnimationFrame(frame);
+        refreshStats();
+      }
+
+      function reset(resetView = false) {
+        if (raf) cancelAnimationFrame(raf);
+        raf = null;
+        const def = SCENES[$('scene').value];
+        if (resetView || !view) {
+          view = { ...def.camera, target: def.camera.target.slice(), focus: def.camera.dist };
+        }
+        $('fov').value = String(Math.round(view.fov));
+        $('focus').value = String(Math.round(view.focus * 10) / 10);
+        W = parseInt($('resolution').value, 10);
+        H = Math.round(W * 0.625);
+        canvas.width = W; canvas.height = H;
+        acc = new Float32Array(W * H * 3);
+        image = ctx.createImageData(W, H);
+        denoiseBuf = new Uint8ClampedArray(W * H * 4);
+        samples = 0; cursor = 0; rays = 0;
+        startTime = performance.now(); lastDisplayAt = 0; lastStatsAt = 0; rngState = 1337;
+        buildScene(); buildCamera(); buildToneLUT(); syncLabels(); syncToggles();
+        running = true;
+        $('pauseBtn').textContent = '❚❚ Pauza';
+        $('statState').textContent = 'RENDERING';
+        $('notice').textContent = 'Renderowanie progresywne';
+        $('resBadge').textContent = `${W} × ${H}`;
+        $('statRes').textContent = `${W} × ${H}`;
+        refreshStats();
+        raf = requestAnimationFrame(frame);
+      }
+
+      function syncLabels() {
+        $('fovValue').textContent = `${$('fov').value}°`;
+        $('apValue').textContent = parseFloat($('aperture').value).toFixed(3);
+        $('focusValue').textContent = parseFloat($('focus').value).toFixed(1);
+        $('expValue').textContent = parseFloat($('exposure').value).toFixed(2);
+        $('lpValue').textContent = `${parseFloat($('lightPower').value).toFixed(1)}×`;
+        $('bounceValue').textContent = $('bounces').value;
+        $('lightValue').textContent = parseFloat($('lightSize').value).toFixed(2);
+      }
+      function syncToggles() {
+        $('dofBtn').classList.toggle('active', dof);
+        $('acesBtn').classList.toggle('active', aces);
+        $('denoiseBtn').classList.toggle('active', denoise);
+        $('neeBtn').classList.toggle('active', nee);
+        $('acesBtn').textContent = aces ? 'ACES' : 'Reinhard';
+        $('bottomTone').textContent = aces ? 'ACES filmic' : 'Reinhard';
+      }
+
+      function buildSceneCards() {
+        const host = $('scenes');
+        host.replaceChildren();
+        Object.entries(SCENES).forEach(([key, def]) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'scene-card' + (key === $('scene').value ? ' active' : '');
+          button.dataset.scene = key;
+          const swatch = document.createElement('i');
+          swatch.style.setProperty('--g', def.gradient);
+          const label = document.createElement('span');
+          label.textContent = def.label;
+          button.append(swatch, label);
+          button.addEventListener('click', () => {
+            $('scene').value = key;
+            [...host.children].forEach((child) => child.classList.toggle('active', child === button));
+            reset(true);
+          });
+          host.appendChild(button);
+        });
+      }
+
+      $('resetBtn').addEventListener('click', () => reset(true));
+      $('scene').addEventListener('change', () => { buildSceneCards(); reset(true); });
+      $('resolution').addEventListener('change', () => reset(false));
+      $('pauseBtn').addEventListener('click', () => {
+        running = !running;
+        $('pauseBtn').textContent = running ? '❚❚ Pauza' : '▶ Wznów';
+        $('statState').textContent = running ? 'RENDERING' : 'PAUSED';
+        $('notice').textContent = running ? 'Renderowanie progresywne' : 'Render wstrzymany';
+        if (running && !raf) raf = requestAnimationFrame(frame);
+      });
+      $('saveBtn').addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = `raytracer-${$('scene').value}-${samples}spp.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        $('notice').textContent = 'Obraz PNG zapisany.';
+      });
+      $('panelBtn').addEventListener('click', () => {
+        const open = $('main').classList.toggle('open');
+        $('panelBtn').setAttribute('aria-label', open ? 'Zamknij panel' : 'Otwórz panel');
+      });
+      $('randomBtn').addEventListener('click', () => {
+        const base = SCENES[$('scene').value].camera.dist;
+        view.yaw = Math.random() * Math.PI * 2;
+        view.pitch = (Math.random() - 0.5) * 1.3;
+        view.dist = base * (0.8 + Math.random() * 0.6);
+        view.focus = view.dist;
+        $('focus').value = String(Math.round(view.focus * 10) / 10);
+        syncLabels();
+        clearRender();
+      });
+      $('turboBtn').addEventListener('click', () => {
+        turbo = !turbo;
+        $('turboBtn').classList.toggle('active', turbo);
+        $('turboBtn').textContent = turbo ? '⚡ Turbo ON' : '⚡ Turbo';
+        if (turbo) {
+          savedSettings = {
+            res: $('resolution').value, target: $('target').value,
+            bounces: $('bounces').value, aperture: $('aperture').value, dof, denoise
+          };
+          $('resolution').value = '320';
+          $('target').value = '16';
+          $('bounces').value = '3';
+          $('aperture').value = '0';
+          dof = false; denoise = false;
+        } else if (savedSettings) {
+          $('resolution').value = savedSettings.res;
+          $('target').value = savedSettings.target;
+          $('bounces').value = savedSettings.bounces;
+          $('aperture').value = savedSettings.aperture;
+          dof = savedSettings.dof; denoise = savedSettings.denoise;
+        }
+        reset(true);
+      });
+
+      ['fov', 'lightSize', 'aperture', 'exposure', 'bounces', 'target', 'focus', 'lightPower'].forEach((id) => {
+        $(id).addEventListener('input', () => {
+          syncLabels();
+          if (id === 'exposure') buildToneLUT();
+          if (id === 'focus') { view.focus = parseFloat($('focus').value); clearRender(); }
+          if (id === 'lightSize' || id === 'lightPower') { buildScene(); clearRender(); }
+          if (!running && (id === 'exposure' || id === 'aperture' || id === 'bounces')) display();
+        });
+      });
+      $('fov').addEventListener('change', () => { view.fov = parseFloat($('fov').value); reset(false); });
+      $('dofBtn').addEventListener('click', () => { dof = !dof; syncToggles(); clearRender(); });
+      $('acesBtn').addEventListener('click', () => {
+        aces = !aces; syncToggles(); buildToneLUT();
+        if (!running) display();
+      });
+      $('denoiseBtn').addEventListener('click', () => { denoise = !denoise; syncToggles(); display(); });
+      $('neeBtn').addEventListener('click', () => { nee = !nee; syncToggles(); clearRender(); });
+
+      let dragging = false, lastX = 0, lastY = 0;
+      canvas.addEventListener('pointerdown', (event) => {
+        dragging = true; lastX = event.clientX; lastY = event.clientY;
+        canvas.setPointerCapture(event.pointerId);
+      });
+      canvas.addEventListener('pointermove', (event) => {
+        if (!dragging) return;
+        view.yaw -= (event.clientX - lastX) * 0.006;
+        view.pitch = clamp(view.pitch + (event.clientY - lastY) * 0.006, -1.25, 1.25);
+        lastX = event.clientX; lastY = event.clientY;
+        clearRender();
+      });
+      canvas.addEventListener('pointerup', (event) => {
+        dragging = false;
+        if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+      });
+      canvas.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        view.dist = clamp(view.dist * Math.exp(event.deltaY * 0.001), 1.6, 24);
+        view.focus = view.dist;
+        $('focus').value = String(Math.round(view.focus * 10) / 10);
+        syncLabels();
+        clearRender();
+      }, { passive: false });
+      canvas.addEventListener('keydown', (event) => {
+        const step = 0.09;
+        if (event.key === 'ArrowLeft') view.yaw -= step;
+        else if (event.key === 'ArrowRight') view.yaw += step;
+        else if (event.key === 'ArrowUp') view.pitch = clamp(view.pitch + step, -1.25, 1.25);
+        else if (event.key === 'ArrowDown') view.pitch = clamp(view.pitch - step, -1.25, 1.25);
+        else if (event.key === '+' || event.key === '=') view.dist = clamp(view.dist * 0.9, 1.6, 24);
+        else if (event.key === '-') view.dist = clamp(view.dist * 1.1, 1.6, 24);
+        else return;
+        event.preventDefault();
+        clearRender();
+      });
+
+      window.__RT_DEBUG__ = {
+        state: () => ({
+          samples, rays, W, H, scene: $('scene').value, running,
+          yaw: view.yaw, pitch: view.pitch, dist: view.dist, focus: view.focus,
+          objects: objMeta.length, lights: lights.length,
+          dof, aces, denoise, nee, turbo
+        }),
+        forceSamples: (count = 4) => {
+          if (raf) cancelAnimationFrame(raf);
+          raf = null; running = false;
+          acc.fill(0); samples = 0; cursor = 0; rays = 0;
+          buildCamera();
+          for (let s = 0; s < count; s += 1) {
+            rngState = 1337 + s * 7919;
+            for (let i = 0; i < W * H; i += 1) {
+              const ray = cameraRay(i % W, (i / W) | 0);
+              const value = radiance(ray[0], ray[1], ray[2], ray[3], ray[4], ray[5]);
+              const j = i * 3;
+              acc[j] += value[0]; acc[j + 1] += value[1]; acc[j + 2] += value[2];
+            }
+            samples += 1;
+          }
+          display(); refreshStats();
+          return samples;
+        }
+      };
+
+      buildSceneCards();
+      reset(true);
+    })();
+  </script>
+</body>
+</html>

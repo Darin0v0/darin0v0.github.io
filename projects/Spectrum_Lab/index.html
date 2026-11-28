@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#080c14">
+  <meta name="description" content="SPECTRUM LAB // stacja DSP: własny FFT, filtry w dziedzinie częstotliwości, spektrogram i analiza THD.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23080c14'/%3E%3Cpath d='M6 44h6V22h6v18h6V12h6v32h6V26h6v18h6V18h6v26h6' fill='none' stroke='%2367e8f9' stroke-width='3'/%3E%3C/svg%3E">
+  <title>Spectrum Lab — stacja DSP</title>
+  <style>
+    :root {
+      --bg:#080c14; --panel:#0d1420; --panel2:#111b2a; --border:#202e42;
+      --text:#e6f0ff; --muted:#7b8ca5; --cyan:#67e8f9; --pink:#ff7ad9; --amber:#ffc857;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; height:100%; }
+    body {
+      background:var(--bg); color:var(--text);
+      font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    header {
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:9px 13px;
+      background:#0b111c; border-bottom:1px solid var(--border);
+    }
+    .brand { font-weight:700; font-size:13px; letter-spacing:.04em; margin-right:6px; }
+    .brand span { color:var(--cyan); }
+    button, select {
+      font:inherit; color:var(--text); background:#121d2c; border:1px solid var(--border);
+      border-radius:6px; padding:6px 9px; cursor:pointer;
+    }
+    button:hover, select:hover { border-color:#36627f; background:#17263a; }
+    button.primary { background:var(--cyan); color:#04212a; border-color:var(--cyan); font-weight:700; }
+    button.active { background:#153947; color:var(--cyan); border-color:#2c7387; }
+    input[type="range"] { accent-color:var(--cyan); width:88px; }
+    .sep { width:1px; height:20px; background:var(--border); margin:0 3px; }
+    .label { color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.05em; }
+    .main { flex:1; display:grid; grid-template-columns:minmax(0,1fr) 246px; min-height:0; }
+    .stack { display:grid; grid-template-rows:1fr 1fr 0.8fr; min-width:0; min-height:0; }
+    .view { position:relative; border-bottom:1px solid var(--border); min-height:0; }
+    canvas { display:block; width:100%; height:100%; }
+    .tag {
+      position:absolute; top:8px; left:11px; font-size:9px; letter-spacing:.12em;
+      text-transform:uppercase; color:var(--muted); pointer-events:none;
+    }
+    .tag b { color:var(--cyan); font-weight:600; }
+    .legend { position:absolute; top:8px; right:11px; display:flex; gap:10px; font-size:9px; color:var(--muted); }
+    .legend i { display:inline-block; width:12px; height:2px; vertical-align:middle; margin-right:4px; }
+    aside { background:var(--panel); border-left:1px solid var(--border); padding:12px; overflow:auto; }
+    .card { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:11px; margin-bottom:10px; }
+    .card h3 { margin:0 0 9px; font-size:10px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+    .row { display:flex; justify-content:space-between; gap:8px; padding:3px 0; }
+    .row span { color:var(--muted); }
+    .row b { font-variant-numeric:tabular-nums; font-weight:600; }
+    .cyan { color:var(--cyan); } .pink { color:var(--pink); } .amber { color:var(--amber); }
+    .meter { height:5px; background:#0a1018; border-radius:3px; overflow:hidden; margin-top:5px; }
+    .meter > div { height:100%; width:0; background:linear-gradient(90deg,var(--cyan),var(--amber),var(--pink)); transition:width .12s; }
+    .note { color:var(--muted); font-size:10px; line-height:1.7; }
+    .status {
+      display:flex; gap:16px; flex-wrap:wrap; padding:7px 13px; background:#0b111c;
+      border-top:1px solid var(--border); color:var(--muted); font-size:10px;
+    }
+    .status b { color:var(--text); font-variant-numeric:tabular-nums; }
+    :where(button,select,input):focus-visible { outline:2px solid var(--cyan); outline-offset:1px; }
+    @media (max-width:860px) { .main { grid-template-columns:1fr; } aside { display:none; } .stack { grid-template-rows:1fr 1fr 0.6fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">SPECTRUM <span>LAB</span></div>
+    <button type="button" id="playBtn" class="primary">▶ Odtwórz</button>
+    <select id="wave" aria-label="Rodzaj sygnału">
+      <option value="sine">Sinusoida</option>
+      <option value="square">Fala prostokątna</option>
+      <option value="saw">Piłokształtna</option>
+      <option value="triangle">Trójkątna</option>
+      <option value="am">AM · modulacja amplitudy</option>
+      <option value="fm">FM · modulacja częstotliwości</option>
+      <option value="chirp">Chirp · przemiatanie</option>
+      <option value="noise">Szum</option>
+    </select>
+    <div class="sep"></div>
+    <span class="label">Częstotliwość</span>
+    <input type="range" id="freq" min="40" max="8000" step="10" value="440">
+    <span class="label" id="freqValue">440 Hz</span>
+    <span class="label">Amp</span>
+    <input type="range" id="amp" min="0.05" max="1" step="0.01" value="0.7">
+    <span class="label" id="ampValue">0.70</span>
+    <span class="label">Mod</span>
+    <input type="range" id="mod" min="0" max="1" step="0.01" value="0.35">
+    <div class="sep"></div>
+    <select id="filter" aria-label="Filtr">
+      <option value="all">Filtr: brak</option>
+      <option value="low">Dolno-przepustowy</option>
+      <option value="high">Górno-przepustowy</option>
+      <option value="band">Pasmowy</option>
+      <option value="notch">Zaporowy</option>
+    </select>
+    <span class="label">Fc</span>
+    <input type="range" id="cutoff" min="60" max="12000" step="10" value="1200">
+    <span class="label" id="cutoffValue">1200 Hz</span>
+    <span class="label">Q</span>
+    <input type="range" id="q" min="0.3" max="12" step="0.1" value="3">
+    <select id="winFunc" aria-label="Okno analizy FFT">
+      <option value="hann">Okno: Hann</option>
+      <option value="hamming">Okno: Hamming</option>
+      <option value="blackman">Okno: Blackman</option>
+      <option value="flat">Okno: Flat-top</option>
+      <option value="rect">Okno: prostokątne</option>
+    </select>
+    <button type="button" id="dbBtn" class="active" title="Przełącz skalę widma dB / liniowa">Skala dB</button>
+    <button type="button" id="peaksBtn" class="active" title="Pokaż znaczniki szczytów widma">Szczyty</button>
+    <button type="button" id="freezeBtn">❚❚ Zamroź</button>
+    <button type="button" id="logBtn" class="active">Skala log</button>
+    <button type="button" id="saveBtn" title="Zapisz wykresy jako PNG">PNG ⤓</button>
+  </header>
+
+  <div class="main">
+    <div class="stack">
+      <div class="view">
+        <canvas id="waveCanvas"></canvas>
+        <div class="tag">WAVEFORM · <b id="waveLabel">SINUSOIDA</b></div>
+        <div class="legend"><span><i style="background:#67e8f9"></i>oryginał</span><span><i style="background:#ff7ad9"></i>po filtrze</span></div>
+      </div>
+      <div class="view">
+        <canvas id="specCanvas"></canvas>
+        <div class="tag">FFT · <b>2048</b> PUNKTÓW · OKNO <b id="winLabelSide">HANN</b></div>
+      </div>
+      <div class="view">
+        <canvas id="waterCanvas"></canvas>
+        <div class="tag">SPEKTROGRAM · <b>CZAS →</b></div>
+      </div>
+    </div>
+    <aside>
+      <div class="card">
+        <h3>Pomiary sygnału</h3>
+        <div class="row"><span>RMS</span><b id="mRms" class="cyan">0.000</b></div>
+        <div class="row"><span>Szczyt</span><b id="mPeak">0.000</b></div>
+        <div class="row"><span>Crest factor</span><b id="mCrest">0.00 dB</b></div>
+        <div class="row"><span>Częstotliwość dom.</span><b id="mDom" class="amber">— Hz</b></div>
+        <div class="row"><span>THD (2–8 harm.)</span><b id="mThd" class="pink">—</b></div>
+        <div class="meter"><div id="thdBar"></div></div>
+      </div>
+      <div class="card">
+        <h3>Filtr w dziedzinie FFT</h3>
+        <div class="row"><span>Tłumienie @ Fc</span><b id="mCut">−3.0 dB</b></div>
+        <div class="row"><span>Szerokość pasma</span><b id="mBw">— Hz</b></div>
+        <div class="row"><span>Energia po filtrze</span><b id="mEnergy" class="cyan">0.000</b></div>
+        <div class="note" style="margin-top:8px">Maska częstotliwościowa nakładana na zespolony widmo → odwrotna FFT. Dzięki temu filtr jest idealny i nie dodaje własnego opóźnienia fazy.</div>
+      </div>
+      <div class="card">
+        <h3>Silnik</h3>
+        <div class="row"><span>Próbkowanie</span><b>44 100 Hz</b></div>
+        <div class="row"><span>FFT</span><b class="cyan">radix-2 Cooley–Tukey</b></div>
+        <div class="row"><span>Okno</span><b id="winLabel" class="cyan">Hann</b></div>
+        <div class="row"><span>Znaczniki</span><b id="peakCount">—</b></div>
+        <div class="row"><span>Format</span><b>Float32 · 16 bit audio</b></div>
+      </div>
+    </aside>
+  </div>
+
+  <div class="status">
+    <span>FPS <b id="fps">—</b></span>
+    <span>FFT <b id="fftTime">0.00 ms</b></span>
+    <span>Próbka <b>2048 / 46.4 ms</b></span>
+    <span id="notice">Generator → FFT → filtr → IFFT → spektrogram</span>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const SR = 44100;
+      const N = 2048;
+      const $ = (id) => document.getElementById(id);
+      const waveCanvas = $('waveCanvas'), waveCtx = waveCanvas.getContext('2d');
+      const specCanvas = $('specCanvas'), specCtx = specCanvas.getContext('2d');
+      const waterCanvas = $('waterCanvas'), waterCtx = waterCanvas.getContext('2d');
+      const waterfall = document.createElement('canvas');
+      waterfall.width = 320; waterfall.height = 180;
+      const waterOff = waterfall.getContext('2d', { willReadFrequently: true });
+
+      let lcg = 12345;
+      const random = () => { lcg = (lcg * 1664525 + 1013904223) >>> 0; return lcg / 4294967296; };
+      let frozen = false;
+      let logScale = true;
+      let dbScale = true;
+      let showPeaks = true;
+      let audioCtx = null, source = null, gain = null;
+      let lastFrame = performance.now(), frames = 0, fpsClock = performance.now(), fps = 60;
+
+      function fft(re, im, inverse) {
+        const n = re.length;
+        for (let i = 1, j = 0; i < n; i += 1) {
+          let bit = n >> 1;
+          for (; j & bit; bit >>= 1) j ^= bit;
+          j ^= bit;
+          if (i < j) {
+            let t = re[i]; re[i] = re[j]; re[j] = t;
+            t = im[i]; im[i] = im[j]; im[j] = t;
+          }
+        }
+        for (let len = 2; len <= n; len <<= 1) {
+          const angle = (inverse ? 2 : -2) * Math.PI / len;
+          const wr = Math.cos(angle), wi = Math.sin(angle);
+          for (let i = 0; i < n; i += len) {
+            let ur = 1, ui = 0;
+            for (let k = 0; k < len / 2; k += 1) {
+              const a = i + k, b = a + len / 2;
+              const tr = re[b] * ur - im[b] * ui;
+              const ti = re[b] * ui + im[b] * ur;
+              re[b] = re[a] - tr; im[b] = im[a] - ti;
+              re[a] += tr; im[a] += ti;
+              const next = ur * wr - ui * wi;
+              ui = ur * wi + ui * wr;
+              ur = next;
+            }
+          }
+        }
+        if (inverse) {
+          for (let i = 0; i < n; i += 1) { re[i] /= n; im[i] /= n; }
+        }
+      }
+
+      function generate() {
+        const type = $('wave').value;
+        const freq = parseFloat($('freq').value);
+        const amp = parseFloat($('amp').value);
+        const mod = parseFloat($('mod').value);
+        const signal = new Float32Array(N);
+        for (let i = 0; i < N; i += 1) {
+          const t = i / SR;
+          const phase = 2 * Math.PI * freq * t;
+          let value = 0;
+          switch (type) {
+            case 'sine': value = Math.sin(phase); break;
+            case 'square': value = Math.tanh(Math.sin(phase) * 12); break;
+            case 'saw': value = 2 * ((freq * t) % 1) - 1; break;
+            case 'triangle': value = 2 / Math.PI * Math.asin(Math.sin(phase)); break;
+            case 'am': value = (1 + mod * Math.sin(2 * Math.PI * 0.7 * freq * t)) * Math.sin(phase); break;
+            case 'fm': value = Math.sin(phase + mod * 8 * Math.sin(2 * Math.PI * 3 * freq * t)); break;
+            case 'chirp': value = Math.sin(2 * Math.PI * (freq * t + 0.5 * 9000 * t * t)); break;
+            case 'noise': value = random() * 2 - 1; break;
+            default: value = Math.sin(phase);
+          }
+          signal[i] = value * amp;
+        }
+        return signal;
+      }
+
+      function windowSample(i, n, type) {
+        const t = i / (n - 1);
+        const w1 = Math.cos(2 * Math.PI * t);
+        switch (type) {
+          case 'rect': return 1;
+          case 'hamming': return 0.54 - 0.46 * w1;
+          case 'blackman': return 0.42 - 0.5 * w1 + 0.08 * Math.cos(4 * Math.PI * t);
+          case 'flat': return 1 - 1.93 * w1 + 1.29 * Math.cos(4 * Math.PI * t) - 0.388 * Math.cos(6 * Math.PI * t) + 0.028 * Math.cos(8 * Math.PI * t);
+          default: return 0.5 - 0.5 * w1; // Hann
+        }
+      }
+
+      function filterMask(bin) {
+        const type = $('filter').value;
+        const cutoff = parseFloat($('cutoff').value);
+        const q = parseFloat($('q').value);
+        const f = bin * SR / N;
+        if (type === 'all') return 1;
+        if (type === 'low') return f <= cutoff ? 1 : 0;
+        if (type === 'high') return f >= cutoff ? 1 : 0;
+        const width = Math.max(20, cutoff / q);
+        const bell = Math.exp(-0.5 * ((f - cutoff) / width) ** 2);
+        if (type === 'band') return bell;
+        if (type === 'notch') return 1 - bell;
+        return 1;
+      }
+
+      function analyze() {
+        const started = performance.now();
+        const signal = generate();
+        const winType = $('winFunc').value;
+        const windowed = new Float32Array(N);
+        for (let i = 0; i < N; i += 1) windowed[i] = signal[i] * windowSample(i, N, winType);
+        const re = Float32Array.from(windowed);
+        const im = new Float32Array(N);
+        fft(re, im, false);
+
+        const magnitudes = new Float32Array(N / 2);
+        let maxMag = 0, dominant = 1;
+        for (let k = 1; k < N / 2; k += 1) {
+          const mag = Math.hypot(re[k], im[k]) / (N / 2);
+          magnitudes[k] = mag;
+          if (mag > maxMag) { maxMag = mag; dominant = k; }
+        }
+
+        const peaks = [];
+        for (let k = 2; k < N / 2 - 1; k += 1) {
+          if (magnitudes[k] > magnitudes[k - 1] && magnitudes[k] >= magnitudes[k + 1] && magnitudes[k] > maxMag * 0.02) {
+            peaks.push({ bin: k, freq: k * SR / N, mag: magnitudes[k] });
+          }
+        }
+        peaks.sort((a, b) => b.mag - a.mag);
+        const topPeaks = peaks.slice(0, 6).sort((a, b) => a.freq - b.freq);
+
+        const fre = Float32Array.from(windowed);
+        const fim = new Float32Array(N);
+        fft(fre, fim, false);
+        for (let k = 0; k < N; k += 1) {
+          const mask = filterMask(k > N / 2 ? N - k : k);
+          fre[k] *= mask; fim[k] *= mask;
+        }
+        fft(fre, fim, true);
+
+        let sumSq = 0, peak = 0, filteredSq = 0;
+        for (let i = 0; i < N; i += 1) {
+          const value = signal[i];
+          sumSq += value * value;
+          filteredSq += fre[i] * fre[i];
+          peak = Math.max(peak, Math.abs(value));
+        }
+        const rms = Math.sqrt(sumSq / N);
+        let harmonic = 0;
+        for (let h = 2; h <= 8; h += 1) {
+          const center = dominant * h;
+          if (center >= N / 2) break;
+          let local = 0;
+          for (let k = Math.max(1, center - 2); k <= Math.min(N / 2 - 1, center + 2); k += 1) local = Math.max(local, magnitudes[k]);
+          harmonic += local * local;
+        }
+        const thd = maxMag > 0 ? Math.sqrt(harmonic) / maxMag : 0;
+        const cutoff = parseFloat($('cutoff').value);
+        const q = parseFloat($('q').value);
+        const result = {
+          signal, filtered: fre, magnitudes, dominant: dominant * SR / N,
+          maxMag, peaks: topPeaks,
+          rms, peak, crest: rms > 0 ? 20 * Math.log10(peak / rms) : 0,
+          thd, filteredRms: Math.sqrt(filteredSq / N),
+          bandwidth: cutoff / q, cutoff,
+          fftMs: performance.now() - started
+        };
+        return result;
+      }
+
+      function fitCanvas(canvas) {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(1, Math.round(rect.width * ratio));
+        const height = Math.max(1, Math.round(rect.height * ratio));
+        if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+        canvas.getContext('2d').setTransform(ratio, 0, 0, ratio, 0, 0);
+        return { width: rect.width, height: rect.height };
+      }
+
+      function grid(ctx, width, height, cols = 10, rows = 4) {
+        ctx.strokeStyle = 'rgba(120,155,190,0.10)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 1; i < cols; i += 1) { const x = width * i / cols; ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+        for (let i = 1; i < rows; i += 1) { const y = height * i / rows; ctx.moveTo(0, y); ctx.lineTo(width, y); }
+        ctx.stroke();
+      }
+
+      function drawWave(data) {
+        const { width, height } = fitCanvas(waveCanvas);
+        waveCtx.clearRect(0, 0, width, height);
+        grid(waveCtx, width, height, 12, 4);
+        waveCtx.strokeStyle = 'rgba(120,155,190,0.23)';
+        waveCtx.beginPath(); waveCtx.moveTo(0, height / 2); waveCtx.lineTo(width, height / 2); waveCtx.stroke();
+
+        const drawLine = (array, color, lineWidth, dash) => {
+          waveCtx.save();
+          if (dash) waveCtx.setLineDash([6, 5]);
+          waveCtx.strokeStyle = color; waveCtx.lineWidth = lineWidth;
+          waveCtx.beginPath();
+          const shown = 720;
+          for (let i = 0; i < shown; i += 1) {
+            const x = i / (shown - 1) * width;
+            const y = height / 2 - array[i] * height * 0.42;
+            if (i === 0) waveCtx.moveTo(x, y); else waveCtx.lineTo(x, y);
+          }
+          waveCtx.stroke();
+          waveCtx.restore();
+        };
+        drawLine(data.filtered, '#ff7ad9', 2.2, false);
+        drawLine(data.signal, '#67e8f9', 1.2, true);
+      }
+
+      function drawSpectrum(data) {
+        const { width, height } = fitCanvas(specCanvas);
+        specCtx.clearRect(0, 0, width, height);
+        grid(specCtx, width, height, 10, 5);
+        const maxDb = 10, minDb = -90;
+        const yOf = (value) => dbScale
+          ? height - (value - minDb) / (maxDb - minDb) * height
+          : height - Math.max(0, Math.min(1, value)) * height;
+        if (dbScale) {
+          specCtx.strokeStyle = 'rgba(255,200,87,0.25)';
+          specCtx.beginPath(); specCtx.moveTo(0, yOf(0)); specCtx.lineTo(width, yOf(0)); specCtx.stroke();
+        }
+
+        const bins = N / 2;
+        const xOf = (k) => {
+          if (!logScale) return k / bins * width;
+          const f = k * SR / N;
+          return Math.log(f / 40) / Math.log(20000 / 40) * width;
+        };
+        specCtx.fillStyle = '#67e8f9';
+        for (let k = 1; k < bins; k += 1) {
+          const mag = data.magnitudes[k];
+          const value = dbScale ? 20 * Math.log10(mag + 1e-9) : mag / (data.maxMag || 1);
+          if (dbScale && value < minDb) continue;
+          const x = xOf(k);
+          if (x < 0 || x > width) continue;
+          const y = yOf(value);
+          specCtx.globalAlpha = dbScale
+            ? 0.25 + 0.75 * Math.min(1, (value - minDb) / 70)
+            : 0.3 + 0.7 * Math.min(1, value);
+          specCtx.fillRect(x, y, logScale ? 2 : Math.max(1, width / bins), height - y);
+        }
+        specCtx.globalAlpha = 1;
+        specCtx.strokeStyle = '#ffc857'; specCtx.lineWidth = 1;
+        specCtx.beginPath();
+        specCtx.moveTo(xOf(data.dominant * SR / N) + 0.5, 0);
+        specCtx.lineTo(xOf(data.dominant * SR / N) + 0.5, height);
+        specCtx.stroke();
+
+        if (showPeaks) {
+          data.peaks.forEach((peak) => {
+            const x = xOf(peak.bin);
+            if (x < 0 || x > width) return;
+            const y = yOf(dbScale ? 20 * Math.log10(peak.mag + 1e-9) : peak.mag / (data.maxMag || 1));
+            specCtx.fillStyle = '#ff7ad9';
+            specCtx.beginPath(); specCtx.arc(x, y, 3, 0, Math.PI * 2); specCtx.fill();
+            specCtx.strokeStyle = 'rgba(255,122,217,0.55)';
+            specCtx.beginPath(); specCtx.moveTo(x, y); specCtx.lineTo(x, height); specCtx.stroke();
+            if (width > 420) {
+              specCtx.fillStyle = '#ffb6e8';
+              specCtx.font = '9px ui-monospace, monospace';
+              specCtx.textAlign = x > width - 70 ? 'right' : 'left';
+              specCtx.fillText(`${peak.freq.toFixed(0)} Hz`, x + (x > width - 70 ? -5 : 5), Math.max(11, y - 6));
+            }
+          });
+          specCtx.textAlign = 'left';
+        }
+      }
+
+      function colorFor(db) {
+        const t = Math.max(0, Math.min(1, (db + 85) / 85));
+        const r = Math.round(255 * Math.min(1, Math.max(0, (t - 0.55) * 2.6)));
+        const g = Math.round(255 * Math.min(1, Math.max(0, Math.min(t, 1 - t) * 3.2)));
+        const b = Math.round(255 * Math.min(1, Math.max(0, (0.75 - t) * 2.4)));
+        return [r, g, b];
+      }
+
+      function drawWaterfall(data) {
+        waterOff.drawImage(waterfall, -1, 0);
+        const image = waterOff.createImageData(1, waterfall.height);
+        for (let y = 0; y < waterfall.height; y += 1) {
+          const bin = Math.floor((1 - y / waterfall.height) * (N / 2 - 1)) + 1;
+          const db = 20 * Math.log10(data.magnitudes[bin] + 1e-9);
+          const [r, g, b] = colorFor(db);
+          const offset = y * 4;
+          image.data[offset] = r; image.data[offset + 1] = g; image.data[offset + 2] = b; image.data[offset + 3] = 255;
+        }
+        waterOff.putImageData(image, waterfall.width - 1, 0);
+        const { width, height } = fitCanvas(waterCanvas);
+        waterCtx.clearRect(0, 0, width, height);
+        waterCtx.imageSmoothingEnabled = true;
+        waterCtx.drawImage(waterfall, 0, 0, width, height);
+        waterCtx.strokeStyle = 'rgba(120,155,190,0.16)';
+        for (let i = 1; i < 5; i += 1) {
+          const y = height * i / 5;
+          waterCtx.beginPath(); waterCtx.moveTo(0, y); waterCtx.lineTo(width, y); waterCtx.stroke();
+        }
+      }
+
+      function updateMetrics(data) {
+        $('mRms').textContent = data.rms.toFixed(3);
+        $('mPeak').textContent = data.peak.toFixed(3);
+        $('mCrest').textContent = `${data.crest.toFixed(2)} dB`;
+        $('mDom').textContent = `${data.dominant.toFixed(1)} Hz`;
+        $('mThd').textContent = `${(data.thd * 100).toFixed(2)} %`;
+        $('thdBar').style.width = `${Math.min(100, data.thd * 250)}%`;
+        $('mCut').textContent = `${(-3).toFixed(1)} dB`;
+        $('mBw').textContent = `${data.bandwidth.toFixed(0)} Hz`;
+        $('mEnergy').textContent = data.filteredRms.toFixed(3);
+        $('fftTime').textContent = `${data.fftMs.toFixed(2)} ms`;
+        $('peakCount').textContent = `${data.peaks.length} · dom. ${data.dominant.toFixed(0)} Hz`;
+      }
+
+      function refreshLabels() {
+        $('freqValue').textContent = `${$('freq').value} Hz`;
+        $('ampValue').textContent = parseFloat($('amp').value).toFixed(2);
+        $('cutoffValue').textContent = `${$('cutoff').value} Hz`;
+        $('waveLabel').textContent = $('wave').selectedOptions[0].textContent.toUpperCase();
+        const winName = $('winFunc').selectedOptions[0].textContent.replace('Okno: ', '').toUpperCase();
+        $('winLabel').textContent = $('winFunc').selectedOptions[0].textContent.replace('Okno: ', '');
+        $('winLabelSide').textContent = winName;
+      }
+
+      function exportPng() {
+        try {
+          const panels = [waveCanvas, specCanvas, waterCanvas];
+          const out = document.createElement('canvas');
+          out.width = Math.max(...panels.map((panel) => panel.width));
+          out.height = panels.reduce((sum, panel) => sum + panel.height, 0);
+          const outCtx = out.getContext('2d');
+          outCtx.fillStyle = '#080c14';
+          outCtx.fillRect(0, 0, out.width, out.height);
+          let y = 0;
+          panels.forEach((panel) => {
+            outCtx.drawImage(panel, 0, y, panel.width, panel.height);
+            y += panel.height;
+          });
+          const link = document.createElement('a');
+          link.download = 'spectrum_lab.png';
+          link.href = out.toDataURL('image/png');
+          link.click();
+          $('notice').textContent = 'PNG zapisany · waveform + FFT + spektrogram';
+        } catch (error) {
+          $('notice').textContent = 'Eksport PNG niedostępny w tej przeglądarce';
+        }
+      }
+
+      function rebuildAudio() {
+        if (!audioCtx) return;
+        const data = generate();
+        const buffer = audioCtx.createBuffer(1, N, SR);
+        buffer.copyToChannel(data, 0);
+        if (source) { try { source.stop(); } catch (_) { /* już zatrzymany */ } source.disconnect(); }
+        source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+        source.connect(gain);
+        if ($('playBtn').textContent.includes('Pauza')) source.start();
+      }
+
+      function loop() {
+        const now = performance.now();
+        const dt = now - lastFrame;
+        lastFrame = now;
+        frames += 1;
+        if (now - fpsClock > 600) { fps = frames * 1000 / (now - fpsClock); frames = 0; fpsClock = now; }
+        const data = analyze();
+        drawWave(data);
+        drawSpectrum(data);
+        if (!frozen) drawWaterfall(data);
+        updateMetrics(data);
+        $('fps').textContent = fps.toFixed(0);
+        void dt;
+        requestAnimationFrame(loop);
+      }
+
+      $('playBtn').addEventListener('click', async () => {
+        if (!audioCtx) {
+          const AudioCtor = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtor) {
+            $('notice').textContent = 'Web Audio nie jest dostępne w tej przeglądarce';
+            return;
+          }
+          try {
+            audioCtx = new AudioCtor();
+          } catch (_) {
+            $('notice').textContent = 'Nie udało się uruchomić Web Audio';
+            return;
+          }
+          gain = audioCtx.createGain();
+          gain.gain.value = 0.16;
+          gain.connect(audioCtx.destination);
+        }
+        try { await audioCtx.resume(); } catch (_) { /* autoplay może blokować */ }
+        const playing = $('playBtn').textContent.includes('Pauza');
+        $('playBtn').textContent = playing ? '▶ Odtwórz' : '❚❚ Pauza';
+        $('playBtn').classList.toggle('primary', !playing);
+        if (!playing) {
+          if (!source) rebuildAudio();
+          else source.start();
+          $('notice').textContent = 'Odtwarzanie pętli 2048 próbek · 44,1 kHz';
+        } else {
+          if (source) { try { source.stop(); } catch (_) {} source.disconnect(); source = null; }
+          $('notice').textContent = 'Odtwarzanie zatrzymane';
+        }
+      });
+
+      ['wave', 'freq', 'amp', 'mod', 'filter', 'cutoff', 'q', 'winFunc'].forEach((id) => {
+        $(id).addEventListener('input', () => { refreshLabels(); rebuildAudio(); });
+        $(id).addEventListener('change', () => { refreshLabels(); rebuildAudio(); });
+      });
+      $('dbBtn').addEventListener('click', () => {
+        dbScale = !dbScale;
+        $('dbBtn').classList.toggle('active', dbScale);
+        $('notice').textContent = dbScale ? 'Widmo w skali dB (10…−90 dB)' : 'Widmo w skali liniowej (0…1)';
+      });
+      $('peaksBtn').addEventListener('click', () => {
+        showPeaks = !showPeaks;
+        $('peaksBtn').classList.toggle('active', showPeaks);
+      });
+      $('saveBtn').addEventListener('click', exportPng);
+      $('freezeBtn').addEventListener('click', () => {
+        frozen = !frozen;
+        $('freezeBtn').classList.toggle('active', frozen);
+        $('freezeBtn').textContent = frozen ? '▶ Wznów' : '❚❚ Zamroź';
+      });
+      $('logBtn').addEventListener('click', () => {
+        logScale = !logScale;
+        $('logBtn').classList.toggle('active', logScale);
+      });
+      window.addEventListener('resize', () => { refreshLabels(); });
+
+      refreshLabels();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>
