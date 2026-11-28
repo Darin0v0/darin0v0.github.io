@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#020000">
+  <meta name="description" content="PACKET_SNIFFER // symulowany przechwytywacz pakietów w estetyce LAYER_00.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23020000'/%3E%3Ctext x='32' y='45' font-family='monospace' font-size='36' fill='%23d10000' text-anchor='middle'%3E%3E%3C/text%3E%3C/svg%3E">
+  <title>PACKET_SNIFFER // NODE_07</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #020000;
+      --panel: rgba(8, 0, 0, 0.9);
+      --surface: #040000;
+      --surface-2: #060000;
+      --primary: #d10000;
+      --secondary: #ff2a2a;
+      --text: #b9b0b0;
+      --heading: #e8e0e0;
+      --muted: #887777;
+      --dim: #4d0000;
+      --border: #6e0000;
+      --glow: rgba(209, 0, 0, 0.35);
+      --grid: rgba(255, 0, 0, 0.035);
+    }
+
+    body[data-theme="matrix"] {
+      --bg: #000500;
+      --panel: rgba(0, 10, 0, 0.9);
+      --surface: #000600;
+      --surface-2: #000a00;
+      --primary: #00cc44;
+      --secondary: #66ff99;
+      --text: #a8c7b0;
+      --heading: #d8ffe4;
+      --muted: #6f9a7b;
+      --dim: #003b14;
+      --border: #006622;
+      --glow: rgba(0, 204, 68, 0.25);
+      --grid: rgba(0, 255, 90, 0.035);
+    }
+
+    body[data-theme="blood"] {
+      --bg: #050005;
+      --panel: rgba(12, 0, 12, 0.9);
+      --surface: #070007;
+      --surface-2: #0c000c;
+      --primary: #b30059;
+      --secondary: #ff1a8c;
+      --text: #c4b5c0;
+      --heading: #f0dce8;
+      --muted: #9a8294;
+      --dim: #3d001f;
+      --border: #730039;
+      --glow: rgba(179, 0, 89, 0.3);
+      --grid: rgba(255, 26, 140, 0.035);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100svh;
+      padding: clamp(0.75rem, 3vw, 2rem) 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--bg);
+      background-image: repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 4px);
+      color: var(--text);
+      font-family: "Courier New", ui-monospace, monospace;
+      overflow-x: hidden;
+      cursor: crosshair;
+    }
+
+    .crt-scanlines, .crt-vignette { position: fixed; inset: 0; pointer-events: none; }
+    .crt-scanlines { z-index: 99; background: linear-gradient(transparent 50%, rgba(0,0,0,0.5) 50%); background-size: 100% 3px; }
+    .crt-vignette { z-index: 98; box-shadow: inset 0 0 100px rgba(0,0,0,0.9); }
+
+    .node {
+      width: 100%;
+      max-width: 900px;
+      position: relative;
+      z-index: 1;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: 0 0 35px var(--glow), inset 0 0 20px rgba(0,0,0,0.9);
+      padding: clamp(1rem, 3vw, 1.5rem);
+    }
+
+    .node-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      padding-bottom: 0.6rem;
+      margin-bottom: 1.4rem;
+      border-bottom: 1px dashed var(--border);
+      font-size: 0.78rem;
+      letter-spacing: 1.5px;
+    }
+
+    .dot { color: var(--secondary); animation: blink 1.1s steps(2, start) infinite; }
+    @keyframes blink { to { opacity: 0; } }
+
+    .theme-switcher { display: flex; gap: 4px; }
+    button { font-family: inherit; cursor: pointer; }
+    .theme-switcher button {
+      background: transparent;
+      border: 1px solid var(--dim);
+      color: var(--text);
+      font-size: 0.7rem;
+      padding: 2px 6px;
+    }
+    .theme-switcher button:hover, .theme-switcher button[aria-pressed="true"] {
+      border-color: var(--secondary);
+      color: var(--secondary);
+    }
+    .theme-switcher button[aria-pressed="true"] { box-shadow: inset 0 0 10px var(--glow); }
+
+    h1 {
+      font-size: clamp(1.4rem, 6vw, 2.4rem);
+      letter-spacing: clamp(0.15rem, 1.4vw, 0.5rem);
+      color: var(--heading);
+      text-shadow: 2px 0 var(--primary), -2px 0 rgba(90,0,200,0.6);
+      margin: 0 0 0.4rem;
+      overflow-wrap: anywhere;
+    }
+    .tagline { color: var(--muted); font-size: 0.82rem; font-style: italic; margin-bottom: 1.3rem; }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .btn {
+      background: var(--surface-2);
+      border: 1px solid var(--primary);
+      color: var(--secondary);
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+      padding: 0.4rem 0.6rem;
+    }
+    .btn:hover { background: var(--primary); color: var(--bg); }
+    .btn.ghost { border-color: var(--dim); color: var(--text); }
+    .btn.ghost:hover { border-color: var(--secondary); color: var(--secondary); }
+    .btn[aria-pressed="true"] { background: var(--primary); color: var(--bg); }
+    .filters { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
+    .filters button {
+      background: transparent;
+      border: 1px solid var(--dim);
+      color: var(--muted);
+      font-size: 0.68rem;
+      padding: 0.35rem 0.5rem;
+    }
+    .filters button[aria-pressed="true"] { color: var(--bg); background: var(--primary); border-color: var(--secondary); }
+    .speed { display: flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; color: var(--muted); }
+    input[type="range"] { accent-color: var(--primary); height: 3px; background: var(--dim); cursor: pointer; }
+
+    .panel { border: 1px solid var(--border); background: var(--surface); min-width: 0; }
+    .panel-label {
+      padding: 0.45rem 0.6rem;
+      border-bottom: 1px dashed var(--dim);
+      color: var(--primary);
+      font-size: 0.7rem;
+      letter-spacing: 1.5px;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    #signal, #flowTimeline { display: block; width: 100%; background: #000; }
+    #signal { height: 92px; }
+    #flowTimeline { height: 72px; }
+    .proto-stats {
+      display: flex; flex-wrap: wrap; gap: 0.35rem 1rem;
+      padding: 0.45rem 0.6rem; border-top: 1px dashed var(--dim);
+      font-size: 0.7rem; color: var(--muted);
+    }
+    .proto-stats b { color: var(--secondary); font-variant-numeric: tabular-nums; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px dashed var(--dim);
+      font-size: 0.7rem;
+    }
+    .metric { padding: 0.5rem 0.6rem; border-right: 1px dashed var(--dim); }
+    .metric:last-child { border-right: 0; }
+    .metric b { display: block; color: var(--secondary); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+
+    .log { margin-top: 1rem; }
+    .log-row {
+      display: grid;
+      grid-template-columns: 72px 52px 1fr 56px minmax(90px, 1fr);
+      gap: 0.6rem;
+      align-items: center;
+      padding: 0.4rem 0.6rem;
+      border-bottom: 1px dashed var(--dim);
+      font-size: 0.74rem;
+    }
+    .log-row:last-child { border-bottom: 0; }
+    .log-head { color: var(--muted); font-size: 0.68rem; letter-spacing: 1px; }
+    .log-body { min-height: 220px; max-height: 260px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--dim) transparent; }
+    .proto { color: var(--secondary); }
+    .route { color: var(--heading); overflow-wrap: anywhere; }
+    .payload { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .empty { padding: 1rem 0.6rem; color: var(--muted); font-size: 0.78rem; }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 1rem;
+      padding-top: 0.7rem;
+      border-top: 1px dashed var(--border);
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    :where(button, input):focus-visible { outline: 2px solid var(--secondary); outline-offset: 2px; }
+
+    @media (max-width: 700px) {
+      body { align-items: flex-start; }
+      .filters { margin-left: 0; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .metric:nth-child(2) { border-right: 0; }
+      .log-row { grid-template-columns: 62px 46px 1fr 50px; }
+      .log-row .payload { display: none; }
+      .log-head span:last-child { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body data-theme="lain">
+  <div class="crt-scanlines" aria-hidden="true"></div>
+  <div class="crt-vignette" aria-hidden="true"></div>
+
+  <main class="node">
+    <header class="node-head">
+      <div><span class="dot">●</span> NODE::<strong>PACKET_SNIFFER</strong> [PROTOCOL_7]</div>
+      <div class="theme-switcher" role="group" aria-label="Motyw węzła">
+        <button type="button" data-theme="lain" aria-pressed="true">[LAIN]</button>
+        <button type="button" data-theme="matrix" aria-pressed="false">[SYS]</button>
+        <button type="button" data-theme="blood" aria-pressed="false">[0x00]</button>
+      </div>
+    </header>
+
+    <h1>PACKET_SNIFFER</h1>
+    <div class="tagline">'The world is a packet stream. Listen to it.'</div>
+
+    <div class="toolbar">
+      <button id="toggleBtn" type="button" class="btn">PAUSE_CAPTURE</button>
+      <button id="clearBtn" type="button" class="btn ghost">PURGE_LOG</button>
+      <button id="chaosBtn" type="button" class="btn ghost" aria-pressed="false">INJECT_CHAOS</button>
+      <button id="exportBtn" type="button" class="btn ghost">EXPORT_JSON</button>
+      <label class="speed" for="speed">RATE
+        <input type="range" id="speed" min="1" max="5" value="3">
+        <span id="speedValue">3</span>
+      </label>
+      <div class="filters" role="group" aria-label="Filtr protokołu">
+        <button type="button" data-filter="ALL" aria-pressed="true">ALL</button>
+        <button type="button" data-filter="TCP" aria-pressed="false">TCP</button>
+        <button type="button" data-filter="UDP" aria-pressed="false">UDP</button>
+        <button type="button" data-filter="ICMP" aria-pressed="false">ICMP</button>
+        <button type="button" data-filter="ANOM" aria-pressed="false">ANOM</button>
+      </div>
+    </div>
+
+    <section class="panel">
+      <div class="panel-label"><span>// SIGNAL_WATERFALL</span><span id="captureStatus" aria-live="polite">CAPTURING</span></div>
+      <canvas id="signal" width="820" height="92" aria-hidden="true"></canvas>
+      <div class="metrics">
+        <div class="metric">TOTAL<b id="statTotal">0</b></div>
+        <div class="metric">PACKETS/S<b id="statRate">0.0</b></div>
+        <div class="metric">BYTES<b id="statBytes">0</b></div>
+        <div class="metric">FILTER<b id="statFilter">ALL</b></div>
+      </div>
+        <div class="proto-stats" id="protoStats" aria-live="polite"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-label"><span>// FLOW_TIMELINE</span><span id="timelineStatus">LAST 60</span></div>
+        <canvas id="flowTimeline" width="820" height="72" aria-label="Oś czasu przepływu pakietów w podziale na protokoły"></canvas>
+      </section>
+
+      <section class="panel log">
+      <div class="panel-label">// PACKET_LOG [LAST 8]</div>
+      <div class="log-row log-head" aria-hidden="true">
+        <span>TIME</span><span>PROTO</span><span>SOURCE → DESTINATION</span><span>SIZE</span><span>PAYLOAD</span>
+      </div>
+      <div id="logBody" class="log-body" role="log" aria-live="polite" aria-relevant="additions"></div>
+    </section>
+
+    <footer class="footer">
+      <span>UID: 000-1998-0706 // WIRED INTERCEPT · SPACE=pauza · C=czyszczenie · X=chaos · E=eksport</span>
+      <span id="sniffClock">00:00:00</span>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const canvas = document.getElementById('signal');
+      const ctx = canvas.getContext('2d');
+      const logBody = document.getElementById('logBody');
+      const toggleBtn = document.getElementById('toggleBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const speed = document.getElementById('speed');
+      const speedValue = document.getElementById('speedValue');
+      const captureStatus = document.getElementById('captureStatus');
+      const statTotal = document.getElementById('statTotal');
+      const statRate = document.getElementById('statRate');
+      const statBytes = document.getElementById('statBytes');
+      const statFilter = document.getElementById('statFilter');
+      const sniffClock = document.getElementById('sniffClock');
+      const chaosBtn = document.getElementById('chaosBtn');
+      const exportBtn = document.getElementById('exportBtn');
+      const protoStats = document.getElementById('protoStats');
+      const flowTimeline = document.getElementById('flowTimeline');
+      const timelineCtx = flowTimeline.getContext('2d');
+      const timelineStatus = document.getElementById('timelineStatus');
+      const filterButtons = document.querySelectorAll('.filters button');
+      const themeButtons = document.querySelectorAll('.theme-switcher button');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const delays = { 1: 900, 2: 600, 3: 380, 4: 240, 5: 120 };
+      const protocols = ['TCP', 'TCP', 'TCP', 'UDP', 'UDP', 'ICMP'];
+
+      let seed = 0x19980706;
+      let running = true;
+      let chaos = false;
+      let filter = 'ALL';
+      let total = 0;
+      let bytes = 0;
+      const protoCounts = { TCP: 0, UDP: 0, ICMP: 0, ANOM: 0 };
+      let packetTimer = 0;
+      let waveTimer = 0;
+      let packets = [];
+      const levels = new Array(80).fill(0.08);
+
+      const random = () => {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+        return seed / 4294967296;
+      };
+      const pick = (list) => list[Math.floor(random() * list.length)];
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+      function fitCanvas() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
+        const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function drawSignal() {
+        fitCanvas();
+        const width = canvas.clientWidth || 800;
+        const height = canvas.clientHeight || 92;
+        const style = getComputedStyle(document.body);
+        const bright = style.getPropertyValue('--secondary').trim() || '#ff2a2a';
+        const dim = style.getPropertyValue('--dim').trim() || '#4d0000';
+
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, width, height);
+        ctx.strokeStyle = dim;
+        ctx.lineWidth = 1;
+        for (let y = height / 4; y < height; y += height / 4) {
+          ctx.beginPath();
+          ctx.moveTo(0, y + 0.5);
+          ctx.lineTo(width, y + 0.5);
+          ctx.stroke();
+        }
+
+        const step = width / (levels.length - 1);
+        ctx.beginPath();
+        levels.forEach((level, index) => {
+          const x = index * step;
+          const y = height - 4 - level * (height - 10);
+          if (index === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = bright;
+        ctx.lineWidth = 1.5;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = bright;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.lineTo(width, height);
+        ctx.lineTo(0, height);
+        ctx.closePath();
+        ctx.globalAlpha = 0.12;
+        ctx.fillStyle = bright;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
+      function pushLevel(force = 0) {
+        const last = levels[levels.length - 1];
+        const value = clamp(0.18 + random() * 0.35 + last * 0.35 + force, 0.05, 1);
+        levels.shift();
+        levels.push(value);
+        drawSignal();
+      }
+
+      function drawTimeline() {
+        if (!timelineCtx) return;
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.max(1, Math.round(flowTimeline.clientWidth || 820));
+        const height = 72;
+        flowTimeline.width = Math.round(width * ratio);
+        flowTimeline.height = Math.round(height * ratio);
+        timelineCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        timelineCtx.fillStyle = '#000';
+        timelineCtx.fillRect(0, 0, width, height);
+        const lanes = ['TCP', 'UDP', 'ICMP', 'ANOM'];
+        const style = getComputedStyle(document.body);
+        const dim = style.getPropertyValue('--dim').trim() || '#4d0000';
+        const bright = style.getPropertyValue('--secondary').trim() || '#ff2a2a';
+        timelineCtx.font = '9px "Courier New", monospace';
+        timelineCtx.textBaseline = 'middle';
+        lanes.forEach((lane, index) => {
+          const y = 9 + index * 18;
+          timelineCtx.strokeStyle = dim;
+          timelineCtx.beginPath();
+          timelineCtx.moveTo(0, y + 8.5);
+          timelineCtx.lineTo(width, y + 8.5);
+          timelineCtx.stroke();
+          timelineCtx.fillStyle = dim;
+          timelineCtx.fillText(lane, 3, y + 4);
+        });
+        const recent = packets.slice(-60);
+        const step = width / 60;
+        recent.forEach((packet, index) => {
+          const lane = lanes.indexOf(packet.proto);
+          if (lane < 0) return;
+          const x = index * step + step / 2;
+          const y = 9 + lane * 18;
+          timelineCtx.fillStyle = packet.proto === 'ANOM' ? '#f59e0b' : bright;
+          timelineCtx.fillRect(x, y, Math.max(1.5, step - 1), 8);
+        });
+        timelineStatus.textContent = `LAST ${recent.length}`;
+      }
+
+      function makePacket() {
+        if (chaos && random() < 0.3) {
+          const flags = pick(['MALFORMED', 'SYN_FLOOD', 'BAD_CSUM', 'RETRY']);
+          return {
+            time: new Date().toLocaleTimeString('pl-PL', { hour12: false }),
+            proto: 'ANOM',
+            src: `${Math.floor(random() * 999)}.${Math.floor(random() * 999)}.0.0`,
+            dst: `0.0.0.${Math.floor(random() * 255)}`,
+            size: 24 + Math.floor(random() * 96),
+            payload: `${flags} ${Array.from({ length: 3 }, () => Math.floor(random() * 256).toString(16).padStart(2, '0')).join(' ')}`,
+            anomaly: true
+          };
+        }
+        const proto = pick(protocols);
+        const size = 40 + Math.floor(random() * 960);
+        const payload = Array.from({ length: 6 }, () => Math.floor(random() * 256).toString(16).padStart(2, '0')).join(' ');
+        return {
+          time: new Date().toLocaleTimeString('pl-PL', { hour12: false }),
+          proto,
+          src: `10.0.${Math.floor(random() * 255)}.${Math.floor(random() * 255)}`,
+          dst: `192.168.${Math.floor(random() * 16)}.${Math.floor(random() * 255)}`,
+          size,
+          payload
+        };
+      }
+
+      function renderLog() {
+        logBody.replaceChildren();
+        const visible = packets.filter((packet) => filter === 'ALL' || packet.proto === filter).slice(-8);
+        if (!visible.length) {
+          const empty = document.createElement('div');
+          empty.className = 'empty';
+          empty.textContent = '> NO PACKETS MATCH CURRENT FILTER';
+          logBody.appendChild(empty);
+          return;
+        }
+        visible.forEach((packet) => {
+          const row = document.createElement('div');
+          row.className = 'log-row';
+          [
+            { className: '', text: packet.time },
+            { className: 'proto', text: packet.proto },
+            { className: 'route', text: `${packet.src} → ${packet.dst}` },
+            { className: '', text: `${packet.size}B` },
+            { className: 'payload', text: packet.payload }
+          ].forEach((cell) => {
+            const span = document.createElement('span');
+            span.className = cell.className;
+            span.textContent = cell.text;
+            row.appendChild(span);
+          });
+          logBody.appendChild(row);
+        });
+        logBody.scrollTop = logBody.scrollHeight;
+      }
+
+      function renderProtoStats() {
+        protoStats.replaceChildren();
+        ['TCP', 'UDP', 'ICMP', 'ANOM'].forEach((proto) => {
+          const item = document.createElement('span');
+          const value = document.createElement('b');
+          item.textContent = `${proto} `;
+          value.textContent = String(protoCounts[proto] || 0);
+          item.appendChild(value);
+          protoStats.appendChild(item);
+        });
+      }
+
+      function updateMetrics() {
+        const delay = delays[Number(speed.value)];
+        statTotal.textContent = String(total);
+        statRate.textContent = running ? (1000 / delay).toFixed(1) : '0.0';
+        statBytes.textContent = String(bytes);
+        statFilter.textContent = filter;
+        renderProtoStats();
+        drawTimeline();
+      }
+
+      function capturePacket() {
+        const packet = makePacket();
+        packets.push(packet);
+        if (packets.length > 60) packets.shift();
+        total += 1;
+        bytes += packet.size;
+        if (protoCounts[packet.proto] !== undefined) protoCounts[packet.proto] += 1;
+        pushLevel(packet.anomaly ? 0.35 : packet.proto === 'ICMP' ? 0.22 : 0.08);
+        renderLog();
+        updateMetrics();
+      }
+
+      function startPacketTimer() {
+        window.clearInterval(packetTimer);
+        if (running) packetTimer = window.setInterval(capturePacket, delays[Number(speed.value)]);
+      }
+
+      function setRunning(next) {
+        running = next;
+        toggleBtn.textContent = running ? 'PAUSE_CAPTURE' : 'RESUME_CAPTURE';
+        captureStatus.textContent = running ? 'CAPTURING' : 'PAUSED';
+        startPacketTimer();
+        updateMetrics();
+      }
+
+      toggleBtn.addEventListener('click', () => setRunning(!running));
+
+      clearBtn.addEventListener('click', () => {
+        packets = [];
+        total = 0;
+        bytes = 0;
+        Object.keys(protoCounts).forEach((proto) => { protoCounts[proto] = 0; });
+        levels.fill(0.05);
+        drawSignal();
+        renderLog();
+        updateMetrics();
+      });
+
+      speed.addEventListener('input', () => {
+        speedValue.textContent = speed.value;
+        startPacketTimer();
+        updateMetrics();
+      });
+
+      filterButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          filter = button.dataset.filter;
+          filterButtons.forEach((candidate) => {
+            candidate.setAttribute('aria-pressed', String(candidate === button));
+          });
+          renderLog();
+          updateMetrics();
+        });
+      });
+
+      chaosBtn.addEventListener('click', () => {
+        chaos = !chaos;
+        chaosBtn.setAttribute('aria-pressed', String(chaos));
+        captureStatus.textContent = chaos ? 'CAPTURING · CHAOS' : (running ? 'CAPTURING' : 'PAUSED');
+      });
+
+      exportBtn.addEventListener('click', () => {
+        const data = {
+          format: 'PACKET_SNIFFER_JSON/1',
+          generatedAt: new Date().toISOString(),
+          total,
+          bytes,
+          ratePerSecond: Number(statRate.textContent),
+          filter,
+          chaos,
+          packets: packets.map((packet, index) => ({
+            index,
+            timestamp: packet.time,
+            protocol: packet.proto,
+            source: packet.src,
+            destination: packet.dst,
+            length: packet.size,
+            payloadHex: packet.payload,
+            anomaly: Boolean(packet.anomaly)
+          }))
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'packet_capture.json';
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        captureStatus.textContent = 'EXPORTED JSON';
+        window.setTimeout(() => {
+          captureStatus.textContent = running ? (chaos ? 'CAPTURING · CHAOS' : 'CAPTURING') : 'PAUSED';
+        }, 1400);
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(event.target.tagName)) return;
+        const key = event.key.toLowerCase();
+        if (event.code === 'Space') { event.preventDefault(); toggleBtn.click(); }
+        else if (key === 'c') clearBtn.click();
+        else if (key === 'x') chaosBtn.click();
+        else if (key === 'e') exportBtn.click();
+      });
+
+      function setTheme(theme) {
+        const allowed = ['lain', 'matrix', 'blood'];
+        const next = allowed.includes(theme) ? theme : 'lain';
+        document.body.dataset.theme = next;
+        try { localStorage.setItem('cyberTheme', next); } catch (_) { /* tryb pamięci podręcznej */ }
+        themeButtons.forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.theme === next));
+        });
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', { lain: '#020000', matrix: '#000500', blood: '#050005' }[next]);
+        drawSignal();
+        drawTimeline();
+      }
+
+      themeButtons.forEach((button) => button.addEventListener('click', () => setTheme(button.dataset.theme)));
+
+      function tick() {
+        sniffClock.textContent = new Date().toLocaleTimeString('pl-PL', {
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        });
+      }
+
+      try { setTheme(localStorage.getItem('cyberTheme') || 'lain'); } catch (_) { setTheme('lain'); }
+      tick();
+      window.setInterval(tick, 1000);
+      window.addEventListener('resize', () => { drawSignal(); drawTimeline(); });
+
+      if (!reduceMotion) waveTimer = window.setInterval(() => {
+        if (running) pushLevel();
+      }, 90);
+
+      renderLog();
+      updateMetrics();
+      drawSignal();
+      for (let i = 0; i < 12; i += 1) capturePacket();
+      setRunning(true);
+    })();
+  </script>
+</body>
+</html>

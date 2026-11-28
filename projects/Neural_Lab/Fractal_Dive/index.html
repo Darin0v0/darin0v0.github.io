@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#020000">
+  <meta name="description" content="FRACTAL_DIVE // eksplorator zbioru Mandelbrota i Julii z płynnym zoomem i progresywnym renderem.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23020000'/%3E%3Ctext x='32' y='45' font-family='monospace' font-size='34' fill='%23d10000' text-anchor='middle'%3EFD%3C/text%3E%3C/svg%3E">
+  <title>FRACTAL_DIVE // LAYER_12</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #020000; --panel: rgba(8,0,0,0.9); --surface: #040000; --surface-2: #060000;
+      --primary: #d10000; --secondary: #ff2a2a; --text: #b9b0b0; --heading: #e8e0e0;
+      --muted: #887777; --dim: #4d0000; --border: #6e0000; --glow: rgba(209,0,0,0.35);
+      --grid: rgba(255,0,0,0.035);
+    }
+    body[data-theme="matrix"] {
+      --bg: #000500; --panel: rgba(0,10,0,0.9); --surface: #000600; --surface-2: #000a00;
+      --primary: #00cc44; --secondary: #66ff99; --text: #a8c7b0; --heading: #d8ffe4;
+      --muted: #6f9a7b; --dim: #003b14; --border: #006622; --glow: rgba(0,204,68,0.25); --grid: rgba(0,255,90,0.035);
+    }
+    body[data-theme="blood"] {
+      --bg: #050005; --panel: rgba(12,0,12,0.9); --surface: #070007; --surface-2: #0c000c;
+      --primary: #b30059; --secondary: #ff1a8c; --text: #c4b5c0; --heading: #f0dce8;
+      --muted: #9a8294; --dim: #3d001f; --border: #730039; --glow: rgba(179,0,89,0.3); --grid: rgba(255,26,140,0.035);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0; min-height: 100vh; min-height: 100svh; padding: clamp(0.75rem,3vw,2rem) 1rem;
+      display: flex; justify-content: center; align-items: center;
+      background-color: var(--bg);
+      background-image: repeating-linear-gradient(0deg,var(--grid) 0 1px,transparent 1px 4px);
+      color: var(--text); font-family: "Courier New", ui-monospace, monospace; overflow-x: hidden; cursor: crosshair;
+    }
+    .crt-scanlines, .crt-vignette { position: fixed; inset:0; pointer-events:none; }
+    .crt-scanlines { z-index: 99; background: linear-gradient(transparent 50%, rgba(0,0,0,0.5) 50%); background-size: 100% 3px; }
+    .crt-vignette { z-index: 98; box-shadow: inset 0 0 100px rgba(0,0,0,0.9); }
+    .node {
+      width: 100%; max-width: 1080px; position: relative; z-index: 1;
+      background: var(--panel); border: 1px solid var(--border);
+      box-shadow: 0 0 35px var(--glow), inset 0 0 20px rgba(0,0,0,0.9);
+      padding: clamp(1rem,3vw,1.5rem);
+    }
+    .node-head {
+      display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem;
+      padding-bottom:0.6rem; margin-bottom:1.2rem; border-bottom:1px dashed var(--border);
+      font-size:0.78rem; letter-spacing:1.5px;
+    }
+    .dot { color: var(--secondary); animation: blink 1.1s steps(2,start) infinite; }
+    @keyframes blink { to { opacity:0; } }
+    .theme-switcher { display:flex; gap:4px; }
+    button, select { font-family: inherit; cursor: pointer; }
+    .theme-switcher button {
+      background:transparent; border:1px solid var(--dim); color:var(--text); font-size:0.7rem; padding:2px 6px;
+    }
+    .theme-switcher button:hover, .theme-switcher button[aria-pressed="true"] { border-color:var(--secondary); color:var(--secondary); }
+    .theme-switcher button[aria-pressed="true"] { box-shadow: inset 0 0 10px var(--glow); }
+    h1 {
+      font-size: clamp(1.4rem,6vw,2.4rem); letter-spacing: clamp(0.15rem,1.4vw,0.5rem);
+      color:var(--heading); text-shadow:2px 0 var(--primary), -2px 0 rgba(90,0,200,0.6);
+      margin:0 0 0.4rem; overflow-wrap:anywhere;
+    }
+    .tagline { color:var(--muted); font-size:0.82rem; font-style:italic; margin-bottom:1.2rem; }
+    .toolbar {
+      display:flex; flex-wrap:wrap; align-items:center; gap:0.5rem 0.8rem; margin-bottom:1rem;
+      font-size:0.72rem;
+    }
+    .btn, select {
+      background:var(--surface-2); border:1px solid var(--dim); color:var(--text);
+      font-size:0.72rem; letter-spacing:1px; padding:0.4rem 0.6rem;
+    }
+    .btn { border-color:var(--primary); color:var(--secondary); }
+    .btn:hover { background:var(--primary); color:var(--bg); }
+    .control { display:flex; align-items:center; gap:0.4rem; color:var(--muted); }
+    input[type="range"] { accent-color:var(--primary); height:3px; background:var(--dim); cursor:pointer; width:110px; }
+    input[type="color"] { width:28px; height:24px; padding:0; border:1px solid var(--dim); background:transparent; cursor:pointer; }
+    .control b { color:var(--secondary); font-variant-numeric:tabular-nums; min-width:2.6em; }
+    .palette-preview { display:inline-block; width:100px; height:12px; border:1px solid var(--border); vertical-align:middle; }
+    #status { color:var(--secondary); font-size:0.7rem; letter-spacing:0; overflow-wrap:anywhere; }
+    .viewport {
+      position:relative; border:1px solid var(--border); background:#000; overflow:hidden;
+    }
+    #fractal {
+      display:block; width:100%; height:clamp(300px,58vh,560px); touch-action:none; cursor:grab; outline:none;
+    }
+    #fractal:active { cursor:grabbing; }
+    #fractal:focus-visible { outline:2px solid var(--secondary); outline-offset:-2px; }
+    .hud {
+      position:absolute; inset:auto 0 0 0; display:flex; flex-wrap:wrap; gap:0.3rem 1.2rem;
+      padding:0.45rem 0.6rem; background:linear-gradient(transparent,rgba(0,0,0,0.9) 40%);
+      font-size:0.7rem; color:var(--secondary); pointer-events:none;
+    }
+    .hint { margin-top:0.7rem; font-size:0.72rem; color:var(--muted); line-height:1.6; }
+    kbd {
+      border:1px solid var(--dim); padding:0 0.3rem; color:var(--text); font-family:inherit;
+    }
+    :where(button, select, input):focus-visible { outline:2px solid var(--secondary); outline-offset:2px; }
+    @media (max-width:680px) {
+      body { align-items:flex-start; }
+      input[type="range"] { width:80px; }
+      #fractal { height:340px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
+  </style>
+</head>
+<body data-theme="lain">
+  <div class="crt-scanlines" aria-hidden="true"></div>
+  <div class="crt-vignette" aria-hidden="true"></div>
+
+  <main class="node">
+    <header class="node-head">
+      <div><span class="dot">●</span> NODE::<strong>FRACTAL_DIVE</strong> [LAYER_12]</div>
+      <div class="theme-switcher" role="group" aria-label="Motyw węzła">
+        <button type="button" data-theme="lain" aria-pressed="true">[LAIN]</button>
+        <button type="button" data-theme="matrix" aria-pressed="false">[SYS]</button>
+        <button type="button" data-theme="blood" aria-pressed="false">[0x00]</button>
+      </div>
+    </header>
+
+    <h1>FRACTAL_DIVE</h1>
+    <div class="tagline">'Zoom long enough and the boundary starts to dream.'</div>
+
+    <div class="toolbar">
+      <select id="setType" aria-label="Typ zbioru">
+        <option value="mandelbrot">MANDELBROT</option>
+        <option value="julia">JULIA SET</option>
+      </select>
+      <select id="palette" aria-label="Paleta kolorów">
+        <option value="ember">EMBER</option>
+        <option value="phosphor">PHOSPHOR</option>
+        <option value="blood">BLOOD</option>
+        <option value="ice">ICE</option>
+        <option value="custom">WŁASNA</option>
+      </select>
+      <select id="quality" aria-label="Jakość renderu">
+        <option value="fast">SZYBKI</option>
+        <option value="normal" selected>STANDARD</option>
+        <option value="fine">DETAL</option>
+      </select>
+      <label class="control" for="iterations">ITER <input type="range" id="iterations" min="50" max="500" step="10" value="180"><b id="iterValue">180</b></label>
+      <button type="button" id="zoomIn" class="btn">ZOOM+</button>
+      <button type="button" id="zoomOut" class="btn">ZOOM−</button>
+      <button type="button" id="reset" class="btn">RESET</button>
+      <button type="button" id="exportBtn" class="btn">PNG</button>
+    </div>
+
+    <div id="paletteEditor" class="toolbar" hidden>
+      <span class="control">PALETA WŁASNA</span>
+      <input type="color" id="c0" value="#000000" aria-label="Kolor 1 palety">
+      <input type="color" id="c1" value="#500000" aria-label="Kolor 2 palety">
+      <input type="color" id="c2" value="#c81e00" aria-label="Kolor 3 palety">
+      <input type="color" id="c3" value="#ff8c00" aria-label="Kolor 4 palety">
+      <input type="color" id="c4" value="#fff0c8" aria-label="Kolor 5 palety">
+      <span id="palettePreview" class="palette-preview" aria-hidden="true"></span>
+    </div>
+
+    <div class="toolbar">
+      <select id="bookmarks" aria-label="Zapisane widoki"><option value="">— ZAPISANE WIDOKI —</option></select>
+      <button type="button" id="saveBookmark" class="btn">ZAPISZ</button>
+      <button type="button" id="loadBookmark" class="btn">WCZYTAJ</button>
+      <button type="button" id="deleteBookmark" class="btn">USUŃ</button>
+      <span id="status" role="status" aria-live="polite">GOTOWE</span>
+    </div>
+
+    <div id="juliaControls" class="toolbar" hidden>
+      <label class="control" for="juliaRe">C.re <input type="range" id="juliaRe" min="-1.5" max="1.5" step="0.001" value="-0.8"><b id="juliaReValue">-0.800</b></label>
+      <label class="control" for="juliaIm">C.im <input type="range" id="juliaIm" min="-1.5" max="1.5" step="0.001" value="0.156"><b id="juliaImValue">0.156</b></label>
+    </div>
+
+    <div class="viewport">
+      <canvas id="fractal" width="900" height="520" tabindex="0" aria-label="Widok fraktala; użyj kółka myszy do powiększania i przeciągania do przesuwania"></canvas>
+      <div class="hud" aria-hidden="true">
+        <span>RE <span id="hudRe">-0.500000</span></span>
+        <span>IM <span id="hudIm">0.000000</span></span>
+        <span>ZOOM <span id="hudZoom">1.0x</span></span>
+        <span>RENDER <span id="hudProgress">0%</span></span>
+        <span>TIME <span id="hudTime">0ms</span></span>
+      </div>
+    </div>
+
+    <div class="hint">
+      Kółko myszy / <kbd>+</kbd> <kbd>−</kbd> — płynny zoom w miejscu kursora · przeciągnij lub <kbd>↑↓←→</kbd> — przesuwanie · szczypta dwoma palcami — zoom na mobile · <kbd>R</kbd> — reset · <kbd>B</kbd> — zapisz widok.
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const canvas = document.getElementById('fractal');
+      const ctx = canvas.getContext('2d');
+      const setType = document.getElementById('setType');
+      const paletteSelect = document.getElementById('palette');
+      const qualitySelect = document.getElementById('quality');
+      const iterationsInput = document.getElementById('iterations');
+      const iterValue = document.getElementById('iterValue');
+      const juliaControls = document.getElementById('juliaControls');
+      const juliaReInput = document.getElementById('juliaRe');
+      const juliaImInput = document.getElementById('juliaIm');
+      const juliaReValue = document.getElementById('juliaReValue');
+      const juliaImValue = document.getElementById('juliaImValue');
+      const paletteEditor = document.getElementById('paletteEditor');
+      const palettePreview = document.getElementById('palettePreview');
+      const colorInputs = [0, 1, 2, 3, 4].map((index) => document.getElementById(`c${index}`));
+      const bookmarksSelect = document.getElementById('bookmarks');
+      const status = document.getElementById('status');
+      const hudRe = document.getElementById('hudRe');
+      const hudIm = document.getElementById('hudIm');
+      const hudZoom = document.getElementById('hudZoom');
+      const hudProgress = document.getElementById('hudProgress');
+      const hudTime = document.getElementById('hudTime');
+      const themeButtons = document.querySelectorAll('.theme-switcher button');
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+      const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const THEME_KEY = 'cyberTheme';
+      const BOOKMARK_KEY = 'fractalBookmarks';
+
+      const storeGet = (key) => { try { return localStorage.getItem(key); } catch (_) { return null; } };
+      const storeSet = (key, value) => { try { localStorage.setItem(key, value); } catch (_) { /* prywatny tryb */ } };
+      const setStatus = (text) => { status.textContent = text; };
+
+      const stopPresets = {
+        ember: [[0,[0,0,0]],[0.25,[80,0,0]],[0.5,[200,30,0]],[0.75,[255,140,0]],[1,[255,240,200]]],
+        phosphor: [[0,[0,0,0]],[0.3,[0,60,20]],[0.6,[0,200,80]],[0.85,[120,255,160]],[1,[230,255,235]]],
+        blood: [[0,[0,0,0]],[0.3,[50,0,30]],[0.6,[180,0,90]],[0.85,[255,40,140]],[1,[255,200,230]]],
+        ice: [[0,[0,0,0]],[0.3,[0,20,70]],[0.6,[30,120,220]],[0.85,[120,220,255]],[1,[240,250,255]]]
+      };
+
+      const quality = {
+        fast: { iterScale: 0.6, previewDiv: 7 },
+        normal: { iterScale: 1, previewDiv: 5 },
+        fine: { iterScale: 2.2, previewDiv: 4 }
+      };
+
+      let width = 0;
+      let height = 0;
+      let view = { re: -0.5, im: 0, span: 3.2 };
+      let maxIter = 180;
+      let juliaRe = -0.8;
+      let juliaIm = 0.156;
+      let palette = [];
+      let image = null;
+      let preview = null;
+      let previewCtx = null;
+      let previewImage = null;
+      let previewW = 0;
+      let previewH = 0;
+      let renderView = { ...view };
+      let pass = 1;
+      let row = 0;
+      let frame = 0;
+      let animFrame = 0;
+      let previewFrame = 0;
+      let debounceTimer = 0;
+      let startedAt = 0;
+      let previewIterations = 80;
+      const pointers = new Map();
+      let pinch = null;
+
+      const hexToRgb = (hex) => [1, 3, 5].map((index) => parseInt(hex.slice(index, index + 2), 16));
+
+      function stopsToTable(stops) {
+        const table = new Uint8Array(256 * 3);
+        for (let index = 0; index < 256; index += 1) {
+          const t = index / 255;
+          let lower = stops[0];
+          let upper = stops[stops.length - 1];
+          for (let i = 0; i < stops.length - 1; i += 1) {
+            if (t >= stops[i][0] && t <= stops[i + 1][0]) {
+              lower = stops[i];
+              upper = stops[i + 1];
+              break;
+            }
+          }
+          const local = upper[0] === lower[0] ? 0 : (t - lower[0]) / (upper[0] - lower[0]);
+          for (let channel = 0; channel < 3; channel += 1) {
+            table[index * 3 + channel] = Math.round(lower[1][channel] + (upper[1][channel] - lower[1][channel]) * local);
+          }
+        }
+        return table;
+      }
+
+      function buildPalette(name) {
+        if (name === 'custom') {
+          const stops = colorInputs.map((input, index) => [index / (colorInputs.length - 1), hexToRgb(input.value)]);
+          return stopsToTable(stops);
+        }
+        return stopsToTable(stopPresets[name] || stopPresets.ember);
+      }
+
+      function updatePalettePreview() {
+        palettePreview.style.background = `linear-gradient(90deg, ${colorInputs.map((input) => input.value).join(', ')})`;
+      }
+
+      function effectiveIterations() {
+        return Math.round(clamp(maxIter * (quality[qualitySelect.value] || quality.normal).iterScale, 24, 2000));
+      }
+
+      function screenToWorld(px, py, state = view) {
+        return {
+          re: state.re + (px / width - 0.5) * state.span,
+          im: state.im + (py / height - 0.5) * state.span * (height / width)
+        };
+      }
+
+      function updateHud() {
+        hudRe.textContent = view.re.toFixed(6);
+        hudIm.textContent = view.im.toFixed(6);
+        hudZoom.textContent = `${(3.2 / view.span).toFixed(1)}x`;
+        iterValue.textContent = String(effectiveIterations());
+        juliaReValue.textContent = juliaRe.toFixed(3);
+        juliaImValue.textContent = juliaIm.toFixed(3);
+      }
+
+      function drawRow(y, w, h, target, iterLimit, state) {
+        const imaginary = state.im + (y / h - 0.5) * state.span * (h / w);
+        const isJulia = setType.value === 'julia';
+        const data = target.data;
+        const offset = y * w * 4;
+        for (let x = 0; x < w; x += 1) {
+          const real = state.re + (x / w - 0.5) * state.span;
+          let zr = isJulia ? real : 0;
+          let zi = isJulia ? imaginary : 0;
+          const cr = isJulia ? juliaRe : real;
+          const ci = isJulia ? juliaIm : imaginary;
+          let iteration = 0;
+          while (iteration < iterLimit && zr * zr + zi * zi <= 4) {
+            const next = zr * zr - zi * zi + cr;
+            zi = 2 * zr * zi + ci;
+            zr = next;
+            iteration += 1;
+          }
+          const index = offset + x * 4;
+          if (iteration === iterLimit) {
+            data[index] = 0;
+            data[index + 1] = 0;
+            data[index + 2] = 0;
+          } else {
+            const magnitude = Math.sqrt(zr * zr + zi * zi);
+            const smooth = iteration + 1 - Math.log(Math.log(magnitude)) / Math.LN2;
+            const t = clamp(Math.sqrt(Math.max(0, smooth) / iterLimit), 0, 1);
+            const colorIndex = Math.min(255, Math.floor(t * 255)) * 3;
+            data[index] = palette[colorIndex];
+            data[index + 1] = palette[colorIndex + 1];
+            data[index + 2] = palette[colorIndex + 2];
+          }
+          data[index + 3] = 255;
+        }
+      }
+
+      function ensurePreview(w, h) {
+        if (preview && previewW === w && previewH === h) return;
+        previewW = w;
+        previewH = h;
+        preview = document.createElement('canvas');
+        preview.width = w;
+        preview.height = h;
+        previewCtx = preview.getContext('2d');
+        previewImage = previewCtx.createImageData(w, h);
+      }
+
+      function paintPreview() {
+        if (!preview) return;
+        previewCtx.putImageData(previewImage, 0, 0);
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(preview, 0, 0, width, height);
+      }
+
+      function renderPreviewFrame(state) {
+        const divisor = (quality[qualitySelect.value] || quality.normal).previewDiv;
+        const w = Math.max(24, Math.round(width / divisor));
+        const h = Math.max(24, Math.round(height / divisor));
+        ensurePreview(w, h);
+        const limit = Math.round(clamp(effectiveIterations() * 0.45, 32, 180));
+        for (let y = 0; y < h; y += 1) drawRow(y, w, h, previewImage, limit, state);
+        paintPreview();
+        hudProgress.textContent = '≈ podgląd';
+      }
+
+      function cancelRender() {
+        if (frame) window.cancelAnimationFrame(frame);
+        frame = 0;
+      }
+
+      function cancelAnimation() {
+        if (animFrame) window.cancelAnimationFrame(animFrame);
+        animFrame = 0;
+      }
+
+      function renderChunk() {
+        const previewPass = pass === 0;
+        const w = previewPass ? previewW : width;
+        const h = previewPass ? previewH : height;
+        const target = previewPass ? previewImage : image;
+        const limit = previewPass ? previewIterations : effectiveIterations();
+        const budget = previewPass ? 10 : 14;
+        const start = performance.now();
+        const first = row;
+        while (row < h && performance.now() - start < budget) {
+          drawRow(row, w, h, target, limit, renderView);
+          row += 1;
+        }
+        if (row > first) {
+          if (previewPass) {
+            paintPreview();
+            hudProgress.textContent = `≈${Math.round(row / h * 100)}%`;
+          } else {
+            ctx.putImageData(image, 0, 0);
+            hudProgress.textContent = `${Math.round(row / h * 100)}%`;
+          }
+        }
+        if (row < h) {
+          frame = window.requestAnimationFrame(renderChunk);
+        } else if (previewPass) {
+          pass = 1;
+          row = 0;
+          hudProgress.textContent = '0%';
+          frame = window.requestAnimationFrame(renderChunk);
+        } else {
+          frame = 0;
+          hudProgress.textContent = '100%';
+          hudTime.textContent = `${Math.round(performance.now() - startedAt)}ms`;
+        }
+      }
+
+      function startRender() {
+        cancelRender();
+        renderView = { ...view };
+        const divisor = (quality[qualitySelect.value] || quality.normal).previewDiv;
+        ensurePreview(Math.max(24, Math.round(width / divisor)), Math.max(24, Math.round(height / divisor)));
+        if (!image || image.width !== width || image.height !== height) image = ctx.createImageData(width, height);
+        previewIterations = Math.round(clamp(effectiveIterations() * 0.45, 32, 180));
+        pass = 0;
+        row = 0;
+        startedAt = performance.now();
+        hudProgress.textContent = '0%';
+        frame = window.requestAnimationFrame(renderChunk);
+        updateHud();
+      }
+
+      function scheduleRender() {
+        cancelAnimation();
+        startRender();
+      }
+
+      function debouncedRender() {
+        cancelAnimation();
+        cancelRender();
+        renderPreviewFrame(view);
+        updateHud();
+        window.clearTimeout(debounceTimer);
+        debounceTimer = window.setTimeout(startRender, 140);
+      }
+
+      function animateTo(target, duration = 230) {
+        cancelRender();
+        cancelAnimation();
+        window.clearTimeout(debounceTimer);
+        const from = { ...view };
+        const to = { re: Number(target.re), im: Number(target.im), span: clamp(Number(target.span) || view.span, 1e-13, 8) };
+        const ms = reduceMotion ? 0 : duration;
+        if (ms <= 0) {
+          view = to;
+          startRender();
+          return;
+        }
+        const begin = performance.now();
+        const tick = () => {
+          const t = clamp((performance.now() - begin) / ms, 0, 1);
+          const eased = 1 - Math.pow(1 - t, 3);
+          view.re = from.re + (to.re - from.re) * eased;
+          view.im = from.im + (to.im - from.im) * eased;
+          view.span = Math.exp(Math.log(from.span) + (Math.log(to.span) - Math.log(from.span)) * eased);
+          renderPreviewFrame(view);
+          updateHud();
+          if (t < 1) {
+            animFrame = window.requestAnimationFrame(tick);
+          } else {
+            animFrame = 0;
+            startRender();
+          }
+        };
+        animFrame = window.requestAnimationFrame(tick);
+      }
+
+      function zoomAt(px, py, factor, animated = true) {
+        const before = screenToWorld(px, py);
+        const nextSpan = clamp(view.span / factor, 1e-13, 8);
+        const after = screenToWorld(px, py, { ...view, span: nextSpan });
+        const target = { re: view.re + before.re - after.re, im: view.im + before.im - after.im, span: nextSpan };
+        if (animated) animateTo(target, 170);
+        else { view = target; startRender(); }
+      }
+
+      function homeView() {
+        return setType.value === 'julia' ? { re: 0, im: 0, span: 3.2 } : { re: -0.5, im: 0, span: 3.2 };
+      }
+
+      function reset(animated = true) {
+        if (animated) animateTo(homeView());
+        else { view = homeView(); scheduleRender(); }
+      }
+
+      function requestPreview() {
+        if (previewFrame) return;
+        previewFrame = window.requestAnimationFrame(() => {
+          previewFrame = 0;
+          renderPreviewFrame(view);
+          updateHud();
+        });
+      }
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        const nextWidth = Math.max(1, Math.round(rect.width));
+        const nextHeight = Math.max(1, Math.round(rect.height));
+        if (nextWidth === width && nextHeight === height) return;
+        width = nextWidth;
+        height = nextHeight;
+        canvas.width = width;
+        canvas.height = height;
+        image = null;
+        preview = null;
+        startRender();
+      }
+
+      function readBookmarks() {
+        try {
+          const parsed = JSON.parse(storeGet(BOOKMARK_KEY) || '[]');
+          return Array.isArray(parsed) ? parsed : [];
+        } catch (_) { return []; }
+      }
+
+      function refreshBookmarks() {
+        const list = readBookmarks();
+        bookmarksSelect.replaceChildren();
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = '— ZAPISANE WIDOKI —';
+        bookmarksSelect.appendChild(placeholder);
+        list.forEach((item, index) => {
+          const option = document.createElement('option');
+          option.value = String(index);
+          option.textContent = `${item.name} · ${item.re.toFixed(4)},${item.im >= 0 ? '+' : ''}${item.im.toFixed(4)} · ${(3.2 / item.span).toFixed(1)}x`;
+          bookmarksSelect.appendChild(option);
+        });
+      }
+
+      function saveBookmark() {
+        const list = readBookmarks();
+        list.push({
+          name: `B${Date.now().toString(36).slice(-4).toUpperCase()}`,
+          re: view.re, im: view.im, span: view.span,
+          set: setType.value, palette: paletteSelect.value,
+          quality: qualitySelect.value, iterations: maxIter,
+          juliaRe, juliaIm
+        });
+        while (list.length > 20) list.shift();
+        storeSet(BOOKMARK_KEY, JSON.stringify(list));
+        refreshBookmarks();
+        bookmarksSelect.value = String(list.length - 1);
+        setStatus(`Zapisano widok ${list[list.length - 1].name}.`);
+      }
+
+      function loadBookmark() {
+        const list = readBookmarks();
+        const item = list[Number(bookmarksSelect.value)];
+        if (!item) { setStatus('Wybierz zapisany widok.'); return; }
+        setType.value = item.set === 'julia' ? 'julia' : 'mandelbrot';
+        paletteSelect.value = item.palette;
+        qualitySelect.value = quality[item.quality] ? item.quality : 'normal';
+        iterationsInput.value = String(clamp(Number(item.iterations) || 180, 50, 500));
+        juliaReInput.value = String(clamp(Number(item.juliaRe) || 0, -1.5, 1.5));
+        juliaImInput.value = String(clamp(Number(item.juliaIm) || 0, -1.5, 1.5));
+        juliaRe = parseFloat(juliaReInput.value);
+        juliaIm = parseFloat(juliaImInput.value);
+        maxIter = parseInt(iterationsInput.value, 10);
+        juliaControls.hidden = setType.value !== 'julia';
+        paletteEditor.hidden = paletteSelect.value !== 'custom';
+        palette = buildPalette(paletteSelect.value);
+        updatePalettePreview();
+        animateTo({ re: item.re, im: item.im, span: item.span });
+        setStatus('Wczytano zapisany widok.');
+      }
+
+      function deleteBookmark() {
+        const index = Number(bookmarksSelect.value);
+        const list = readBookmarks();
+        if (!list[index]) { setStatus('Wybierz zapisany widok.'); return; }
+        list.splice(index, 1);
+        storeSet(BOOKMARK_KEY, JSON.stringify(list));
+        refreshBookmarks();
+        setStatus('Usunięto widok.');
+      }
+
+      function exportPng() {
+        try {
+          canvas.toBlob((blob) => {
+            if (!blob) { setStatus('Eksport PNG nieudany.'); return; }
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `fractal-${view.re.toFixed(5)}_${view.im.toFixed(5)}.png`;
+            link.click();
+            window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+            setStatus('PNG zapisany.');
+          }, 'image/png');
+        } catch (_) { setStatus('Eksport PNG niedostępny.'); }
+      }
+
+      document.getElementById('zoomIn').addEventListener('click', () => zoomAt(width / 2, height / 2, 1.7));
+      document.getElementById('zoomOut').addEventListener('click', () => zoomAt(width / 2, height / 2, 1 / 1.7));
+      document.getElementById('reset').addEventListener('click', () => reset());
+      document.getElementById('exportBtn').addEventListener('click', exportPng);
+      document.getElementById('saveBookmark').addEventListener('click', saveBookmark);
+      document.getElementById('loadBookmark').addEventListener('click', loadBookmark);
+      document.getElementById('deleteBookmark').addEventListener('click', deleteBookmark);
+
+      setType.addEventListener('change', () => {
+        juliaControls.hidden = setType.value !== 'julia';
+        reset();
+      });
+
+      paletteSelect.addEventListener('change', () => {
+        paletteEditor.hidden = paletteSelect.value !== 'custom';
+        palette = buildPalette(paletteSelect.value);
+        scheduleRender();
+      });
+
+      colorInputs.forEach((input) => {
+        input.addEventListener('input', () => {
+          paletteSelect.value = 'custom';
+          paletteEditor.hidden = false;
+          updatePalettePreview();
+          palette = buildPalette('custom');
+          debouncedRender();
+        });
+      });
+
+      qualitySelect.addEventListener('change', debouncedRender);
+
+      iterationsInput.addEventListener('input', () => {
+        maxIter = parseInt(iterationsInput.value, 10);
+        debouncedRender();
+      });
+
+      [juliaReInput, juliaImInput].forEach((input) => {
+        input.addEventListener('input', () => {
+          juliaRe = parseFloat(juliaReInput.value);
+          juliaIm = parseFloat(juliaImInput.value);
+          debouncedRender();
+        });
+      });
+
+      canvas.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        zoomAt(event.clientX - rect.left, event.clientY - rect.top, Math.exp(clamp(-event.deltaY, -240, 240) * 0.006), true);
+      }, { passive: false });
+
+      canvas.addEventListener('pointerdown', (event) => {
+        try { canvas.setPointerCapture(event.pointerId); } catch (_) { /* brak przechwytu */ }
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        cancelAnimation();
+        cancelRender();
+        window.clearTimeout(debounceTimer);
+        if (pointers.size === 2) {
+          const [a, b] = [...pointers.values()];
+          const rect = canvas.getBoundingClientRect();
+          pinch = {
+            distance: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+            cx: (a.x + b.x) / 2 - rect.left,
+            cy: (a.y + b.y) / 2 - rect.top,
+            view: { ...view }
+          };
+        }
+      });
+
+      canvas.addEventListener('pointermove', (event) => {
+        if (!pointers.has(event.pointerId)) return;
+        const previous = pointers.get(event.pointerId);
+        pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (pointers.size >= 2 && pinch) {
+          const [a, b] = [...pointers.values()];
+          const rect = canvas.getBoundingClientRect();
+          const cx = (a.x + b.x) / 2 - rect.left;
+          const cy = (a.y + b.y) / 2 - rect.top;
+          const factor = Math.hypot(a.x - b.x, a.y - b.y) / pinch.distance;
+          const span = clamp(pinch.view.span / factor, 1e-13, 8);
+          const anchorRe = pinch.view.re + (pinch.cx / width - 0.5) * pinch.view.span;
+          const anchorIm = pinch.view.im + (pinch.cy / height - 0.5) * pinch.view.span * (height / width);
+          view.span = span;
+          view.re = anchorRe + (0.5 - cx / width) * span;
+          view.im = anchorIm + (0.5 - cy / height) * span * (height / width);
+        } else {
+          const step = view.span / width;
+          view.re -= (event.clientX - previous.x) * step;
+          view.im -= (event.clientY - previous.y) * step;
+        }
+        requestPreview();
+      });
+
+      function endPointer(event) {
+        pointers.delete(event.pointerId);
+        try { if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId); } catch (_) { /* brak przechwytu */ }
+        if (pointers.size < 2) pinch = null;
+        if (pointers.size === 0) startRender();
+      }
+      canvas.addEventListener('pointerup', endPointer);
+      canvas.addEventListener('pointercancel', endPointer);
+
+      canvas.addEventListener('keydown', (event) => {
+        const step = view.span * 0.08;
+        if (event.key === 'ArrowLeft') view.re -= step;
+        else if (event.key === 'ArrowRight') view.re += step;
+        else if (event.key === 'ArrowUp') view.im -= step;
+        else if (event.key === 'ArrowDown') view.im += step;
+        else if (event.key === '+' || event.key === '=') return zoomAt(width / 2, height / 2, 1.5);
+        else if (event.key === '-') return zoomAt(width / 2, height / 2, 1 / 1.5);
+        else if (event.key.toLowerCase() === 'r') return reset();
+        else if (event.key.toLowerCase() === 'b') return saveBookmark();
+        else return;
+        event.preventDefault();
+        debouncedRender();
+      });
+
+      function setTheme(theme) {
+        const allowed = ['lain', 'matrix', 'blood'];
+        const next = allowed.includes(theme) ? theme : 'lain';
+        document.body.dataset.theme = next;
+        storeSet(THEME_KEY, next);
+        themeButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.theme === next)));
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', { lain: '#020000', matrix: '#000500', blood: '#050005' }[next]);
+      }
+      themeButtons.forEach((button) => button.addEventListener('click', () => setTheme(button.dataset.theme)));
+
+      window.__FRACTAL_DEBUG__ = {
+        state: () => ({
+          re: view.re, im: view.im, span: view.span, zoom: 3.2 / view.span,
+          iterations: effectiveIterations(), set: setType.value, palette: paletteSelect.value,
+          rendering: Boolean(frame), animating: Boolean(animFrame), width, height
+        }),
+        goTo: (re, im, span) => animateTo({ re, im, span }),
+        bookmarks: () => readBookmarks().length
+      };
+
+      setTheme(storeGet(THEME_KEY) || 'lain');
+      palette = buildPalette(paletteSelect.value);
+      updatePalettePreview();
+      refreshBookmarks();
+      resize();
+      window.addEventListener('resize', resize);
+    })();
+  </script>
+</body>
+</html>

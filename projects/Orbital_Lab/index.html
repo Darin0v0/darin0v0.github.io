@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#060b16">
+  <meta name="description" content="ORBITAL LAB // symulator mechaniki niebieskiej z integratorem RK4, predykcją trajektorii i elementami orbity.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23060b16'/%3E%3Cellipse cx='32' cy='32' rx='24' ry='11' fill='none' stroke='%235eead0' stroke-width='3' transform='rotate(-25 32 32)'/%3E%3Ccircle cx='32' cy='32' r='7' fill='%23ffb454'/%3E%3C/svg%3E">
+  <title>Orbital Lab — mechanika niebieska</title>
+  <style>
+    :root {
+      --bg:#060b16; --panel:#0b1324; --panel2:#0f1b30; --border:#1e2d47;
+      --text:#e8f1ff; --muted:#7d91ad; --accent:#5eead0; --accent2:#ffb454; --danger:#ff6b81;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; height:100%; }
+    body {
+      background:var(--bg); color:var(--text);
+      font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    header {
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:9px 13px;
+      background:linear-gradient(180deg,#0d1729,#0a1220); border-bottom:1px solid var(--border);
+    }
+    .brand { font-weight:700; font-size:13px; letter-spacing:.04em; margin-right:6px; }
+    .brand span { color:var(--accent); }
+    button, select, input[type="number"] {
+      font:inherit; color:var(--text); background:#101d33; border:1px solid var(--border);
+      border-radius:6px; padding:6px 9px; cursor:pointer;
+    }
+    button:hover, select:hover { border-color:#3b6b8f; background:#152842; }
+    button.primary { background:var(--accent); color:#052018; border-color:var(--accent); font-weight:700; }
+    button.primary:hover { background:#8af4df; color:#052018; }
+    button.active { background:#173a3a; color:var(--accent); border-color:#2d7d72; }
+    input[type="range"] { accent-color:var(--accent); width:104px; }
+    .sep { width:1px; height:20px; background:var(--border); margin:0 3px; }
+    header label { color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
+    .label { color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.06em; }
+    .main { flex:1; display:grid; grid-template-columns:minmax(0,1fr) 268px; min-height:0; }
+    .stage { position:relative; min-width:0; overflow:hidden; background:radial-gradient(circle at 50% 45%,#0a1730 0,#050912 70%); }
+    canvas { display:block; width:100%; height:100%; touch-action:none; cursor:crosshair; }
+    .stage-hint {
+      position:absolute; left:14px; bottom:12px; color:#6f88a8; font-size:10px; pointer-events:none;
+      background:rgba(6,11,22,.55); padding:5px 9px; border-radius:5px; border:1px solid #17263e;
+    }
+    aside {
+      background:var(--panel); border-left:1px solid var(--border); overflow:auto; padding:12px;
+      display:flex; flex-direction:column; gap:12px;
+    }
+    .card { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:11px; }
+    .card h3 {
+      margin:0 0 9px; font-size:10px; text-transform:uppercase; letter-spacing:.09em;
+      color:var(--muted); font-weight:700;
+    }
+    .row { display:flex; justify-content:space-between; gap:8px; padding:3px 0; }
+    .row span:first-child { color:var(--muted); }
+    .row b { font-weight:600; font-variant-numeric:tabular-nums; }
+    .accent { color:var(--accent); }
+    .amber { color:var(--accent2); }
+    .field { display:grid; gap:4px; margin-bottom:8px; }
+    .field label { color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.05em; }
+    .field input[type="text"], .field input[type="number"] { width:100%; }
+    .swatches { display:flex; gap:6px; }
+    .swatch { width:24px; height:24px; border-radius:50%; border:2px solid transparent; cursor:pointer; }
+    .swatch.on { border-color:#fff; box-shadow:0 0 0 2px #2b4d6b; }
+    .status {
+      display:flex; gap:16px; flex-wrap:wrap; padding:7px 13px; background:#0a1220;
+      border-top:1px solid var(--border); color:var(--muted); font-size:10px;
+    }
+    .status b { color:var(--text); font-variant-numeric:tabular-nums; }
+    :where(button,select,input):focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+    @media (max-width:860px) { .main { grid-template-columns:1fr; } aside { display:none; } }
+    @media (max-width:480px) {
+      header { gap:6px; padding:8px; }
+      header .label { display:none; }
+      input[type="range"] { width:86px; }
+      .stage-hint { right:10px; font-size:9px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">ORBITAL <span>LAB</span></div>
+    <button type="button" id="playBtn" class="primary">❚❚ Pauza</button>
+    <button type="button" id="resetBtn">Reset</button>
+    <select id="presetSelect" aria-label="Układ">
+      <option value="solar">Układ słoneczny</option>
+      <option value="binary">Gwiazda podwójna</option>
+      <option value="figure8">Problem trzech ciał · figure-8</option>
+      <option value="chaos">Chaos · 8 ciał</option>
+    </select>
+    <div class="sep"></div>
+    <label for="speed">Czas</label>
+    <input type="range" id="speed" min="-10" max="10" step="0.2" value="3" aria-label="Skala czasu (wartość ujemna cofa symulację)">
+    <span class="label" id="speedValue">3.0×</span>
+    <button type="button" id="stepBtn">Krok</button>
+    <div class="sep"></div>
+    <button type="button" id="trailsBtn" class="active">Ślady</button>
+    <button type="button" id="predictBtn" class="active">Predykcja</button>
+    <button type="button" id="collideBtn" class="active">Kolizje</button>
+    <button type="button" id="followBtn">Podążaj</button>
+    <button type="button" id="exportBtn">PNG</button>
+    <div class="sep"></div>
+    <label for="trailFade">Zanik śladu</label>
+    <input type="range" id="trailFade" min="0" max="1" step="0.05" value="0.55">
+    <span class="label">Masa nowego</span>
+    <input type="range" id="newMass" min="1" max="300" step="1" value="30">
+    <span class="label" id="newMassValue">30</span>
+  </header>
+
+  <div class="main">
+    <div class="stage">
+      <canvas id="canvas" aria-label="Symulator mechaniki niebieskiej"></canvas>
+      <div class="stage-hint" id="stageHint" role="status" aria-live="polite">Kliknięcie — wybierz ciało · przeciągnięcie w pustce — dodaj ciało z prędkością · kółko — zoom · przeciągnięcie tła — przesuwanie</div>
+    </div>
+    <aside>
+      <div class="card">
+        <h3>Ciało wybrane</h3>
+        <div id="selectedEmpty" style="color:var(--muted)">Brak zaznaczenia. Kliknij ciało na canvasie.</div>
+        <div id="selectedBox" hidden>
+          <div class="field">
+            <label>Nazwa</label>
+            <input type="text" id="bodyName" maxlength="18">
+          </div>
+          <div class="field">
+            <label>Masa: <span id="bodyMassValue" class="accent">—</span></label>
+            <input type="range" id="bodyMass" min="1" max="1500" step="1" value="100">
+          </div>
+          <div class="field">
+            <label>Kolor</label>
+            <div class="swatches" id="swatches"></div>
+          </div>
+          <div class="row"><span>Prędkość</span><b id="bodySpeed">—</b></div>
+          <div class="row"><span>Dystans od głównego</span><b id="bodyDist">—</b></div>
+          <div class="row"><span>Półoś wielka <i>a</i></span><b id="bodyA" class="accent">—</b></div>
+          <div class="row"><span>Mimośród <i>e</i></span><b id="bodyE">—</b></div>
+          <div class="row"><span>Okres orbitalny</span><b id="bodyT" class="amber">—</b></div>
+          <button type="button" id="removeBtn" style="width:100%;margin-top:8px">Usuń ciało</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Stan układu</h3>
+        <div class="row"><span>Czas symulacji</span><b id="statTime">0.00</b></div>
+        <div class="row"><span>Liczba ciał</span><b id="statCount">0</b></div>
+        <div class="row"><span>Energia kinetyczna</span><b id="statKe">0</b></div>
+        <div class="row"><span>Energia potencjalna</span><b id="statPe">0</b></div>
+        <div class="row"><span>Energia całkowita</span><b id="statTe" class="accent">0</b></div>
+        <div class="row"><span>Pęd całkowity</span><b id="statMom">0</b></div>
+        <div class="row"><span>Dryf środka masy</span><b id="statCom">0</b></div>
+        <div class="row"><span>Dryf energii</span><b id="statDrift" class="accent">0%</b></div>
+        <div class="row"><span>Kolizje</span><b id="statCollisions">0</b></div>
+      </div>
+      <div class="card" style="color:var(--muted);font-size:11px;line-height:1.7">
+        <h3>Metoda</h3>
+        Integrator <b style="color:var(--text)">Rungego–Kutty 4. rzędu</b> z miękkim potencjałem grawitacyjnym. Elementy orbity liczone z wektora momentu pędu i energii względem najmasywniejszego ciała.
+      </div>
+    </aside>
+  </div>
+
+  <div class="status">
+    <span>FPS <b id="fps">—</b></span>
+    <span>Krok <b id="stepInfo">—</b></span>
+    <span>Zoom <b id="zoomInfo">1.00×</b></span>
+    <span>E <b id="energyInfo">0</b></span>
+    <span>P <b id="momentumInfo">0</b></span>
+    <span>G <b>1.000</b></span>
+    <span id="hint">Grawitacja N-ciał · RK4 · predykcja na żywo</span>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const G = 1;
+      const SOFT2 = 18;
+      const COLORS = ['#5eead0', '#ffb454', '#ff6b81', '#8b9cff', '#f9f871', '#ff7ad9', '#67e8f9', '#c4b5fd'];
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const $ = (id) => document.getElementById(id);
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+      let bodies = [];
+      let nextId = 1;
+      let selectedId = null;
+      let running = true;
+      let timeScale = 3;
+      let simTime = 0;
+      let showTrails = true;
+      let showPrediction = true;
+      let collisions = true;
+      let follow = false;
+      let collisionCount = 0;
+      let energyRef = 0;
+      let statsClock = 0;
+      let zoom = 1;
+      let pan = { x: 0, y: 0 };
+      let initializedView = false;
+      let pointer = null;
+      let panning = null;
+      let prediction = [];
+      let predictionAge = 0;
+      let lastFrame = performance.now();
+      let fps = 60;
+      let frames = 0;
+      let fpsClock = performance.now();
+      let stars = [];
+
+      const fmt = (value, digits = 2) => {
+        if (!Number.isFinite(value)) return '—';
+        const abs = Math.abs(value);
+        if (abs >= 1e5 || (abs > 0 && abs < 1e-3)) return value.toExponential(2);
+        return value.toFixed(digits);
+      };
+      const selected = () => bodies.find((body) => body.id === selectedId) || null;
+      const radiusOf = (mass) => Math.max(2.5, Math.cbrt(mass) * 1.7);
+
+      function makeBody(name, mass, x, y, vx, vy, color) {
+        return { id: nextId++, name, mass, radius: radiusOf(mass), x, y, vx, vy, color, trail: [] };
+      }
+
+      function accelerations(list) {
+        const out = list.map(() => ({ x: 0, y: 0 }));
+        for (let i = 0; i < list.length; i += 1) {
+          for (let j = i + 1; j < list.length; j += 1) {
+            const dx = list[j].x - list[i].x;
+            const dy = list[j].y - list[i].y;
+            const r2 = dx * dx + dy * dy + SOFT2;
+            const inv = 1 / (r2 * Math.sqrt(r2));
+            const fx = G * dx * inv;
+            const fy = G * dy * inv;
+            out[i].x += fx * list[j].mass;
+            out[i].y += fy * list[j].mass;
+            out[j].x -= fx * list[i].mass;
+            out[j].y -= fy * list[i].mass;
+          }
+        }
+        return out;
+      }
+
+      function derivative(list) {
+        const acc = accelerations(list);
+        return list.map((body, i) => ({ x: body.vx, y: body.vy, vx: acc[i].x, vy: acc[i].y }));
+      }
+
+      function shifted(list, k, h) {
+        return list.map((body, i) => ({
+          ...body,
+          x: body.x + k[i].x * h,
+          y: body.y + k[i].y * h,
+          vx: body.vx + k[i].vx * h,
+          vy: body.vy + k[i].vy * h
+        }));
+      }
+
+      function rk4(list, h) {
+        const k1 = derivative(list);
+        const k2 = derivative(shifted(list, k1, h / 2));
+        const k3 = derivative(shifted(list, k2, h / 2));
+        const k4 = derivative(shifted(list, k3, h));
+        return list.map((body, i) => ({
+          ...body,
+          x: body.x + h / 6 * (k1[i].x + 2 * k2[i].x + 2 * k3[i].x + k4[i].x),
+          y: body.y + h / 6 * (k1[i].y + 2 * k2[i].y + 2 * k3[i].y + k4[i].y),
+          vx: body.vx + h / 6 * (k1[i].vx + 2 * k2[i].vx + 2 * k3[i].vx + k4[i].vx),
+          vy: body.vy + h / 6 * (k1[i].vy + 2 * k2[i].vy + 2 * k3[i].vy + k4[i].vy)
+        }));
+      }
+
+      function mergeCollisions() {
+        let changed = true;
+        while (changed) {
+          changed = false;
+          outer: for (let i = 0; i < bodies.length; i += 1) {
+            for (let j = i + 1; j < bodies.length; j += 1) {
+              const a = bodies[i], b = bodies[j];
+              const distance = Math.hypot(a.x - b.x, a.y - b.y);
+              if (distance > Math.max(3, (a.radius + b.radius) * 0.55)) continue;
+              const mass = a.mass + b.mass;
+              const merged = makeBody(
+                mass > a.mass && mass > b.mass ? a.name : b.name,
+                mass,
+                (a.x * a.mass + b.x * b.mass) / mass,
+                (a.y * a.mass + b.y * b.mass) / mass,
+                (a.vx * a.mass + b.vx * b.mass) / mass,
+                (a.vy * a.mass + b.vy * b.mass) / mass,
+                a.mass >= b.mass ? a.color : b.color
+              );
+              merged.trail = (a.mass >= b.mass ? a.trail : b.trail).slice(-120);
+              bodies.splice(j, 1);
+              bodies.splice(i, 1, merged);
+              if (selectedId === a.id || selectedId === b.id) selectedId = merged.id;
+              changed = true;
+              collisionCount += 1;
+              $('stageHint').textContent = `Kolizja: ${a.name} + ${b.name} → ${merged.name}`;
+              break outer;
+            }
+          }
+        }
+      }
+
+      function advance() {
+        const total = 0.02 * timeScale;
+        const steps = Math.max(1, Math.min(8, Math.ceil(Math.abs(total) / 0.025)));
+        const h = total / steps;
+        for (let i = 0; i < steps; i += 1) {
+          bodies = rk4(bodies, h);
+          simTime += h;
+          if (collisions) mergeCollisions();
+        }
+        if (showTrails) {
+          bodies.forEach((body) => {
+            const last = body.trail[body.trail.length - 1];
+            if (!last || Math.hypot(body.x - last.x, body.y - last.y) > 1.6) {
+              body.trail.push({ x: body.x, y: body.y });
+              if (body.trail.length > 260) body.trail.shift();
+            }
+          });
+        }
+      }
+
+      function computePrediction() {
+        if (!showPrediction || !selected()) { prediction = []; return; }
+        const target = selected();
+        let clone = bodies.map((body) => ({ ...body, trail: [] }));
+        const points = [];
+        const h = 0.03;
+        for (let i = 0; i < 520; i += 1) {
+          clone = rk4(clone, h);
+          if (i % 3 === 0) {
+            const body = clone.find((item) => item.id === target.id);
+            if (body) points.push({ x: body.x, y: body.y });
+          }
+        }
+        prediction = points;
+        predictionAge = 0;
+      }
+
+      function energy() {
+        let ke = 0, pe = 0, px = 0, py = 0, m = 0, cx = 0, cy = 0;
+        bodies.forEach((body) => {
+          ke += 0.5 * body.mass * (body.vx * body.vx + body.vy * body.vy);
+          px += body.mass * body.vx;
+          py += body.mass * body.vy;
+          m += body.mass;
+          cx += body.mass * body.x;
+          cy += body.mass * body.y;
+        });
+        for (let i = 0; i < bodies.length; i += 1) {
+          for (let j = i + 1; j < bodies.length; j += 1) {
+            pe -= G * bodies[i].mass * bodies[j].mass / Math.sqrt(Math.hypot(bodies[i].x - bodies[j].x, bodies[i].y - bodies[j].y) ** 2 + SOFT2);
+          }
+        }
+        return { ke, pe, te: ke + pe, momentum: Math.hypot(px, py), com: Math.hypot(cx / (m || 1), cy / (m || 1)) };
+      }
+
+      function orbitalElements(body) {
+        if (!body) return null;
+        const primary = bodies.filter((item) => item !== body).sort((a, b) => b.mass - a.mass)[0];
+        if (!primary) return null;
+        const dx = body.x - primary.x, dy = body.y - primary.y;
+        const dvx = body.vx - primary.vx, dvy = body.vy - primary.vy;
+        const r = Math.hypot(dx, dy);
+        const v2 = dvx * dvx + dvy * dvy;
+        const mu = G * (primary.mass + body.mass);
+        const specific = v2 / 2 - mu / r;
+        const dot = dx * dvx + dy * dvy;
+        const ex = ((v2 - mu / r) * dx - dot * dvx) / mu;
+        const ey = ((v2 - mu / r) * dy - dot * dvy) / mu;
+        const eccentricity = Math.hypot(ex, ey);
+        const a = specific < 0 ? -mu / (2 * specific) : Infinity;
+        const period = Number.isFinite(a) ? 2 * Math.PI * Math.sqrt(a * a * a / mu) : Infinity;
+        return { primary, distance: r, speed: Math.sqrt(v2), a, e: eccentricity, period };
+      }
+
+      function makeStars() {
+        stars = Array.from({ length: 170 }, () => ({
+          x: Math.random(), y: Math.random(), size: Math.random() * 1.3 + 0.3, alpha: Math.random() * 0.5 + 0.15
+        }));
+      }
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(1, Math.round(rect.width * ratio));
+        canvas.height = Math.max(1, Math.round(rect.height * ratio));
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        if (!initializedView && rect.width) {
+          pan = { x: rect.width / 2, y: rect.height / 2 };
+          initializedView = true;
+        }
+      }
+
+      const toScreen = (x, y) => ({ x: pan.x + x * zoom, y: pan.y + y * zoom });
+      const toWorld = (x, y) => ({ x: (x - pan.x) / zoom, y: (y - pan.y) / zoom });
+
+      function drawGrid(width, height) {
+        const spacing = 50 * zoom;
+        if (spacing < 12) return;
+        const origin = toScreen(0, 0);
+        ctx.strokeStyle = 'rgba(94,234,208,0.055)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let x = origin.x % spacing; x < width; x += spacing) { ctx.moveTo(x, 0); ctx.lineTo(x, height); }
+        for (let y = origin.y % spacing; y < height; y += spacing) { ctx.moveTo(0, y); ctx.lineTo(width, y); }
+        ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,180,84,0.13)';
+        ctx.beginPath();
+        ctx.moveTo(origin.x - 9, origin.y); ctx.lineTo(origin.x + 9, origin.y);
+        ctx.moveTo(origin.x, origin.y - 9); ctx.lineTo(origin.x, origin.y + 9);
+        ctx.stroke();
+      }
+
+      function draw() {
+        const now = performance.now();
+        lastFrame = now;
+        frames += 1;
+        if (now - fpsClock > 500) { fps = frames * 1000 / (now - fpsClock); frames = 0; fpsClock = now; }
+
+        if (running) advance();
+        predictionAge += 1;
+        if (showPrediction && predictionAge > 12) computePrediction();
+        if (!showPrediction) prediction = [];
+
+        const width = canvas.clientWidth, height = canvas.clientHeight;
+        if (follow) {
+          const tracked = selected();
+          if (tracked) {
+            const screen = toScreen(tracked.x, tracked.y);
+            pan.x += (width / 2 - screen.x) * 0.12;
+            pan.y += (height / 2 - screen.y) * 0.12;
+          } else {
+            follow = false;
+            $('followBtn').classList.remove('active');
+          }
+        }
+        ctx.clearRect(0, 0, width, height);
+        stars.forEach((star) => {
+          ctx.fillStyle = `rgba(190,215,255,${star.alpha})`;
+          ctx.fillRect(star.x * width, star.y * height, star.size, star.size);
+        });
+        drawGrid(width, height);
+
+        if (prediction.length > 1) {
+          ctx.save();
+          ctx.setLineDash([5, 6]);
+          ctx.strokeStyle = 'rgba(94,234,208,0.42)';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          prediction.forEach((point, i) => {
+            const p = toScreen(point.x, point.y);
+            if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+          });
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        const trailFade = parseFloat($('trailFade').value);
+        bodies.forEach((body) => {
+          if (!showTrails || body.trail.length < 2) return;
+          const count = body.trail.length;
+          const groups = 6;
+          for (let group = 0; group < groups; group += 1) {
+            const first = Math.floor(group * count / groups);
+            const last = Math.min(count - 1, Math.floor((group + 1) * count / groups));
+            if (last - first < 1) continue;
+            ctx.beginPath();
+            for (let i = first; i <= last; i += 1) {
+              const p = toScreen(body.trail[i].x, body.trail[i].y);
+              if (i === first) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+            }
+            const alpha = clamp((0.08 + 0.52 * Math.pow((group + 1) / groups, 1 + trailFade * 3)) * (1 - trailFade * 0.35), 0.04, 0.85);
+            ctx.strokeStyle = `${body.color}${Math.round(alpha * 255).toString(16).padStart(2, '0')}`;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+          }
+        });
+
+        bodies.forEach((body) => {
+          const p = toScreen(body.x, body.y);
+          const r = Math.max(3, body.radius * zoom);
+          const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3.5);
+          glow.addColorStop(0, `${body.color}cc`);
+          glow.addColorStop(0.35, `${body.color}44`);
+          glow.addColorStop(1, `${body.color}00`);
+          ctx.fillStyle = glow;
+          ctx.beginPath(); ctx.arc(p.x, p.y, r * 3.5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = body.color;
+          ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+          if (body.id === selectedId) {
+            ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2;
+            ctx.beginPath(); ctx.arc(p.x, p.y, r + 6, 0, Math.PI * 2); ctx.stroke();
+          }
+          ctx.fillStyle = '#cfe0f5';
+          ctx.font = '10px -apple-system, "Segoe UI", sans-serif';
+          ctx.fillText(body.name, p.x + r + 6, p.y - r - 3);
+        });
+
+        if (pointer && pointer.kind === 'launch') {
+          const a = toScreen(pointer.start.x, pointer.start.y);
+          const b = toScreen(pointer.current.x, pointer.current.y);
+          ctx.strokeStyle = '#ffb454'; ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          const angle = Math.atan2(b.y - a.y, b.x - a.x);
+          ctx.beginPath();
+          ctx.moveTo(b.x, b.y);
+          ctx.lineTo(b.x - 9 * Math.cos(angle - 0.5), b.y - 9 * Math.sin(angle - 0.5));
+          ctx.lineTo(b.x - 9 * Math.cos(angle + 0.5), b.y - 9 * Math.sin(angle + 0.5));
+          ctx.closePath(); ctx.fillStyle = '#ffb454'; ctx.fill();
+        }
+
+        if (now - statsClock > 140) {
+          statsClock = now;
+          const e = energy();
+          const drift = energyRef ? Math.abs((e.te - energyRef) / energyRef) * 100 : 0;
+          $('fps').textContent = fps.toFixed(0);
+          $('stepInfo').textContent = `${(0.02 * timeScale).toFixed(3)} / klatkę`;
+          $('zoomInfo').textContent = `${zoom.toFixed(2)}×`;
+          $('energyInfo').textContent = fmt(e.te, 2);
+          $('momentumInfo').textContent = fmt(e.momentum, 2);
+          $('statTime').textContent = fmt(simTime, 1);
+          $('statCount').textContent = String(bodies.length);
+          $('statKe').textContent = fmt(e.ke, 1);
+          $('statPe').textContent = fmt(e.pe, 1);
+          $('statTe').textContent = fmt(e.te, 1);
+          $('statMom').textContent = fmt(e.momentum, 3);
+          $('statCom').textContent = fmt(e.com, 3);
+          $('statDrift').textContent = `${fmt(drift, 3)}%`;
+          $('statCollisions').textContent = String(collisionCount);
+          updatePanel();
+        }
+        requestAnimationFrame(draw);
+      }
+
+      function updatePanel() {
+        const body = selected();
+        $('selectedEmpty').hidden = Boolean(body);
+        $('selectedBox').hidden = !body;
+        if (!body) return;
+        const elements = orbitalElements(body);
+        if (document.activeElement !== $('bodyName')) $('bodyName').value = body.name;
+        if (document.activeElement !== $('bodyMass')) $('bodyMass').value = String(Math.min(1500, Math.max(1, Math.round(body.mass))));
+        $('bodyMassValue').textContent = fmt(body.mass, 1);
+        $('bodySpeed').textContent = fmt(elements?.speed ?? Math.hypot(body.vx, body.vy), 3);
+        $('bodyDist').textContent = fmt(elements?.distance ?? 0, 1);
+        $('bodyA').textContent = elements ? fmt(elements.a, 1) : '—';
+        $('bodyE').textContent = elements ? fmt(elements.e, 4) : '—';
+        $('bodyT').textContent = elements ? fmt(elements.period, 1) : '—';
+      }
+
+      function renderSwatches() {
+        const host = $('swatches');
+        host.replaceChildren();
+        const body = selected();
+        COLORS.forEach((color) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = `swatch${body?.color === color ? ' on' : ''}`;
+          button.style.background = color;
+          button.setAttribute('aria-label', `Kolor ${color}`);
+          button.addEventListener('click', () => {
+            if (body) { body.color = color; renderSwatches(); }
+          });
+          host.appendChild(button);
+        });
+      }
+
+      function loadPreset(name) {
+        bodies = []; nextId = 1; selectedId = null; simTime = 0; prediction = []; collisionCount = 0;
+        follow = false;
+        $('followBtn').classList.remove('active');
+        if (name === 'solar') {
+          bodies.push(makeBody('Słońce', 1200, 0, 0, 0, 0, '#ffb454'));
+          [[90, 6, '#67e8f9'], [145, 14, '#ff6b81'], [210, 22, '#8b9cff'], [285, 36, '#f9f871']].forEach(([r, m, color], i) => {
+            const v = Math.sqrt(G * 1200 / r);
+            bodies.push(makeBody(`P${i + 1}`, m, r, 0, 0, v, color));
+          });
+        } else if (name === 'binary') {
+          const m = 550, d = 90;
+          const v = Math.sqrt(G * m / (4 * d));
+          bodies.push(makeBody('A', m, -d, 0, 0, -v, '#5eead0'));
+          bodies.push(makeBody('B', m, d, 0, 0, v, '#ffb454'));
+          for (let i = 0; i < 3; i += 1) {
+            const r = 230 + i * 55;
+            const angle = i * 2.1;
+            const speed = Math.sqrt(G * 2 * m / r) * 0.9;
+            bodies.push(makeBody(`P${i + 1}`, 8, Math.cos(angle) * r, Math.sin(angle) * r, -Math.sin(angle) * speed, Math.cos(angle) * speed, '#8b9cff'));
+          }
+        } else if (name === 'figure8') {
+          const scale = 130, mass = 240;
+          const factor = Math.sqrt(G * mass / scale);
+          const pos = [[-0.97000436, 0.24308753], [0.97000436, -0.24308753], [0, 0]];
+          const vel = [[0.466203685, 0.43236573], [0.466203685, 0.43236573], [-0.93240737, -0.86473146]];
+          pos.forEach((p, i) => bodies.push(makeBody(`C${i + 1}`, mass, p[0] * scale, p[1] * scale, vel[i][0] * factor, vel[i][1] * factor, COLORS[i])));
+        } else {
+          bodies.push(makeBody('Jądro', 900, 0, 0, 0, 0, '#ffb454'));
+          for (let i = 0; i < 7; i += 1) {
+            const angle = i * 2.39996;
+            const r = 80 + i * 34;
+            const speed = Math.sqrt(G * 900 / r) * (0.72 + Math.random() * 0.5);
+            bodies.push(makeBody(`X${i + 1}`, 8 + Math.random() * 40, Math.cos(angle) * r, Math.sin(angle) * r, -Math.sin(angle) * speed, Math.cos(angle) * speed, COLORS[i % COLORS.length]));
+          }
+        }
+        energyRef = energy().te;
+        renderSwatches();
+        $('stageHint').textContent = `Wczytano układ: ${$('presetSelect').selectedOptions[0].textContent}`;
+        computePrediction();
+        statsClock = 0;
+      }
+
+      function toggle(button, flag) {
+        $(button).classList.toggle('active', $(button).classList.contains('active'));
+        return flag;
+      }
+
+      function setRunning(value) {
+        running = value;
+        $('playBtn').textContent = running ? '❚❚ Pauza' : '▶ Uruchom';
+        $('playBtn').classList.toggle('primary', running);
+      }
+      $('playBtn').addEventListener('click', () => setRunning(!running));
+      $('stepBtn').addEventListener('click', () => {
+        if (running) setRunning(false);
+        advance();
+        computePrediction();
+        statsClock = 0;
+        $('stageHint').textContent = timeScale < 0 ? 'Wykonano krok wstecz.' : 'Wykonano krok naprzód.';
+      });
+      $('followBtn').addEventListener('click', () => {
+        follow = !follow && Boolean(selected());
+        if (follow && !selected()) $('stageHint').textContent = 'Wybierz ciało, aby za nim podążać.';
+        $('followBtn').classList.toggle('active', follow);
+      });
+      $('exportBtn').addEventListener('click', () => {
+        try {
+          canvas.toBlob((blob) => {
+            if (!blob) { $('stageHint').textContent = 'Eksport PNG nieudany.'; return; }
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `orbital-${$('presetSelect').value}-${simTime.toFixed(1)}.png`;
+            link.click();
+            window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+            $('stageHint').textContent = 'PNG zapisany.';
+          }, 'image/png');
+        } catch (_) { $('stageHint').textContent = 'Eksport PNG niedostępny.'; }
+      });
+      $('resetBtn').addEventListener('click', () => loadPreset($('presetSelect').value));
+      $('presetSelect').addEventListener('change', (event) => loadPreset(event.target.value));
+      $('speed').addEventListener('input', (event) => {
+        timeScale = parseFloat(event.target.value);
+        $('speedValue').textContent = `${timeScale.toFixed(1)}×`;
+      });
+      $('newMass').addEventListener('input', (event) => { $('newMassValue').textContent = event.target.value; });
+      $('trailsBtn').addEventListener('click', () => {
+        showTrails = !showTrails;
+        $('trailsBtn').classList.toggle('active', showTrails);
+        if (!showTrails) bodies.forEach((body) => { body.trail = []; });
+      });
+      $('predictBtn').addEventListener('click', () => {
+        showPrediction = !showPrediction;
+        $('predictBtn').classList.toggle('active', showPrediction);
+        if (showPrediction) computePrediction(); else prediction = [];
+      });
+      $('collideBtn').addEventListener('click', () => {
+        collisions = !collisions;
+        $('collideBtn').classList.toggle('active', collisions);
+      });
+      $('bodyName').addEventListener('input', (event) => { const body = selected(); if (body) body.name = event.target.value; });
+      $('bodyMass').addEventListener('input', (event) => {
+        const body = selected();
+        if (!body) return;
+        body.mass = parseFloat(event.target.value);
+        body.radius = radiusOf(body.mass);
+        $('bodyMassValue').textContent = fmt(body.mass, 1);
+        computePrediction();
+      });
+      $('removeBtn').addEventListener('click', () => {
+        if (selectedId === null) return;
+        bodies = bodies.filter((body) => body.id !== selectedId);
+        selectedId = null; prediction = []; renderSwatches();
+      });
+
+      canvas.addEventListener('pointerdown', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left, y = event.clientY - rect.top;
+        const world = toWorld(x, y);
+        const hit = [...bodies].reverse().find((body) => Math.hypot(toScreen(body.x, body.y).x - x, toScreen(body.x, body.y).y - y) < Math.max(10, body.radius * zoom + 5));
+        canvas.setPointerCapture(event.pointerId);
+        if (hit) {
+          selectedId = hit.id;
+          pointer = { kind: 'select', id: event.pointerId };
+          renderSwatches(); computePrediction();
+        } else if (event.button === 0) {
+          selectedId = null;
+          pointer = { kind: 'launch', id: event.pointerId, start: world, current: world };
+          panning = null;
+          renderSwatches();
+        } else {
+          panning = { id: event.pointerId, x, y, panX: pan.x, panY: pan.y };
+        }
+      });
+
+      canvas.addEventListener('pointermove', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left, y = event.clientY - rect.top;
+        if (pointer?.kind === 'launch') pointer.current = toWorld(x, y);
+        else if (panning) { pan.x = panning.panX + x - panning.x; pan.y = panning.panY + y - panning.y; }
+      });
+
+      function endPointer(event) {
+        if (pointer?.kind === 'launch') {
+          const dx = pointer.current.x - pointer.start.x;
+          const dy = pointer.current.y - pointer.start.y;
+          const mass = parseFloat($('newMass').value);
+          const body = makeBody(`N${nextId}`, mass, pointer.start.x, pointer.start.y, dx * 0.55, dy * 0.55, COLORS[(nextId - 1) % COLORS.length]);
+          bodies.push(body);
+          selectedId = body.id;
+          renderSwatches();
+          $('stageHint').textContent = `Dodano ${body.name} · m=${mass} · v=${fmt(Math.hypot(body.vx, body.vy), 2)}`;
+        }
+        pointer = null; panning = null;
+      }
+      canvas.addEventListener('pointerup', endPointer);
+      canvas.addEventListener('pointercancel', () => { pointer = null; panning = null; });
+      canvas.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left, y = event.clientY - rect.top;
+        const before = toWorld(x, y);
+        zoom = Math.min(4, Math.max(0.18, zoom * (event.deltaY < 0 ? 1.1 : 1 / 1.1)));
+        pan.x = x - before.x * zoom;
+        pan.y = y - before.y * zoom;
+      }, { passive: false });
+      window.addEventListener('resize', resize);
+
+      window.__ORBITAL_DEBUG__ = {
+        state: () => ({
+          preset: $('presetSelect').value, bodies: bodies.length, running, timeScale, simTime,
+          zoom, follow, collisions: collisionCount, selectedId, fps
+        }),
+        load: (name) => { loadPreset(name); return bodies.length; },
+        step: (count = 1) => { for (let i = 0; i < Math.min(200, count); i += 1) advance(); return simTime; },
+        pause: () => setRunning(false),
+        energy: () => energy()
+      };
+
+      makeStars();
+      resize();
+      loadPreset('solar');
+      requestAnimationFrame(draw);
+    })();
+  </script>
+</body>
+</html>

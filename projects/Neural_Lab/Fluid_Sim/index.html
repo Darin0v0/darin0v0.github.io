@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#070a12">
+  <meta name="description" content="FLUID SIM // rozwiązywacz Naviera–Stokesa metodą Stable Fluids: dyfuzja, projekcja ciśnienia, advection i vorticity confinement.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23070a12'/%3E%3Cpath d='M8 20c8-10 16 10 24 0s16 10 24 0M8 32c8-10 16 10 24 0s16 10 24 0M8 44c8-10 16 10 24 0s16 10 24 0' fill='none' stroke='%235eead0' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <title>Fluid Sim — silnik płynów</title>
+  <style>
+    :root {
+      --bg:#070a12; --panel:#0c1220; --panel2:#111a2b; --border:#1d2b40;
+      --text:#e8f2ff; --muted:#788aa4; --accent:#5eead0; --pink:#ff7ad9; --amber:#ffc857;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; height:100%; }
+    body {
+      background:var(--bg); color:var(--text);
+      font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    header {
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:9px 13px;
+      background:#0b111d; border-bottom:1px solid var(--border);
+    }
+    .brand { font-weight:700; font-size:13px; letter-spacing:.04em; margin-right:6px; }
+    .brand span { color:var(--accent); }
+    button, select {
+      font:inherit; color:var(--text); background:#111c2d; border:1px solid var(--border);
+      border-radius:6px; padding:6px 9px; cursor:pointer;
+    }
+    button:hover, select:hover { border-color:#35657f; background:#16263b; }
+    button.primary { background:var(--accent); color:#04201a; border-color:var(--accent); font-weight:700; }
+    button.active { background:#153b3a; color:var(--accent); border-color:#2d7d72; }
+    input[type="range"] { accent-color:var(--accent); width:82px; }
+    header label.label { cursor:default; }
+    .sep { width:1px; height:20px; background:var(--border); margin:0 3px; }
+    .label { color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.05em; }
+    .main { flex:1; display:grid; grid-template-columns:minmax(0,1fr) 250px; min-height:0; }
+    .stage { position:relative; min-width:0; background:#04060b; overflow:hidden; }
+    canvas { display:block; width:100%; height:100%; touch-action:none; cursor:crosshair; }
+    .stage-hint {
+      position:absolute; left:13px; bottom:11px; color:#69809d; font-size:10px; pointer-events:none;
+      background:rgba(7,10,18,.62); padding:5px 9px; border-radius:5px; border:1px solid #1b2a40;
+    }
+    aside { background:var(--panel); border-left:1px solid var(--border); padding:12px; overflow:auto; }
+    .card { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:11px; margin-bottom:10px; }
+    .card h3 { margin:0 0 9px; font-size:10px; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); }
+    .row { display:flex; justify-content:space-between; gap:8px; padding:3px 0; }
+    .row span { color:var(--muted); }
+    .row b { font-variant-numeric:tabular-nums; font-weight:600; }
+    .accent { color:var(--accent); } .pink { color:var(--pink); } .amber { color:var(--amber); }
+    .swatches { display:flex; gap:6px; flex-wrap:wrap; }
+    .swatch { width:24px; height:24px; border-radius:6px; border:2px solid transparent; cursor:pointer; }
+    .swatch.on { border-color:#fff; box-shadow:0 0 0 2px #2b4d6b; }
+    .note { color:var(--muted); font-size:10px; line-height:1.7; }
+    .bar { height:5px; background:#08101b; border-radius:3px; overflow:hidden; margin-top:4px; }
+    .bar > div { height:100%; background:linear-gradient(90deg,var(--accent),var(--amber),var(--pink)); width:0; transition:width .15s; }
+    .status {
+      display:flex; gap:16px; flex-wrap:wrap; padding:7px 13px; background:#0b111d;
+      border-top:1px solid var(--border); color:var(--muted); font-size:10px;
+    }
+    .status b { color:var(--text); font-variant-numeric:tabular-nums; }
+    :where(button,select,input):focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+    @media (max-width:850px) { .main { grid-template-columns:1fr; } aside { display:none; } }
+    @media (max-width:480px) {
+      header { gap:6px; padding:8px; }
+      input[type="range"] { width:72px; }
+      .stage-hint { right:10px; font-size:9px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">FLUID <span>SIM</span></div>
+    <button type="button" id="playBtn" class="primary">❚❚ Pauza</button>
+    <button type="button" id="stepBtn">Krok</button>
+    <button type="button" id="autoBtn" class="active">♺ Auto-emitery</button>
+    <button type="button" id="resetBtn">Wyczyść pole</button>
+    <button type="button" id="exportBtn">⤓ PNG</button>
+    <select id="resolution" aria-label="Rozdzielczość siatki">
+      <option value="64">Siatka 64²</option>
+      <option value="96" selected>Siatka 96²</option>
+      <option value="128">Siatka 128²</option>
+    </select>
+    <div class="sep"></div>
+    <label class="label" for="visc">Lepkość</label>
+    <input type="range" id="visc" min="0" max="0.002" step="0.00005" value="0.00015">
+    <label class="label" for="diff">Dyfuzyjność</label>
+    <input type="range" id="diff" min="0" max="0.002" step="0.00005" value="0.00008">
+    <label class="label" for="vort">Wirość</label>
+    <input type="range" id="vort" min="0" max="6" step="0.1" value="2.4">
+    <label class="label" for="confine">Koncentracja wirów</label>
+    <input type="range" id="confine" min="0" max="1" step="0.05" value="0.35">
+    <label class="label" for="fade">Zanikanie</label>
+    <input type="range" id="fade" min="0" max="0.6" step="0.01" value="0.06">
+    <div class="sep"></div>
+    <label class="label" for="brushPreset">Pędzel</label>
+    <select id="brushPreset" aria-label="Preset pędzla">
+      <option value="fine">Igła · 2 px</option>
+      <option value="standard" selected>Standard · 6 px</option>
+      <option value="wide">Szeroki · 12 px</option>
+      <option value="storm">Burza · 14 px</option>
+      <option value="custom">Własny</option>
+    </select>
+    <input type="range" id="brush" min="2" max="14" step="1" value="6">
+    <select id="view" aria-label="Widok">
+      <option value="dye">Barwnik</option>
+      <option value="curl">Wir (curl)</option>
+      <option value="speed">Prędkość</option>
+    </select>
+    <button type="button" id="arrowsBtn">Wektory prądu</button>
+    <button type="button" id="overlayBtn">Nakładka prędkości</button>
+  </header>
+
+  <div class="main">
+    <div class="stage">
+      <canvas id="canvas" aria-label="Symulacja dynamiki płynów"></canvas>
+      <div class="stage-hint">Przeciągnij palcem lub myszą, aby wstrzyknąć barwnik i pęd · kółko zmienia rozmiar pędzla</div>
+    </div>
+    <aside>
+      <div class="card">
+        <h3>Kolor wstrzyknięcia</h3>
+        <div class="swatches" id="swatches"></div>
+      </div>
+      <div class="card">
+        <h3>Stan pola</h3>
+        <div class="row"><span>Siatka</span><b id="statGrid">96 × 96</b></div>
+        <div class="row"><span>Komórki</span><b id="statCells">9 216</b></div>
+        <div class="row"><span>Energia kinetyczna</span><b id="statEnergy" class="accent">0.00</b></div>
+        <div class="row"><span>Maks. prędkość</span><b id="statMax">0.000</b></div>
+        <div class="row"><span>Masa barwnika</span><b id="statDye" class="pink">0.00</b></div>
+        <div class="row"><span>Krok symulacji</span><b id="statStep">0</b></div>
+        <div class="bar"><div id="dyeBar"></div></div>
+      </div>
+      <div class="card">
+        <h3>Rozwiązywacz</h3>
+        <div class="row"><span>Metoda</span><b>Stable Fluids</b></div>
+        <div class="row"><span>Dyfuzja</span><b>Gauss–Seidel ×6</b></div>
+        <div class="row"><span>Projekcja</span><b class="accent">Poisson ÷6</b></div>
+        <div class="row"><span>Adwekcja</span><b>Pół Lagrange'a</b></div>
+        <div class="row"><span>Korekta</span><b>Vorticity confinement</b></div>
+      </div>
+      <div class="card note">
+        Prędkość i barwnik są rozwiązywane osobno. Po każdym kroku pole prędkości jest rzutowane na pole bezdywergencyjne (∇·u = 0), dzięki czemu płyn nie „ucieka” i tworzy stabilne wiry.
+      </div>
+    </aside>
+  </div>
+
+  <div class="status">
+    <span>FPS <b id="fps">—</b></span>
+    <span>Czas kroku <b id="stepTime">0.00 ms</b></span>
+    <span>Krok <b id="statusStep">0</b></span>
+    <span>Iteracje <b>6 + 6</b></span>
+    <span>Wejście <b id="pointerInfo">—</b></span>
+    <span id="notice">Navier–Stokes · incompressible · semi-Lagrangian</span>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const off = document.createElement('canvas');
+      const offCtx = off.getContext('2d');
+      const $ = (id) => document.getElementById(id);
+      const PALETTE = [[94,234,208], [255,122,217], [255,200,87], [139,156,255], [255,107,129]];
+
+      let N = 96, stride = N + 2, size = stride * stride;
+      let u, v, u0, v0, r, g, b, r0, g0, b0, curl, p, div;
+      let dyeColor = PALETTE[0];
+      let running = true, auto = true, showArrows = false, view = 'dye';
+      let velocityOverlay = false, stepOnce = false, stepCount = 0;
+      let offImage = null, statsClock = 0;
+      let brushForce = 0.9;
+      let last = { x: 0, y: 0, has: false };
+      let pointerDown = false;
+      let autoTime = 0;
+      let fps = 60, frames = 0, fpsClock = performance.now();
+      let lastFrame = performance.now();
+
+      const IX = (x, y) => x + stride * y;
+
+      function alloc() {
+        N = parseInt($('resolution').value, 10);
+        stride = N + 2;
+        size = stride * stride;
+        const zero = () => new Float32Array(size);
+        u = zero(); v = zero(); u0 = zero(); v0 = zero();
+        r = zero(); g = zero(); b = zero(); r0 = zero(); g0 = zero(); b0 = zero();
+        curl = zero(); p = zero(); div = zero();
+        off.width = N; off.height = N;
+        offImage = offCtx.createImageData(N, N);
+        $('statGrid').textContent = `${N} × ${N}`;
+        $('statCells').textContent = (N * N).toLocaleString('pl-PL');
+      }
+
+      function setBoundary(kind, field) {
+        for (let i = 1; i <= N; i += 1) {
+          field[IX(0, i)] = kind === 1 ? -field[IX(1, i)] : field[IX(1, i)];
+          field[IX(N + 1, i)] = kind === 1 ? -field[IX(N, i)] : field[IX(N, i)];
+          field[IX(i, 0)] = kind === 2 ? -field[IX(i, 1)] : field[IX(i, 1)];
+          field[IX(i, N + 1)] = kind === 2 ? -field[IX(i, N)] : field[IX(i, N)];
+        }
+        field[IX(0, 0)] = 0.5 * (field[IX(1, 0)] + field[IX(0, 1)]);
+        field[IX(0, N + 1)] = 0.5 * (field[IX(1, N + 1)] + field[IX(0, N)]);
+        field[IX(N + 1, 0)] = 0.5 * (field[IX(N, 0)] + field[IX(N + 1, 1)]);
+        field[IX(N + 1, N + 1)] = 0.5 * (field[IX(N, N + 1)] + field[IX(N + 1, N)]);
+      }
+
+      function linSolve(kind, x, x0, a, c, iterations) {
+        const invC = 1 / c;
+        for (let k = 0; k < iterations; k += 1) {
+          for (let j = 1; j <= N; j += 1) {
+            for (let i = 1; i <= N; i += 1) {
+              const idx = IX(i, j);
+              x[idx] = (x0[idx] + a * (x[idx - 1] + x[idx + 1] + x[idx - stride] + x[idx + stride])) * invC;
+            }
+          }
+          setBoundary(kind, x);
+        }
+      }
+
+      function diffuse(kind, x, x0, amount, dt) {
+        const a = dt * amount * N * N;
+        linSolve(kind, x, x0, a, 1 + 4 * a, 6);
+      }
+
+      function project(velX, velY, pressure, divergence) {
+        const h = 1 / N;
+        for (let j = 1; j <= N; j += 1) {
+          for (let i = 1; i <= N; i += 1) {
+            const idx = IX(i, j);
+            divergence[idx] = -0.5 * h * (velX[idx + 1] - velX[idx - 1] + velY[idx + stride] - velY[idx - stride]);
+            pressure[idx] = 0;
+          }
+        }
+        setBoundary(0, divergence); setBoundary(0, pressure);
+        linSolve(0, pressure, divergence, 1, 4, 6);
+        for (let j = 1; j <= N; j += 1) {
+          for (let i = 1; i <= N; i += 1) {
+            const idx = IX(i, j);
+            velX[idx] -= 0.5 * (pressure[idx + 1] - pressure[idx - 1]) / h;
+            velY[idx] -= 0.5 * (pressure[idx + stride] - pressure[idx - stride]) / h;
+          }
+        }
+        setBoundary(1, velX); setBoundary(2, velY);
+      }
+
+      function advect(kind, d, d0, velX, velY, dt) {
+        const dt0 = dt * N;
+        for (let j = 1; j <= N; j += 1) {
+          for (let i = 1; i <= N; i += 1) {
+            const idx = IX(i, j);
+            let x = i - dt0 * velX[idx];
+            let y = j - dt0 * velY[idx];
+            if (x < 0.5) x = 0.5;
+            if (x > N + 0.5) x = N + 0.5;
+            if (y < 0.5) y = 0.5;
+            if (y > N + 0.5) y = N + 0.5;
+            const i0 = Math.floor(x), i1 = i0 + 1;
+            const j0 = Math.floor(y), j1 = j0 + 1;
+            const s1 = x - i0, s0 = 1 - s1;
+            const t1 = y - j0, t0 = 1 - t1;
+            d[idx] = s0 * (t0 * d0[IX(i0, j0)] + t1 * d0[IX(i0, j1)])
+                   + s1 * (t0 * d0[IX(i1, j0)] + t1 * d0[IX(i1, j1)]);
+          }
+        }
+        setBoundary(kind, d);
+      }
+
+      function applyVorticity(dt) {
+        const strength = parseFloat($('vort').value);
+        if (strength <= 0) return;
+        for (let j = 1; j <= N; j += 1) {
+          for (let i = 1; i <= N; i += 1) {
+            const idx = IX(i, j);
+            curl[idx] = 0.5 * (v[idx + 1] - v[idx - 1] - u[idx + stride] + u[idx - stride]);
+          }
+        }
+        setBoundary(0, curl);
+        const confinement = parseFloat($('confine').value);
+        const reach = 1 + Math.round(confinement * 3);
+        for (let j = reach; j <= N - reach; j += 1) {
+          for (let i = reach; i <= N - reach; i += 1) {
+            const idx = IX(i, j);
+            const gx = (Math.abs(curl[idx + reach]) - Math.abs(curl[idx - reach])) / reach;
+            const gy = (Math.abs(curl[idx + reach * stride]) - Math.abs(curl[idx - reach * stride])) / reach;
+            const length = Math.hypot(gx, gy) + 1e-5;
+            const nx = gx / length, ny = gy / length;
+            u[idx] += strength * dt * ny * curl[idx];
+            v[idx] -= strength * dt * nx * curl[idx];
+          }
+        }
+        setBoundary(1, u); setBoundary(2, v);
+      }
+
+      function densityStep(dt) {
+        const diffusion = parseFloat($('diff').value);
+        const fade = parseFloat($('fade').value);
+        [r, r0], [g, g0], [b, b0];
+        let tmp;
+        tmp = r0; r0 = r; r = tmp; diffuse(0, r, r0, diffusion, dt);
+        tmp = g0; g0 = g; g = tmp; diffuse(0, g, g0, diffusion, dt);
+        tmp = b0; b0 = b; b = tmp; diffuse(0, b, b0, diffusion, dt);
+        tmp = r0; r0 = r; r = tmp; advect(0, r, r0, u, v, dt);
+        tmp = g0; g0 = g; g = tmp; advect(0, g, g0, u, v, dt);
+        tmp = b0; b0 = b; b = tmp; advect(0, b, b0, u, v, dt);
+        const keep = Math.max(0, 1 - fade * dt * 8);
+        for (let i = 0; i < size; i += 1) { r[i] *= keep; g[i] *= keep; b[i] *= keep; }
+      }
+
+      function velocityStep(dt) {
+        const viscosity = parseFloat($('visc').value);
+        let tmp;
+        tmp = u0; u0 = u; u = tmp; diffuse(1, u, u0, viscosity, dt);
+        tmp = v0; v0 = v; v = tmp; diffuse(2, v, v0, viscosity, dt);
+        project(u, v, p, div);
+        tmp = u0; u0 = u; u = tmp;
+        tmp = v0; v0 = v; v = tmp;
+        advect(1, u, u0, u0, v0, dt);
+        advect(2, v, v0, u0, v0, dt);
+        project(u, v, p, div);
+        applyVorticity(dt);
+      }
+
+      function inject(gx, gy, dx, dy, color, strength = 1) {
+        const radius = parseInt($('brush').value, 10);
+        const minX = Math.max(1, Math.floor(gx - radius));
+        const maxX = Math.min(N, Math.ceil(gx + radius));
+        const minY = Math.max(1, Math.floor(gy - radius));
+        const maxY = Math.min(N, Math.ceil(gy + radius));
+        for (let j = minY; j <= maxY; j += 1) {
+          for (let i = minX; i <= maxX; i += 1) {
+            const dist = Math.hypot(i - gx, j - gy);
+            if (dist > radius) continue;
+            const weight = Math.exp(-(dist * dist) / (radius * radius * 0.45)) * strength;
+            const idx = IX(i, j);
+            r[idx] = Math.min(3.5, r[idx] + color[0] / 255 * weight * 0.9);
+            g[idx] = Math.min(3.5, g[idx] + color[1] / 255 * weight * 0.9);
+            b[idx] = Math.min(3.5, b[idx] + color[2] / 255 * weight * 0.9);
+            u[idx] += dx * weight * brushForce;
+            v[idx] += dy * weight * brushForce;
+          }
+        }
+      }
+
+      function autoEmit(dt) {
+        autoTime += dt;
+        const count = 3;
+        for (let k = 0; k < count; k += 1) {
+          const angle = autoTime * (0.7 + k * 0.17) + k * Math.PI * 2 / count;
+          const radius = N * (0.25 + 0.08 * Math.sin(autoTime * 0.5 + k));
+          const x = N / 2 + Math.cos(angle) * radius;
+          const y = N / 2 + Math.sin(angle) * radius * 0.72;
+          const dx = -Math.sin(angle) * 0.9;
+          const dy = Math.cos(angle) * 0.7;
+          inject(x, y, dx, dy, PALETTE[k], 0.34);
+        }
+      }
+
+      function stats() {
+        let energy = 0, maxSpeed = 0, dye = 0;
+        for (let j = 1; j <= N; j += 1) {
+          for (let i = 1; i <= N; i += 1) {
+            const idx = IX(i, j);
+            const speed = Math.hypot(u[idx], v[idx]);
+            energy += speed * speed;
+            maxSpeed = Math.max(maxSpeed, speed);
+            dye += r[idx] + g[idx] + b[idx];
+          }
+        }
+        $('statEnergy').textContent = (energy / (N * N)).toFixed(3);
+        $('statMax').textContent = maxSpeed.toFixed(3);
+        $('statDye').textContent = (dye / 1000).toFixed(2);
+        $('dyeBar').style.width = `${Math.min(100, dye / (N * N) * 22)}%`;
+        $('statStep').textContent = String(stepCount);
+        $('statusStep').textContent = String(stepCount);
+      }
+
+      function hslToRgb(h, s, l) {
+        const k = (n) => (n + h * 12) % 12;
+        const a = s * Math.min(l, 1 - l);
+        return [0, 8, 4].map((n) => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)))));
+      }
+
+      function render() {
+        const width = canvas.clientWidth, height = canvas.clientHeight;
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) {
+          canvas.width = Math.round(width * ratio);
+          canvas.height = Math.round(height * ratio);
+        }
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        ctx.fillStyle = '#04060b';
+        ctx.fillRect(0, 0, width, height);
+
+        const image = offImage;
+        const mode = $('view').value;
+        for (let j = 1; j <= N; j += 1) {
+          for (let i = 1; i <= N; i += 1) {
+            const idx = IX(i, j);
+            const px = ((j - 1) * N + (i - 1)) * 4;
+            let red = 0, green = 0, blue = 0;
+            if (mode === 'dye') {
+              red = 255 * (1 - Math.exp(-r[idx] * 1.5));
+              green = 255 * (1 - Math.exp(-g[idx] * 1.5));
+              blue = 255 * (1 - Math.exp(-b[idx] * 1.5));
+              if (velocityOverlay) {
+                const speed = Math.min(1, Math.hypot(u[idx], v[idx]) * 1.6);
+                red = red * (1 - speed * 0.3) + speed * 30;
+                green = green * (1 - speed * 0.16) + speed * 190;
+                blue = blue * (1 - speed * 0.3) + speed * 170;
+              }
+            } else if (mode === 'curl') {
+              const value = Math.max(-1, Math.min(1, curl[idx] * 1.6));
+              const color = hslToRgb(0.55 + value * 0.22, 0.9, 0.5 + Math.abs(value) * 0.12);
+              [red, green, blue] = color;
+            } else {
+              const speed = Math.min(1, Math.hypot(u[idx], v[idx]) * 1.8);
+              const color = hslToRgb(0.5 - speed * 0.42, 0.95, 0.12 + speed * 0.45);
+              [red, green, blue] = color;
+            }
+            image.data[px] = red;
+            image.data[px + 1] = green;
+            image.data[px + 2] = blue;
+            image.data[px + 3] = 255;
+          }
+        }
+        offCtx.putImageData(image, 0, 0);
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(off, 0, 0, width, height);
+
+        if (showArrows) {
+          const step = Math.max(8, Math.floor(N / 18));
+          ctx.strokeStyle = 'rgba(230,245,255,0.42)';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          for (let j = step; j <= N; j += step) {
+            for (let i = step; i <= N; i += step) {
+              const idx = IX(i, j);
+              const x = i / N * width, y = j / N * height;
+              const dx = u[idx] * N * 0.32, dy = v[idx] * N * 0.32;
+              ctx.moveTo(x, y); ctx.lineTo(x + dx, y + dy);
+            }
+          }
+          ctx.stroke();
+        }
+      }
+
+      function simulate(dt) {
+        if (auto) autoEmit(dt);
+        velocityStep(0.12);
+        densityStep(0.12);
+        stepCount += 1;
+      }
+
+      function frame() {
+        const now = performance.now();
+        const wall = Math.min(0.05, (now - lastFrame) / 1000);
+        lastFrame = now;
+        frames += 1;
+        if (now - fpsClock > 600) { fps = frames * 1000 / (now - fpsClock); frames = 0; fpsClock = now; }
+        const started = performance.now();
+        if (running) simulate(wall);
+        else if (stepOnce) { simulate(0.12); stepOnce = false; }
+        render();
+        if (now - statsClock > 200) {
+          statsClock = now;
+          stats();
+          $('fps').textContent = fps.toFixed(0);
+          $('stepTime').textContent = `${(performance.now() - started).toFixed(1)} ms`;
+        }
+        requestAnimationFrame(frame);
+      }
+
+      function renderSwatches() {
+        const host = $('swatches');
+        host.replaceChildren();
+        PALETTE.forEach((color, index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = `swatch${color === dyeColor ? ' on' : ''}`;
+          button.style.background = `rgb(${color.join(',')})`;
+          button.setAttribute('aria-label', `Kolor ${index + 1}`);
+          button.addEventListener('click', () => { dyeColor = color; renderSwatches(); });
+          host.appendChild(button);
+        });
+      }
+
+      function canvasPoint(event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)),
+          y: Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height))
+        };
+      }
+
+      canvas.addEventListener('pointerdown', (event) => {
+        try { canvas.setPointerCapture(event.pointerId); } catch (_) { /* brak przechwytu */ }
+        pointerDown = true;
+        last = { ...canvasPoint(event), has: true };
+        inject(last.x * N + 1, last.y * N + 1, 0, 0, dyeColor, 0.3);
+        $('pointerInfo').textContent = 'wstrzykiwanie';
+      });
+      canvas.addEventListener('pointermove', (event) => {
+        const point = canvasPoint(event);
+        if (!pointerDown || !last.has) return;
+        const gx = point.x * N + 1;
+        const gy = point.y * N + 1;
+        const dx = (point.x - last.x) * N * 1.4;
+        const dy = (point.y - last.y) * N * 1.4;
+        inject(gx, gy, dx, dy, dyeColor, 0.55);
+        last = { ...point, has: true };
+      });
+      const endPointer = () => { pointerDown = false; last.has = false; $('pointerInfo').textContent = '—'; };
+      canvas.addEventListener('pointerup', endPointer);
+      canvas.addEventListener('pointercancel', endPointer);
+      canvas.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        const brush = $('brush');
+        brush.value = String(Math.max(2, Math.min(14, parseInt(brush.value, 10) + (event.deltaY < 0 ? 1 : -1))));
+        $('brushPreset').value = 'custom';
+      }, { passive: false });
+
+      function setRunning(value) {
+        running = value;
+        $('playBtn').textContent = running ? '❚❚ Pauza' : '▶ Uruchom';
+        $('playBtn').classList.toggle('primary', running);
+      }
+      $('playBtn').addEventListener('click', () => setRunning(!running));
+      $('stepBtn').addEventListener('click', () => {
+        if (running) setRunning(false);
+        stepOnce = true;
+        $('notice').textContent = 'Wykonano pojedynczy krok.';
+      });
+      $('exportBtn').addEventListener('click', () => {
+        try {
+          off.toBlob((blob) => {
+            if (!blob) { $('notice').textContent = 'Eksport PNG nieudany.'; return; }
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `fluid-${N}x${N}-step${stepCount}.png`;
+            link.click();
+            window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+            $('notice').textContent = 'PNG zapisany.';
+          }, 'image/png');
+        } catch (_) { $('notice').textContent = 'Eksport PNG niedostępny.'; }
+      });
+      $('autoBtn').addEventListener('click', () => {
+        auto = !auto;
+        $('autoBtn').classList.toggle('active', auto);
+        $('notice').textContent = auto ? 'Auto-emitery aktywne' : 'Tryb ręczny — użyj wskaźnika';
+      });
+      $('resetBtn').addEventListener('click', () => {
+        alloc(); autoTime = 0; stepCount = 0; statsClock = 0;
+        $('notice').textContent = 'Pole wyczyszczone';
+      });
+      $('resolution').addEventListener('change', alloc);
+      $('view').addEventListener('change', (event) => { view = event.target.value; });
+      $('arrowsBtn').addEventListener('click', () => {
+        showArrows = !showArrows;
+        $('arrowsBtn').classList.toggle('active', showArrows);
+      });
+      $('overlayBtn').addEventListener('click', () => {
+        velocityOverlay = !velocityOverlay;
+        $('overlayBtn').classList.toggle('active', velocityOverlay);
+        $('notice').textContent = velocityOverlay ? 'Nakładka prędkości włączona.' : 'Nakładka prędkości wyłączona.';
+      });
+      $('brushPreset').addEventListener('change', (event) => {
+        const presets = {
+          fine: [2, 0.6], standard: [6, 0.9], wide: [12, 1.1], storm: [14, 1.5]
+        };
+        const preset = presets[event.target.value];
+        if (!preset) return;
+        $('brush').value = String(preset[0]);
+        brushForce = preset[1];
+        $('notice').textContent = `Pędzel: ${event.target.selectedOptions[0].textContent}`;
+      });
+
+      window.__FLUID_DEBUG__ = {
+        state: () => ({
+          grid: N, running, auto, view, stepCount, fps, brush: parseInt($('brush').value, 10),
+          vorticity: parseFloat($('vort').value), confinement: parseFloat($('confine').value),
+          fade: parseFloat($('fade').value), overlay: velocityOverlay
+        }),
+        step: (count = 1) => { for (let i = 0; i < Math.min(30, count); i += 1) simulate(0.12); return stepCount; },
+        pause: () => setRunning(false),
+        splash: () => inject(N / 2 + 1, N / 2 + 1, 1.5, -1.2, PALETTE[1], 1)
+      };
+
+      alloc();
+      renderSwatches();
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>

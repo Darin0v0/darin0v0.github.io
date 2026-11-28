@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#020000">
+  <meta name="description" content="NEURAL_LAB // sieć neuronowa trenowana od zera w przeglądarce, z wizualizacją wag, granicy decyzji i krzywej uczenia.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23020000'/%3E%3Ctext x='32' y='45' font-family='monospace' font-size='32' fill='%23d10000' text-anchor='middle'%3ENN%3C/text%3E%3C/svg%3E">
+  <title>NEURAL_LAB // LAYER_13</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#020000; --panel:rgba(8,0,0,0.9); --surface:#040000; --surface-2:#060000;
+      --primary:#d10000; --secondary:#ff2a2a; --text:#b9b0b0; --heading:#e8e0e0;
+      --muted:#887777; --dim:#4d0000; --border:#6e0000; --glow:rgba(209,0,0,0.35); --grid:rgba(255,0,0,0.035);
+    }
+    body[data-theme="matrix"] {
+      --bg:#000500; --panel:rgba(0,10,0,0.9); --surface:#000600; --surface-2:#000a00;
+      --primary:#00cc44; --secondary:#66ff99; --text:#a8c7b0; --heading:#d8ffe4;
+      --muted:#6f9a7b; --dim:#003b14; --border:#006622; --glow:rgba(0,204,68,0.25); --grid:rgba(0,255,90,0.035);
+    }
+    body[data-theme="blood"] {
+      --bg:#050005; --panel:rgba(12,0,12,0.9); --surface:#070007; --surface-2:#0c000c;
+      --primary:#b30059; --secondary:#ff1a8c; --text:#c4b5c0; --heading:#f0dce8;
+      --muted:#9a8294; --dim:#3d001f; --border:#730039; --glow:rgba(179,0,89,0.3); --grid:rgba(255,26,140,0.035);
+    }
+    *, *::before, *::after { box-sizing:border-box; }
+    body {
+      margin:0; min-height:100vh; min-height:100svh; padding:clamp(0.75rem,3vw,2rem) 1rem;
+      display:flex; justify-content:center; align-items:flex-start;
+      background-color:var(--bg);
+      background-image:repeating-linear-gradient(0deg,var(--grid) 0 1px,transparent 1px 4px);
+      color:var(--text); font-family:"Courier New",ui-monospace,monospace; overflow-x:hidden; cursor:crosshair;
+    }
+    .crt-scanlines, .crt-vignette { position:fixed; inset:0; pointer-events:none; }
+    .crt-scanlines { z-index:99; background:linear-gradient(transparent 50%,rgba(0,0,0,0.5) 50%); background-size:100% 3px; }
+    .crt-vignette { z-index:98; box-shadow:inset 0 0 100px rgba(0,0,0,0.9); }
+    .node {
+      width:100%; max-width:1180px; position:relative; z-index:1;
+      background:var(--panel); border:1px solid var(--border);
+      box-shadow:0 0 35px var(--glow),inset 0 0 20px rgba(0,0,0,0.9);
+      padding:clamp(1rem,3vw,1.5rem);
+    }
+    .node-head {
+      display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem;
+      padding-bottom:0.6rem; margin-bottom:1.2rem; border-bottom:1px dashed var(--border);
+      font-size:0.78rem; letter-spacing:1.5px;
+    }
+    .dot { color:var(--secondary); animation:blink 1.1s steps(2,start) infinite; }
+    @keyframes blink { to { opacity:0; } }
+    .theme-switcher { display:flex; gap:4px; }
+    button, select { font-family:inherit; cursor:pointer; }
+    .theme-switcher button {
+      background:transparent; border:1px solid var(--dim); color:var(--text); font-size:0.7rem; padding:2px 6px;
+    }
+    .theme-switcher button:hover, .theme-switcher button[aria-pressed="true"] { border-color:var(--secondary); color:var(--secondary); }
+    .theme-switcher button[aria-pressed="true"] { box-shadow:inset 0 0 10px var(--glow); }
+    h1 {
+      font-size:clamp(1.4rem,6vw,2.4rem); letter-spacing:clamp(0.15rem,1.4vw,0.5rem);
+      color:var(--heading); text-shadow:2px 0 var(--primary),-2px 0 rgba(90,0,200,0.6);
+      margin:0 0 0.4rem; overflow-wrap:anywhere;
+    }
+    .tagline { color:var(--muted); font-size:0.82rem; font-style:italic; margin-bottom:1.2rem; }
+    .toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:0.5rem 0.8rem; margin-bottom:1rem; font-size:0.72rem; }
+    .btn, select {
+      background:var(--surface-2); border:1px solid var(--dim); color:var(--text);
+      font-size:0.72rem; letter-spacing:1px; padding:0.4rem 0.6rem;
+    }
+    .btn { border-color:var(--primary); color:var(--secondary); }
+    .btn:hover { background:var(--primary); color:var(--bg); }
+    .control { display:flex; align-items:center; gap:0.4rem; color:var(--muted); }
+    input[type="range"] { accent-color:var(--primary); height:3px; background:var(--dim); cursor:pointer; width:96px; }
+    .control b { color:var(--secondary); font-variant-numeric:tabular-nums; min-width:2.6em; }
+    input[type="checkbox"] { accent-color:var(--primary); cursor:pointer; }
+    input.seed { width:104px; font-variant-numeric:tabular-nums; }
+    .workspace { display:grid; grid-template-columns:minmax(0,300px) minmax(0,1fr); gap:1rem; align-items:start; }
+    .panel { border:1px solid var(--border); background:var(--surface); min-width:0; }
+    .panel-label {
+      display:flex; justify-content:space-between; gap:0.5rem; padding:0.45rem 0.6rem;
+      border-bottom:1px dashed var(--dim); color:var(--primary); font-size:0.7rem; letter-spacing:1.5px;
+    }
+    .panel-label span:last-child { color:var(--muted); letter-spacing:0; }
+    canvas { display:block; width:100%; background:#000; }
+    #boundary { height:280px; image-rendering:auto; }
+    #lossChart { height:132px; }
+    #network { height:160px; }
+    #confusion { height:132px; }
+    .stack { display:grid; gap:1rem; }
+    .metrics { display:grid; grid-template-columns:repeat(4,1fr); border-top:1px dashed var(--dim); }
+    .metric { padding:0.5rem 0.6rem; font-size:0.68rem; color:var(--muted); border-right:1px dashed var(--dim); }
+    .metric:last-child { border-right:0; }
+    .metric b { display:block; color:var(--secondary); font-size:0.95rem; font-variant-numeric:tabular-nums; }
+    .legend { padding:0.6rem; font-size:0.72rem; color:var(--muted); line-height:1.6; }
+    .legend b { color:var(--heading); font-weight:normal; }
+    :where(button, select, input):focus-visible { outline:2px solid var(--secondary); outline-offset:2px; }
+    @media (max-width:860px) { .workspace { grid-template-columns:1fr; } #boundary { height:260px; } }
+    @media (max-width:520px) { .metrics { grid-template-columns:repeat(2,1fr); } .metric:nth-child(even) { border-right:0; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
+  </style>
+</head>
+<body data-theme="lain">
+  <div class="crt-scanlines" aria-hidden="true"></div>
+  <div class="crt-vignette" aria-hidden="true"></div>
+
+  <main class="node">
+    <header class="node-head">
+      <div><span class="dot">●</span> NODE::<strong>NEURAL_LAB</strong> [LAYER_13]</div>
+      <div class="theme-switcher" role="group" aria-label="Motyw węzła">
+        <button type="button" data-theme="lain" aria-pressed="true">[LAIN]</button>
+        <button type="button" data-theme="matrix" aria-pressed="false">[SYS]</button>
+        <button type="button" data-theme="blood" aria-pressed="false">[0x00]</button>
+      </div>
+    </header>
+
+    <h1>NEURAL_LAB</h1>
+    <div class="tagline">'No libraries. Just gradients, patience and a little faith.'</div>
+
+    <div class="toolbar">
+      <select id="dataset" aria-label="Zbiór danych">
+        <option value="xor">XOR GATE</option>
+        <option value="and">AND GATE</option>
+        <option value="or">OR GATE</option>
+        <option value="circle">CIRCLE</option>
+        <option value="rings">RINGS</option>
+        <option value="spiral">SPIRAL</option>
+      </select>
+      <label class="control" for="hidden">HIDDEN <input type="range" id="hidden" min="2" max="10" value="6"><b id="hiddenValue">6</b></label>
+      <label class="control" for="learningRate">LR <input type="range" id="learningRate" min="0.05" max="1" step="0.05" value="0.5"><b id="lrValue">0.50</b></label>
+      <label class="control" for="speed">SPEED <input type="range" id="speed" min="1" max="20" value="3"><b id="speedValue">3</b></label>
+      <label class="control" for="seed">SEED <input class="seed" type="number" id="seed" min="0" step="1" value="19980706" aria-label="Ziarno wag"></label>
+      <label class="control"><input type="checkbox" id="decay"> LR DECAY</label>
+      <button type="button" id="trainBtn" class="btn">TRAIN</button>
+      <button type="button" id="resetBtn" class="btn">RESET_WEIGHTS</button>
+      <button type="button" id="reseedBtn" class="btn">RESEED</button>
+      <button type="button" id="snapshotBtn" class="btn">SNAPSHOT</button>
+      <button type="button" id="replayBtn" class="btn">REPLAY</button>
+      <button type="button" id="exportBtn" class="btn">EXPORT JSON</button>
+    </div>
+
+    <div class="workspace">
+      <section class="panel">
+        <div class="panel-label"><span>// DECISION_BOUNDARY</span><span id="trainStatus">IDLE</span></div>
+        <canvas id="boundary" width="300" height="280" aria-label="Granica decyzji sieci neuronowej"></canvas>
+        <div class="metrics">
+          <div class="metric">EPOCH<b id="statEpoch">0</b></div>
+          <div class="metric">LOSS<b id="statLoss">0.000</b></div>
+          <div class="metric">ACCURACY<b id="statAccuracy">0%</b></div>
+          <div class="metric">HIDDEN<b id="statHidden">6</b></div>
+          <div class="metric">LR<b id="statLr">0.50</b></div>
+          <div class="metric">SEED<b id="statSeed">19980706</b></div>
+        </div>
+        <div class="legend" id="legend"></div>
+      </section>
+
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-label"><span>// LOSS_HISTORY [LOG SCALE]</span><span id="lossPeak">0.000</span></div>
+          <canvas id="lossChart" width="800" height="132" aria-label="Wykres funkcji straty"></canvas>
+        </section>
+        <section class="panel">
+          <div class="panel-label"><span>// WEIGHT_GRAPH</span><span id="weightInfo">GRADIENTS LIVE</span></div>
+          <canvas id="network" width="800" height="160" aria-label="Diagram wag sieci"></canvas>
+        </section>
+        <section class="panel">
+          <div class="panel-label"><span>// CONFUSION_MATRIX</span><span id="confusionInfo">—</span></div>
+          <canvas id="confusion" width="800" height="132" aria-label="Macierz pomyłek"></canvas>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const datasets = {
+        xor: { points: [[0,0,0],[0,1,1],[1,0,1],[1,1,0]], note: 'XOR nie jest liniowo separowalny — sieć musi znaleźć nieliniową granicę.' },
+        and: { points: [[0,0,0],[0,1,0],[1,0,0],[1,1,1]], note: 'AND: granica niemal liniowa, szybka zbieżność.' },
+        or: { points: [[0,0,0],[0,1,1],[1,0,1],[1,1,1]], note: 'OR: klasyczny problem nieliniowy, ale prosty.' },
+        circle: {
+          points: [[0.15,0.15,1],[0.25,0.5,1],[0.5,0.85,1],[0.8,0.2,0],[0.85,0.75,0],[0.5,0.5,1],[0.1,0.85,0],[0.9,0.5,0]],
+          note: 'CIRCLE: okrąg w jednostkowym kwadracie — test dla ukrytej warstwy.'
+        },
+        rings: {
+          points: Array.from({ length: 32 }, (_, index) => {
+            const inner = index < 16;
+            const angle = (index % 16) / 16 * Math.PI * 2 + (inner ? 0 : 0.18);
+            const radius = inner ? 0.17 : 0.43;
+            return [0.5 + Math.cos(angle) * radius, 0.5 + Math.sin(angle) * radius, inner ? 1 : 0];
+          }),
+          note: 'RINGS: dwa koncentryczne pierścienie — granica wymaga dwóch okręgów.'
+        },
+        spiral: {
+          points: Array.from({ length: 48 }, (_, index) => {
+            const t = index / 47;
+            const angle = t * Math.PI * 3.4;
+            const radius = 0.05 + t * 0.44;
+            return [0.5 + Math.cos(angle) * radius, 0.5 + Math.sin(angle) * radius, index % 2];
+          }),
+          note: 'SPIRAL: dwie przeplatające się spirale — mocno nieliniowy test dla 8–10 neuronów.'
+        }
+      };
+
+      const boundary = document.getElementById('boundary');
+      const lossChart = document.getElementById('lossChart');
+      const networkCanvas = document.getElementById('network');
+      const confusionCanvas = document.getElementById('confusion');
+      const datasetSelect = document.getElementById('dataset');
+      const hiddenInput = document.getElementById('hidden');
+      const lrInput = document.getElementById('learningRate');
+      const speedInput = document.getElementById('speed');
+      const seedInput = document.getElementById('seed');
+      const decayInput = document.getElementById('decay');
+      const hiddenValue = document.getElementById('hiddenValue');
+      const lrValue = document.getElementById('lrValue');
+      const speedValue = document.getElementById('speedValue');
+      const trainBtn = document.getElementById('trainBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const reseedBtn = document.getElementById('reseedBtn');
+      const snapshotBtn = document.getElementById('snapshotBtn');
+      const replayBtn = document.getElementById('replayBtn');
+      const exportBtn = document.getElementById('exportBtn');
+      const trainStatus = document.getElementById('trainStatus');
+      const statEpoch = document.getElementById('statEpoch');
+      const statLoss = document.getElementById('statLoss');
+      const statAccuracy = document.getElementById('statAccuracy');
+      const statHidden = document.getElementById('statHidden');
+      const statLr = document.getElementById('statLr');
+      const statSeed = document.getElementById('statSeed');
+      const lossPeak = document.getElementById('lossPeak');
+      const weightInfo = document.getElementById('weightInfo');
+      const confusionInfo = document.getElementById('confusionInfo');
+      const legend = document.getElementById('legend');
+      const themeButtons = document.querySelectorAll('.theme-switcher button');
+      const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+      const sigmoid = (value) => 1 / (1 + Math.exp(-clamp(value, -30, 30)));
+      const tanh = (value) => Math.tanh(clamp(value, -30, 30));
+      const storeGet = (key) => { try { return localStorage.getItem(key); } catch (_) { return null; } };
+      const storeSet = (key, value) => { try { localStorage.setItem(key, value); } catch (_) { /* prywatny tryb */ } };
+      const setStatus = (text) => { weightInfo.textContent = text; };
+
+      let seed = 19980706;
+      let w1 = [];
+      let b1 = [];
+      let w2 = [];
+      let b2 = 0;
+      let epoch = 0;
+      let loss = 1;
+      let accuracy = 0;
+      let currentLr = parseFloat(lrInput.value);
+      let history = [];
+      let snapshots = [];
+      let lastSnapshotEpoch = 0;
+      let training = false;
+      let trainTimer = 0;
+      let lastDraw = 0;
+      let replaying = false;
+      let replayTimer = 0;
+      let replayIndex = 0;
+      let liveWeights = null;
+      let theme = 'lain';
+
+      const random = () => {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+        return seed / 4294967296;
+      };
+
+      const themedColors = {
+        lain: ['#1a0000', '#ff2a2a'],
+        matrix: ['#001808', '#66ff99'],
+        blood: ['#1a0010', '#ff1a8c']
+      };
+
+      function hexToRgb(hex) {
+        return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+      }
+
+      function mixColor(from, to, t) {
+        const a = hexToRgb(from);
+        const b = hexToRgb(to);
+        return `rgb(${Math.round(a[0] + (b[0] - a[0]) * t)},${Math.round(a[1] + (b[1] - a[1]) * t)},${Math.round(a[2] + (b[2] - a[2]) * t)})`;
+      }
+
+      function readSeed() {
+        const value = parseInt(seedInput.value, 10);
+        return Number.isFinite(value) ? (value >>> 0) || 1 : 1;
+      }
+
+      function initNetwork(newSeed = false) {
+        if (newSeed) {
+          seed = (Math.imul(readSeed(), 1664525) + 1013904223) >>> 0;
+          seedInput.value = String(seed);
+        } else {
+          seed = readSeed();
+        }
+        const hidden = parseInt(hiddenInput.value, 10);
+        const scale = Math.sqrt(1 / 2);
+        w1 = Array.from({ length: hidden }, () => [(random() * 2 - 1) * scale, (random() * 2 - 1) * scale]);
+        b1 = Array.from({ length: hidden }, () => (random() * 2 - 1) * 0.5);
+        w2 = Array.from({ length: hidden }, () => (random() * 2 - 1) * scale);
+        b2 = 0;
+        epoch = 0;
+        loss = 1;
+        accuracy = 0;
+        currentLr = parseFloat(lrInput.value);
+        history = [];
+        snapshots = [];
+        lastSnapshotEpoch = 0;
+        trainStatus.textContent = 'IDLE';
+        if (!replaying) setStatus('GRADIENTS LIVE');
+        drawAll();
+      }
+
+      function forward(x, y) {
+        const activations = new Array(w1.length);
+        for (let j = 0; j < w1.length; j += 1) {
+          activations[j] = tanh(w1[j][0] * x + w1[j][1] * y + b1[j]);
+        }
+        let sum = b2;
+        for (let j = 0; j < w2.length; j += 1) sum += w2[j] * activations[j];
+        return { activations, output: sigmoid(sum) };
+      }
+
+      function trainEpoch() {
+        const points = datasets[datasetSelect.value].points;
+        const baseRate = parseFloat(lrInput.value);
+        const learningRate = decayInput.checked ? Math.max(0.01, baseRate * Math.pow(0.9992, epoch)) : baseRate;
+        currentLr = learningRate;
+        const gradientW1 = w1.map(() => [0, 0]);
+        const gradientB1 = new Array(w1.length).fill(0);
+        const gradientW2 = new Array(w2.length).fill(0);
+        let gradientB2 = 0;
+        let totalLoss = 0;
+        let correct = 0;
+
+        points.forEach(([x, y, target]) => {
+          const { activations, output } = forward(x, y);
+          const error = output - target;
+          totalLoss += 0.5 * error * error;
+          if ((output >= 0.5 ? 1 : 0) === target) correct += 1;
+          const deltaOut = error * output * (1 - output);
+          for (let j = 0; j < w2.length; j += 1) {
+            gradientW2[j] += deltaOut * activations[j];
+            gradientB2 += deltaOut;
+            const deltaHidden = deltaOut * w2[j] * (1 - activations[j] * activations[j]);
+            gradientW1[j][0] += deltaHidden * x;
+            gradientW1[j][1] += deltaHidden * y;
+            gradientB1[j] += deltaHidden;
+          }
+        });
+
+        const count = points.length;
+        for (let j = 0; j < w1.length; j += 1) {
+          w1[j][0] -= learningRate * gradientW1[j][0] / count;
+          w1[j][1] -= learningRate * gradientW1[j][1] / count;
+          b1[j] -= learningRate * gradientB1[j] / count;
+          w2[j] -= learningRate * gradientW2[j] / count;
+        }
+        b2 -= learningRate * gradientB2 / count;
+
+        epoch += 1;
+        loss = totalLoss / count;
+        accuracy = correct / count;
+        history.push(loss);
+        if (history.length > 400) history.shift();
+      }
+
+      function fitCanvas(canvas) {
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        const width = Math.round(canvas.clientWidth * ratio);
+        const height = Math.round(canvas.clientHeight * ratio);
+        if (canvas.width !== width || canvas.height !== height) {
+          canvas.width = width;
+          canvas.height = height;
+        }
+        const context = canvas.getContext('2d');
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        return { context, width: canvas.clientWidth, height: canvas.clientHeight };
+      }
+
+      function drawBoundary() {
+        const { context, width, height } = fitCanvas(boundary);
+        const colors = themedColors[theme] || themedColors.lain;
+        const cells = 48;
+        const cellWidth = width / cells;
+        const cellHeight = height / cells;
+        for (let row = 0; row < cells; row += 1) {
+          for (let column = 0; column < cells; column += 1) {
+            const { output } = forward(column / (cells - 1), row / (cells - 1));
+            context.fillStyle = mixColor(colors[0], colors[1], output);
+            context.fillRect(column * cellWidth, row * cellHeight, cellWidth + 1, cellHeight + 1);
+          }
+        }
+        datasets[datasetSelect.value].points.forEach(([x, y, target]) => {
+          context.beginPath();
+          context.arc(x * width, y * height, 5, 0, Math.PI * 2);
+          context.fillStyle = target ? '#ffffff' : '#000000';
+          context.fill();
+          context.lineWidth = 2;
+          context.strokeStyle = '#ffffff';
+          context.stroke();
+        });
+      }
+
+      function drawLoss() {
+        const { context, width, height } = fitCanvas(lossChart);
+        const bright = getComputedStyle(document.body).getPropertyValue('--secondary').trim() || '#ff2a2a';
+        const dim = getComputedStyle(document.body).getPropertyValue('--dim').trim() || '#4d0000';
+        context.fillStyle = '#000';
+        context.fillRect(0, 0, width, height);
+        context.strokeStyle = dim;
+        context.lineWidth = 1;
+        for (let i = 1; i < 4; i += 1) {
+          const y = (height / 4) * i;
+          context.beginPath();
+          context.moveTo(0, y + 0.5);
+          context.lineTo(width, y + 0.5);
+          context.stroke();
+        }
+        snapshots.forEach((item) => {
+          const x = clamp(item.epoch / Math.max(epoch, 1), 0, 1) * width;
+          context.fillStyle = 'rgba(255,255,255,0.25)';
+          context.fillRect(x, 0, 1, height);
+        });
+        if (history.length < 2) return;
+        const top = Math.log10(Math.max(history[0], 1e-4));
+        const bottom = -4;
+        const range = Math.max(0.2, top - bottom);
+        context.beginPath();
+        history.forEach((value, index) => {
+          const x = (index / (history.length - 1)) * width;
+          const normalized = (top - Math.log10(Math.max(value, 1e-4))) / range;
+          const y = height - clamp(normalized, 0, 1) * (height - 8) - 4;
+          if (index === 0) context.moveTo(x, y);
+          else context.lineTo(x, y);
+        });
+        context.strokeStyle = bright;
+        context.lineWidth = 2;
+        context.shadowBlur = 8;
+        context.shadowColor = bright;
+        context.stroke();
+        context.shadowBlur = 0;
+      }
+
+      function drawNetwork() {
+        const { context, width, height } = fitCanvas(networkCanvas);
+        const bright = getComputedStyle(document.body).getPropertyValue('--secondary').trim() || '#ff2a2a';
+        const muted = getComputedStyle(document.body).getPropertyValue('--muted').trim() || '#887777';
+        context.fillStyle = '#000';
+        context.fillRect(0, 0, width, height);
+        const xInput = 42;
+        const xHidden = width * 0.52;
+        const xOutput = width - 42;
+        const hidden = w1.length;
+        const hiddenY = (index) => ((index + 1) / (hidden + 1)) * height;
+
+        for (let j = 0; j < hidden; j += 1) {
+          for (let i = 0; i < 2; i += 1) {
+            context.beginPath();
+            context.moveTo(xInput, i === 0 ? height * 0.35 : height * 0.65);
+            context.lineTo(xHidden, hiddenY(j));
+            context.strokeStyle = w1[j][i] >= 0 ? bright : muted;
+            context.globalAlpha = clamp(Math.abs(w1[j][i]) * 2.5, 0.12, 0.9);
+            context.lineWidth = clamp(Math.abs(w1[j][i]) * 4, 0.6, 4);
+            context.stroke();
+          }
+          context.beginPath();
+          context.moveTo(xHidden, hiddenY(j));
+          context.lineTo(xOutput, height * 0.5);
+          context.strokeStyle = w2[j] >= 0 ? bright : muted;
+          context.globalAlpha = clamp(Math.abs(w2[j]) * 2.5, 0.12, 0.9);
+          context.lineWidth = clamp(Math.abs(w2[j]) * 4, 0.6, 4);
+          context.stroke();
+        }
+        context.globalAlpha = 1;
+
+        const nodes = [
+          { x: xInput, y: height * 0.35, label: 'x' },
+          { x: xInput, y: height * 0.65, label: 'y' },
+          ...w1.map((_, j) => ({ x: xHidden, y: hiddenY(j), label: 'h' })),
+          { x: xOutput, y: height * 0.5, label: 'ŷ' }
+        ];
+        nodes.forEach((node) => {
+          context.beginPath();
+          context.arc(node.x, node.y, 7, 0, Math.PI * 2);
+          context.fillStyle = '#000';
+          context.fill();
+          context.strokeStyle = bright;
+          context.lineWidth = 1.5;
+          context.stroke();
+          context.fillStyle = bright;
+          context.font = '10px Courier New';
+          context.fillText(node.label, node.x + 10, node.y + 3);
+        });
+      }
+
+      function drawConfusion() {
+        const { context, width, height } = fitCanvas(confusionCanvas);
+        const bright = getComputedStyle(document.body).getPropertyValue('--secondary').trim() || '#ff2a2a';
+        const dim = getComputedStyle(document.body).getPropertyValue('--dim').trim() || '#4d0000';
+        context.fillStyle = '#000';
+        context.fillRect(0, 0, width, height);
+        const points = datasets[datasetSelect.value].points;
+        const values = [[0, 0], [0, 0]];
+        points.forEach(([x, y, target]) => {
+          const predicted = forward(x, y).output >= 0.5 ? 1 : 0;
+          values[target][predicted] += 1;
+        });
+        const maximum = Math.max(1, values[0][0], values[0][1], values[1][0], values[1][1]);
+        const size = Math.min(72, height - 26, width * 0.22);
+        const left = (width - size * 2) / 2;
+        const top = (height - size * 2) / 2 + 4;
+        const labels = [['TN', 'FP'], ['FN', 'TP']];
+        for (let row = 0; row < 2; row += 1) {
+          for (let column = 0; column < 2; column += 1) {
+            const value = values[row][column];
+            context.fillStyle = row === column ? bright : dim;
+            context.globalAlpha = row === column ? 0.12 + 0.65 * value / maximum : 0.25 + 0.6 * value / maximum;
+            context.fillRect(left + column * size, top + row * size, size - 2, size - 2);
+            context.globalAlpha = 1;
+            context.strokeStyle = 'rgba(255,255,255,0.18)';
+            context.lineWidth = 1;
+            context.strokeRect(left + column * size + 0.5, top + row * size + 0.5, size - 3, size - 3);
+            context.fillStyle = '#ffffff';
+            context.font = 'bold 13px Courier New';
+            context.textAlign = 'center';
+            context.fillText(String(value), left + column * size + size / 2, top + row * size + size / 2 - 2);
+            context.font = '9px Courier New';
+            context.fillStyle = 'rgba(255,255,255,0.7)';
+            context.fillText(labels[row][column], left + column * size + size / 2, top + row * size + size / 2 + 12);
+          }
+        }
+        context.textAlign = 'left';
+        confusionInfo.textContent = `ACC ${Math.round((values[0][0] + values[1][1]) / points.length * 100)}% · N ${points.length}`;
+      }
+
+      function drawMetrics() {
+        statEpoch.textContent = String(epoch);
+        statLoss.textContent = loss.toFixed(5);
+        statAccuracy.textContent = `${Math.round(accuracy * 100)}%`;
+        statHidden.textContent = String(w1.length);
+        statLr.textContent = currentLr.toFixed(3);
+        statSeed.textContent = String(seed);
+        lossPeak.textContent = history.length ? `MAX ${Math.max(...history).toFixed(4)}` : 'MAX 0.000';
+      }
+
+      function drawAll() {
+        drawBoundary();
+        drawLoss();
+        drawNetwork();
+        drawConfusion();
+        drawMetrics();
+      }
+
+      function snapshotWeights() {
+        return {
+          epoch, loss, accuracy,
+          w1: w1.map((row) => row.slice()), b1: b1.slice(), w2: w2.slice(), b2
+        };
+      }
+
+      function restoreSnapshot(item) {
+        if (!item) return;
+        w1 = item.w1.map((row) => row.slice());
+        b1 = item.b1.slice();
+        w2 = item.w2.slice();
+        b2 = item.b2;
+        epoch = item.epoch;
+        loss = item.loss;
+        accuracy = item.accuracy;
+      }
+
+      function captureSnapshot(tag = 'AUTO') {
+        const item = { ...snapshotWeights(), tag };
+        snapshots.push(item);
+        if (snapshots.length > 48) snapshots.shift();
+        lastSnapshotEpoch = epoch;
+        return item;
+      }
+
+      function stopTraining(status) {
+        training = false;
+        if (trainTimer) window.clearInterval(trainTimer);
+        trainTimer = 0;
+        trainBtn.textContent = 'TRAIN';
+        if (status) trainStatus.textContent = status;
+      }
+
+      function trainTick() {
+        if (!training) return;
+        const steps = parseInt(speedInput.value, 10);
+        for (let i = 0; i < steps; i += 1) trainEpoch();
+        if (epoch - lastSnapshotEpoch >= 100) captureSnapshot();
+        const now = performance.now();
+        if (now - lastDraw > 90) {
+          drawAll();
+          lastDraw = now;
+        }
+        if (loss < 0.005 || epoch >= 5000) {
+          captureSnapshot('BEST');
+          stopTraining('CONVERGED');
+          drawAll();
+        }
+      }
+
+      function stopReplay() {
+        if (replayTimer) window.clearInterval(replayTimer);
+        replayTimer = 0;
+        replaying = false;
+        replayBtn.textContent = 'REPLAY';
+        replayBtn.classList.remove('active');
+        if (liveWeights) restoreSnapshot(liveWeights);
+        liveWeights = null;
+        setStatus('GRADIENTS LIVE');
+        drawAll();
+      }
+
+      function toggleReplay() {
+        if (replaying) { stopReplay(); return; }
+        if (training) stopTraining('PAUSED');
+        if (!snapshots.length) captureSnapshot('MANUAL');
+        liveWeights = snapshotWeights();
+        replaying = true;
+        replayIndex = 0;
+        replayBtn.textContent = 'STOP REPLAY';
+        replayBtn.classList.add('active');
+        const showNext = () => {
+          if (!replaying || !snapshots.length) { stopReplay(); return; }
+          const item = snapshots[replayIndex % snapshots.length];
+          restoreSnapshot(item);
+          replayIndex += 1;
+          setStatus(`REPLAY ${item.tag} @ EPOCH ${item.epoch}`);
+          drawBoundary(); drawNetwork(); drawConfusion(); drawMetrics();
+        };
+        showNext();
+        replayTimer = window.setInterval(showNext, 420);
+      }
+
+      function exportModel() {
+        const payload = {
+          format: 'neural-lab-v1',
+          dataset: datasetSelect.value,
+          seed: seed,
+          hidden: w1.length,
+          learningRate: parseFloat(lrInput.value),
+          decay: decayInput.checked,
+          epoch, loss, accuracy,
+          weights: { w1, b1, w2, b2 }
+        };
+        try {
+          const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `neural-${datasetSelect.value}-${seed}.json`;
+          link.click();
+          window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+          setStatus('MODEL JSON ZAPISANY');
+        } catch (_) { setStatus('EXPORT NIEDOSTĘPNY'); }
+      }
+
+      trainBtn.addEventListener('click', () => {
+        if (replaying) stopReplay();
+        if (training) {
+          stopTraining('PAUSED');
+          return;
+        }
+        training = true;
+        trainBtn.textContent = 'PAUSE';
+        trainStatus.textContent = 'TRAINING';
+        lastDraw = 0;
+        trainTimer = window.setInterval(trainTick, 16);
+      });
+
+      resetBtn.addEventListener('click', () => {
+        if (replaying) stopReplay();
+        stopTraining('RESET');
+        initNetwork(false);
+      });
+
+      reseedBtn.addEventListener('click', () => {
+        if (replaying) stopReplay();
+        stopTraining('RESEEDED');
+        initNetwork(true);
+      });
+
+      snapshotBtn.addEventListener('click', () => {
+        const item = captureSnapshot('MANUAL');
+        setStatus(`SNAPSHOT @ EPOCH ${item.epoch}`);
+      });
+      replayBtn.addEventListener('click', toggleReplay);
+      exportBtn.addEventListener('click', exportModel);
+
+      [hiddenInput, lrInput, speedInput].forEach((input) => {
+        input.addEventListener('input', () => {
+          hiddenValue.textContent = hiddenInput.value;
+          lrValue.textContent = parseFloat(lrInput.value).toFixed(2);
+          speedValue.textContent = speedInput.value;
+          if (input === hiddenInput) {
+            if (replaying) stopReplay();
+            stopTraining('RESET');
+            initNetwork(false);
+          }
+        });
+      });
+
+      seedInput.addEventListener('change', () => {
+        if (replaying) stopReplay();
+        stopTraining('RESET');
+        initNetwork(false);
+      });
+      decayInput.addEventListener('change', () => { setStatus(decayInput.checked ? 'LR DECAY ON' : 'LR DECAY OFF'); });
+
+      datasetSelect.addEventListener('change', () => {
+        if (replaying) stopReplay();
+        stopTraining('RESET');
+        legend.textContent = datasets[datasetSelect.value].note;
+        initNetwork(false);
+      });
+
+      function setTheme(value) {
+        const allowed = ['lain', 'matrix', 'blood'];
+        theme = allowed.includes(value) ? value : 'lain';
+        document.body.dataset.theme = theme;
+        storeSet('cyberTheme', theme);
+        themeButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.theme === theme)));
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', { lain: '#020000', matrix: '#000500', blood: '#050005' }[theme]);
+        drawAll();
+      }
+      themeButtons.forEach((button) => button.addEventListener('click', () => setTheme(button.dataset.theme)));
+
+      window.__NEURAL_DEBUG__ = {
+        state: () => ({
+          dataset: datasetSelect.value, seed, epoch, loss, accuracy, learningRate: currentLr,
+          hidden: w1.length, snapshots: snapshots.length, replaying, training, decay: decayInput.checked
+        }),
+        step: (count = 1) => {
+          if (replaying) stopReplay();
+          for (let i = 0; i < Math.min(1000, count); i += 1) trainEpoch();
+          drawAll();
+          return epoch;
+        },
+        predict: (x, y) => forward(x, y).output
+      };
+
+      window.addEventListener('resize', drawAll);
+      legend.textContent = datasets[datasetSelect.value].note;
+      setTheme(storeGet('cyberTheme') || 'lain');
+      initNetwork(false);
+    })();
+  </script>
+</body>
+</html>
