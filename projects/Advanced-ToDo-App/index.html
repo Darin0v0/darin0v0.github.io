@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced To-Do App | Portfolio Project</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --dark: #2b2d42;
+            --light: #f8f9fa;
+            --danger: #ef233c;
+            --border: #dee2e6;
+            --muted: #6c757d;
+            --surface: #ffffff;
+        }
+
+        .dark-mode {
+            --primary: #4895ef;
+            --dark: #f8f9fa;
+            --light: #2b2d42;
+            --border: #495057;
+            --muted: #adb5bd;
+            --surface: #343a52;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--light);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        header {
+            padding: 1.1rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            overflow-wrap: anywhere;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        button, input, select, textarea { font: inherit; }
+
+        button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            color: white;
+            border-radius: 6px;
+            padding: 0.4rem 0.65rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .icon-btn:hover { background: rgba(255, 255, 255, 0.28); }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.25rem 0.4rem;
+            border-radius: 6px;
+        }
+
+        .input-section {
+            padding: 1.1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .task-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        #new-task {
+            flex: 1 1 240px;
+            min-width: 0;
+            padding: 0.7rem;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--surface);
+            color: var(--dark);
+            font-size: 1rem;
+        }
+
+        .meta-input {
+            padding: 0.7rem 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--surface);
+            color: var(--dark);
+            max-width: 100%;
+        }
+
+        #tag-input { flex: 1 1 110px; min-width: 90px; }
+        #due-input { flex: 0 1 140px; }
+
+        #add-btn {
+            padding: 0.7rem 1.2rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 0.75rem;
+            padding: 0.85rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem 1rem;
+            align-items: center;
+        }
+
+        .filter-btn, .clear-btn, .text-btn {
+            background: none;
+            border: none;
+            color: var(--dark);
+            cursor: pointer;
+            font-weight: 500;
+            padding: 0.25rem 0.1rem;
+            border-radius: 4px;
+        }
+
+        .filter-btn.active {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .clear-btn { color: var(--danger); }
+        .text-btn { color: var(--primary); }
+        .text-btn:disabled { color: var(--muted); cursor: not-allowed; }
+
+        .refine {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        #search-input {
+            flex: 1 1 180px;
+            min-width: 0;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--surface);
+            color: var(--dark);
+        }
+
+        .tasks { list-style: none; }
+
+        .task {
+            display: flex;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 0.4rem 0.6rem;
+            padding: 0.8rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .task.dragging { opacity: 0.45; }
+        .task.completed { opacity: 0.7; }
+        .task.completed .task-text { text-decoration: line-through; }
+
+        .task-checkbox {
+            margin-top: 0.15rem;
+            width: 1.2rem;
+            height: 1.2rem;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .task-body { flex: 1 1 180px; min-width: 0; }
+
+        .task-text {
+            display: block;
+            overflow-wrap: anywhere;
+            line-height: 1.4;
+        }
+
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            margin-top: 0.3rem;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.72rem;
+            padding: 0.1rem 0.45rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+        }
+
+        .badge.priority-high { color: var(--danger); border-color: var(--danger); }
+        .badge.priority-medium { color: #b7791f; border-color: #b7791f; }
+        .badge.priority-low { color: var(--primary); border-color: var(--primary); }
+        .badge.due-overdue { color: var(--danger); border-color: var(--danger); }
+
+        .task-edit {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--surface);
+            color: var(--dark);
+            display: none;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.15rem;
+            flex-shrink: 0;
+        }
+
+        .edit-btn, .delete-btn, .move-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            padding: 0.2rem 0.35rem;
+            border-radius: 4px;
+            color: var(--muted);
+        }
+
+        .edit-btn { color: var(--primary); }
+        .delete-btn { color: var(--danger); }
+        .move-btn:hover { color: var(--primary); }
+
+        .stats {
+            padding: 1rem 1.5rem;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .progress-track {
+            height: 8px;
+            border-radius: 6px;
+            background: var(--border);
+            overflow: hidden;
+            margin: 0.6rem 0 0.4rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0;
+            background: var(--primary);
+            transition: width 0.25s ease;
+        }
+
+        .priority-stats { font-size: 0.8rem; margin-top: 0.3rem; }
+
+        .io-panel {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .io-panel[hidden] { display: none; }
+
+        #io-text {
+            width: 100%;
+            min-height: 120px;
+            resize: vertical;
+            padding: 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--light);
+            color: var(--dark);
+            font-family: ui-monospace, 'Courier New', monospace;
+            font-size: 0.8rem;
+        }
+
+        .io-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.6rem;
+        }
+
+        .io-actions button {
+            padding: 0.45rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            background: var(--light);
+            color: var(--dark);
+            cursor: pointer;
+        }
+
+        .io-status { color: var(--muted); font-size: 0.8rem; margin-top: 0.5rem; min-height: 1.2em; }
+        .hint { font-size: 0.75rem; color: var(--muted); padding: 0.6rem 1.5rem; border-top: 1px solid var(--border); }
+
+        @media (max-width: 600px) {
+            body { padding: 0.75rem; }
+            h1 { font-size: 1.2rem; }
+            header, .input-section, .controls, .refine, .task, .stats, .io-panel, .hint { padding-left: 0.9rem; padding-right: 0.9rem; }
+            .task { padding-top: 0.7rem; padding-bottom: 0.7rem; }
+            .controls { flex-direction: column; }
+            .filters { justify-content: flex-start; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Moja Lista Zadań</h1>
+            <div class="header-actions">
+                <button class="icon-btn" id="undo-btn" title="Cofnij ostatnią akcję (Ctrl+Z)" aria-label="Cofnij ostatnią akcję">↶ Cofnij</button>
+                <button class="theme-toggle" id="themeToggle" aria-label="Przełącz motyw jasny/ciemny">🌓</button>
+            </div>
+        </header>
+
+        <div class="input-section">
+            <div class="task-input">
+                <input type="text" id="new-task" placeholder="Dodaj nowe zadanie..." aria-label="Nowe zadanie">
+                <select id="priority-input" class="meta-input" aria-label="Priorytet nowego zadania">
+                    <option value="medium">Średni</option>
+                    <option value="high">Wysoki</option>
+                    <option value="low">Niski</option>
+                </select>
+                <input type="text" id="tag-input" class="meta-input" placeholder="Tag" aria-label="Tag nowego zadania">
+                <input type="date" id="due-input" class="meta-input" aria-label="Termin zadania (opcjonalnie)">
+                <button id="add-btn">Dodaj</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="filters" role="group" aria-label="Filtr statusu">
+                <button class="filter-btn active" data-filter="all">Wszystkie</button>
+                <button class="filter-btn" data-filter="active">Aktywne</button>
+                <button class="filter-btn" data-filter="completed">Zakończone</button>
+            </div>
+            <div class="filters">
+                <button class="text-btn" id="io-toggle" aria-expanded="false" aria-controls="io-panel">Eksport / Import ☰</button>
+                <button class="clear-btn" id="clearCompleted">Wyczyść ukończone</button>
+            </div>
+        </div>
+
+        <div class="refine">
+            <input type="search" id="search-input" placeholder="Szukaj ( / )" aria-label="Szukaj zadań">
+            <select id="priority-filter" class="meta-input" aria-label="Filtr priorytetu">
+                <option value="all">Wszystkie priorytety</option>
+                <option value="high">Wysoki</option>
+                <option value="medium">Średni</option>
+                <option value="low">Niski</option>
+            </select>
+            <select id="tag-filter" class="meta-input" aria-label="Filtr tagu">
+                <option value="all">Wszystkie tagi</option>
+            </select>
+        </div>
+
+        <ul class="tasks" id="tasksList" aria-label="Lista zadań">
+            <!-- Tasks will be added here dynamically -->
+        </ul>
+
+        <div class="stats" id="stats">
+            Liczba zadań: <span id="totalCount">0</span> | Pozostało: <span id="activeCount">0</span>
+            <div class="progress-track" role="progressbar" aria-label="Postęp wykonania" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-track">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div id="completion-label">0% ukończone</div>
+            <div class="priority-stats" id="priority-stats"></div>
+        </div>
+
+        <div class="io-panel" id="io-panel" hidden>
+            <label for="io-text" style="display:block; font-size:0.85rem; margin-bottom:0.4rem;">Dane JSON zadań (eksport / import):</label>
+            <textarea id="io-text" spellcheck="false" placeholder="Kliknij „Eksportuj”, aby zobaczyć dane, lub wklej JSON i kliknij „Importuj”."></textarea>
+            <div class="io-actions">
+                <button type="button" id="export-btn">Eksportuj JSON</button>
+                <button type="button" id="import-btn">Importuj JSON</button>
+                <button type="button" id="copy-btn">Kopiuj</button>
+                <button type="button" id="download-btn">Pobierz .json</button>
+            </div>
+            <div class="io-status" id="io-status" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="hint">Skróty: Enter — dodaj zadanie, / — szukaj, Ctrl+Z — cofnij, Esc — zakończ edycję. Przeciągnij zadanie, aby zmienić kolejność.</div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const themeToggle = document.getElementById('themeToggle');
+        const newTaskInput = document.getElementById('new-task');
+        const addBtn = document.getElementById('add-btn');
+        const tasksList = document.getElementById('tasksList');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const clearCompletedBtn = document.getElementById('clearCompleted');
+        const totalCountEl = document.getElementById('totalCount');
+        const activeCountEl = document.getElementById('activeCount');
+        const priorityInput = document.getElementById('priority-input');
+        const tagInput = document.getElementById('tag-input');
+        const dueInput = document.getElementById('due-input');
+        const searchInput = document.getElementById('search-input');
+        const priorityFilter = document.getElementById('priority-filter');
+        const tagFilter = document.getElementById('tag-filter');
+        const undoBtn = document.getElementById('undo-btn');
+        const ioToggle = document.getElementById('io-toggle');
+        const ioPanel = document.getElementById('io-panel');
+        const ioText = document.getElementById('io-text');
+        const ioStatus = document.getElementById('io-status');
+        const progressFill = document.getElementById('progress-fill');
+        const progressTrack = document.getElementById('progress-track');
+        const completionLabel = document.getElementById('completion-label');
+        const priorityStats = document.getElementById('priority-stats');
+
+        // Bezpieczny dostęp do localStorage (tryb prywatny / plik lokalny)
+        function lsGet(key) {
+            try { return localStorage.getItem(key); } catch (e) { return null; }
+        }
+        function lsSet(key, value) {
+            try { localStorage.setItem(key, value); } catch (e) { /* brak uprawnień */ }
+        }
+
+        // State
+        let tasks = (() => {
+            try {
+                const parsed = JSON.parse(lsGet('tasks'));
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) { return []; }
+        })();
+        let currentFilter = 'all';
+        let undoStack = [];
+        let draggedId = null;
+
+        const PRIORITIES = {
+            high: { label: 'Wysoki', order: 0 },
+            medium: { label: 'Średni', order: 1 },
+            low: { label: 'Niski', order: 2 }
+        };
+
+        function normalizeTask(task) {
+            const priority = Object.prototype.hasOwnProperty.call(PRIORITIES, task.priority) ? task.priority : 'medium';
+            return {
+                id: task.id,
+                text: String(task.text || ''),
+                completed: !!task.completed,
+                createdAt: task.createdAt || new Date().toISOString(),
+                priority,
+                tag: String(task.tag || ''),
+                due: String(task.due || '')
+            };
+        }
+
+        function snapshot() {
+            return JSON.stringify(tasks);
+        }
+
+        function pushUndo() {
+            undoStack.push(snapshot());
+            if (undoStack.length > 30) undoStack.shift();
+            undoBtn.disabled = false;
+        }
+
+        function undo() {
+            if (!undoStack.length) {
+                setIoStatus('Brak akcji do cofnięcia.');
+                return;
+            }
+            try {
+                const previous = JSON.parse(undoStack.pop());
+                if (Array.isArray(previous)) tasks = previous.map(normalizeTask);
+                saveTasks();
+                renderTasks();
+                setIoStatus('Cofnięto ostatnią akcję.');
+            } catch (e) {
+                setIoStatus('Nie udało się cofnąć akcji.');
+            }
+            undoBtn.disabled = undoStack.length === 0;
+        }
+
+        function setIoStatus(message) {
+            ioStatus.textContent = message;
+        }
+
+        // Initialize
+        function init() {
+            renderTasks();
+            updateStats();
+            updateTagFilter();
+
+            // Load theme preference
+            if (lsGet('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+            }
+            undoBtn.disabled = true;
+        }
+
+        function matchesFilters(task) {
+            if (currentFilter === 'active' && task.completed) return false;
+            if (currentFilter === 'completed' && !task.completed) return false;
+            const priority = task.priority || 'medium';
+            if (priorityFilter.value !== 'all' && priority !== priorityFilter.value) return false;
+            if (tagFilter.value !== 'all' && (task.tag || '') !== tagFilter.value) return false;
+            const query = searchInput.value.trim().toLowerCase();
+            if (query) {
+                const haystack = [task.text, task.tag, task.due, PRIORITIES[priority] && PRIORITIES[priority].label].join(' ').toLowerCase();
+                if (!haystack.includes(query)) return false;
+            }
+            return true;
+        }
+
+        function makeBadge(text, className) {
+            const badge = document.createElement('span');
+            badge.className = 'badge ' + className;
+            badge.textContent = text;
+            return badge;
+        }
+
+        // Render tasks based on current filter
+        function renderTasks() {
+            tasksList.innerHTML = '';
+
+            const filteredTasks = tasks.filter(matchesFilters);
+
+            if (filteredTasks.length === 0) {
+                const empty = document.createElement('li');
+                empty.className = 'task';
+                empty.style.justifyContent = 'center';
+                empty.style.color = 'var(--muted)';
+                empty.textContent = tasks.length === 0 ? 'Brak zadań. Dodaj pierwsze powyżej.' : 'Brak zadań spełniających kryteria.';
+                tasksList.appendChild(empty);
+                return;
+            }
+
+            filteredTasks.forEach((task) => {
+                const normalized = normalizeTask(task);
+                const taskEl = document.createElement('li');
+                taskEl.className = `task ${normalized.completed ? 'completed' : ''}`;
+                taskEl.dataset.id = normalized.id;
+                taskEl.draggable = true;
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'task-checkbox';
+                checkbox.checked = normalized.completed;
+                checkbox.setAttribute('aria-label', 'Oznacz zadanie jako ukończone: ' + normalized.text);
+
+                const body = document.createElement('div');
+                body.className = 'task-body';
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'task-text';
+                textSpan.textContent = normalized.text;
+
+                const editInput = document.createElement('input');
+                editInput.type = 'text';
+                editInput.className = 'task-edit';
+                editInput.value = normalized.text;
+                editInput.setAttribute('aria-label', 'Edytuj treść zadania');
+
+                const badges = document.createElement('div');
+                badges.className = 'badges';
+                badges.appendChild(makeBadge(PRIORITIES[normalized.priority].label, 'priority-' + normalized.priority));
+                if (normalized.tag) badges.appendChild(makeBadge('#' + normalized.tag, 'badge-tag'));
+                if (normalized.due) {
+                    const today = new Date().toISOString().slice(0, 10);
+                    const overdue = normalized.due < today && !normalized.completed;
+                    badges.appendChild(makeBadge('📅 ' + normalized.due, overdue ? 'due-overdue' : ''));
+                }
+
+                body.appendChild(textSpan);
+                body.appendChild(editInput);
+                body.appendChild(badges);
+
+                const actions = document.createElement('div');
+                actions.className = 'task-actions';
+
+                const moveUp = document.createElement('button');
+                moveUp.className = 'move-btn';
+                moveUp.textContent = '↑';
+                moveUp.title = 'Przesuń wyżej';
+                moveUp.setAttribute('aria-label', 'Przesuń zadanie wyżej');
+                moveUp.addEventListener('click', () => moveTask(normalized.id, -1));
+
+                const moveDown = document.createElement('button');
+                moveDown.className = 'move-btn';
+                moveDown.textContent = '↓';
+                moveDown.title = 'Przesuń niżej';
+                moveDown.setAttribute('aria-label', 'Przesuń zadanie niżej');
+                moveDown.addEventListener('click', () => moveTask(normalized.id, 1));
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'edit-btn';
+                editBtn.textContent = '✏️';
+                editBtn.title = 'Edytuj';
+                editBtn.setAttribute('aria-label', 'Edytuj zadanie');
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = '🗑️';
+                deleteBtn.title = 'Usuń';
+                deleteBtn.setAttribute('aria-label', 'Usuń zadanie');
+
+                actions.append(moveUp, moveDown, editBtn, deleteBtn);
+                taskEl.append(checkbox, body, actions);
+
+                checkbox.addEventListener('change', () => toggleTaskComplete(normalized.id));
+                deleteBtn.addEventListener('click', () => deleteTask(normalized.id));
+
+                editBtn.addEventListener('click', () => {
+                    textSpan.style.display = 'none';
+                    editInput.style.display = 'block';
+                    editInput.focus();
+                    editInput.select();
+                });
+
+                function saveEditNow() {
+                    if (editInput.style.display === 'none' || editInput.style.display === '') return;
+                    saveEdit(normalized.id, editInput);
+                }
+
+                editInput.addEventListener('blur', saveEditNow);
+                editInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); saveEditNow(); }
+                    if (e.key === 'Escape') { editInput.value = normalized.text; editInput.blur(); }
+                });
+
+                // Przeciąganie i upuszczanie
+                taskEl.addEventListener('dragstart', () => {
+                    draggedId = normalized.id;
+                    taskEl.classList.add('dragging');
+                });
+                taskEl.addEventListener('dragend', () => {
+                    taskEl.classList.remove('dragging');
+                    draggedId = null;
+                });
+                taskEl.addEventListener('dragover', (e) => {
+                    if (draggedId !== null) e.preventDefault();
+                });
+                taskEl.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    if (draggedId === null || draggedId === normalized.id) return;
+                    pushUndo();
+                    const from = tasks.findIndex(t => t.id === draggedId);
+                    const to = tasks.findIndex(t => t.id === normalized.id);
+                    if (from !== -1 && to !== -1) {
+                        const [item] = tasks.splice(from, 1);
+                        tasks.splice(to, 0, item);
+                        saveTasks();
+                        renderTasks();
+                    }
+                    draggedId = null;
+                });
+
+                tasksList.appendChild(taskEl);
+            });
+        }
+
+        function moveTask(id, direction) {
+            const index = tasks.findIndex(t => t.id === id);
+            const target = index + direction;
+            if (index === -1 || target < 0 || target >= tasks.length) return;
+            pushUndo();
+            [tasks[index], tasks[target]] = [tasks[target], tasks[index]];
+            saveTasks();
+            renderTasks();
+        }
+
+        function updateTagFilter() {
+            const current = tagFilter.value;
+            const tags = [...new Set(tasks.map(t => t.tag).filter(Boolean))].sort();
+            tagFilter.innerHTML = '<option value="all">Wszystkie tagi</option>' + tags.map(t => {
+                const escaped = String(t).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+                return `<option value="${escaped}">#${escaped}</option>`;
+            }).join('');
+            if (tags.includes(current)) tagFilter.value = current;
+        }
+
+        // Update task statistics
+        function updateStats() {
+            const total = tasks.length;
+            const active = tasks.filter(task => !task.completed).length;
+            const done = total - active;
+            const percent = total ? Math.round((done / total) * 100) : 0;
+
+            totalCountEl.textContent = total;
+            activeCountEl.textContent = active;
+            completionLabel.textContent = percent + '% ukończone';
+            progressFill.style.width = percent + '%';
+            progressTrack.setAttribute('aria-valuenow', String(percent));
+
+            const parts = Object.keys(PRIORITIES).map(key => {
+                const count = activeTasksWithPriority(key);
+                return PRIORITIES[key].label + ': ' + count;
+            });
+            priorityStats.textContent = 'Aktywne wg priorytetu — ' + parts.join(' · ');
+        }
+
+        function activeTasksWithPriority(priority) {
+            return tasks.filter(t => !t.completed && (t.priority || 'medium') === priority).length;
+        }
+
+        // Save tasks to localStorage
+        function saveTasks() {
+            lsSet('tasks', JSON.stringify(tasks));
+            updateStats();
+            updateTagFilter();
+        }
+
+        // Add new task
+        function addTask() {
+            const text = newTaskInput.value.trim();
+            if (text === '') {
+                newTaskInput.focus();
+                return;
+            }
+
+            const newTask = normalizeTask({
+                id: Date.now(),
+                text,
+                completed: false,
+                createdAt: new Date().toISOString(),
+                priority: priorityInput.value,
+                tag: tagInput.value.trim(),
+                due: dueInput.value
+            });
+
+            pushUndo();
+            tasks.unshift(newTask);
+            saveTasks();
+            renderTasks();
+
+            newTaskInput.value = '';
+            tagInput.value = '';
+            dueInput.value = '';
+            newTaskInput.focus();
+        }
+
+        // Toggle task completion
+        function toggleTaskComplete(id) {
+            pushUndo();
+            tasks = tasks.map(task =>
+                task.id === id ? { ...task, completed: !task.completed } : task
+            );
+            saveTasks();
+            renderTasks();
+        }
+
+        // Delete task
+        function deleteTask(id) {
+            pushUndo();
+            tasks = tasks.filter(task => task.id !== id);
+            saveTasks();
+            renderTasks();
+        }
+
+        // Save edited task
+        function saveEdit(id, editInput) {
+            const newText = editInput.value.trim();
+            if (newText === '') {
+                deleteTask(id);
+                return;
+            }
+            const original = tasks.find(task => task.id === id);
+            if (original && original.text === newText) return;
+            pushUndo();
+            tasks = tasks.map(task =>
+                task.id === id ? { ...task, text: newText } : task
+            );
+            saveTasks();
+            renderTasks();
+        }
+
+        // Clear completed tasks
+        function clearCompleted() {
+            if (!tasks.some(t => t.completed)) return;
+            pushUndo();
+            tasks = tasks.filter(task => !task.completed);
+            saveTasks();
+            renderTasks();
+        }
+
+        // Eksport / import danych
+        function exportTasks() {
+            ioText.value = JSON.stringify(tasks, null, 2);
+            setIoStatus('Wyeksportowano ' + tasks.length + ' zadań do pola tekstowego.');
+            ioText.focus();
+            ioText.select();
+        }
+
+        function importTasks() {
+            try {
+                const parsed = JSON.parse(ioText.value);
+                if (!Array.isArray(parsed)) throw new Error('to nie jest lista zadań');
+                const imported = parsed.map(normalizeTask).map((t, i) => ({
+                    ...t,
+                    id: t.id === undefined ? Date.now() + i : t.id
+                }));
+                pushUndo();
+                tasks = imported;
+                currentFilter = 'all';
+                filterBtns.forEach(b => b.classList.toggle('active', b.dataset.filter === 'all'));
+                saveTasks();
+                renderTasks();
+                setIoStatus('Zaimportowano ' + tasks.length + ' zadań.');
+            } catch (e) {
+                setIoStatus('Nieprawidłowy JSON: ' + e.message);
+            }
+        }
+
+        function copyIoText() {
+            if (!ioText.value) {
+                setIoStatus('Najpierw kliknij „Eksportuj JSON”.');
+                return;
+            }
+            const text = ioText.value;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .then(() => setIoStatus('Skopiowano do schowka.'))
+                    .catch(() => fallbackCopy(text));
+            } else {
+                fallbackCopy(text);
+            }
+        }
+
+        function fallbackCopy(text) {
+            ioText.value = text;
+            ioText.focus();
+            ioText.select();
+            try {
+                const ok = document.execCommand('copy');
+                setIoStatus(ok ? 'Skopiowano do schowka.' : 'Zaznaczono tekst — użyj Ctrl+C.');
+            } catch (e) {
+                setIoStatus('Zaznaczono tekst — użyj Ctrl+C.');
+            }
+        }
+
+        function downloadTasks() {
+            const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'zadania.json';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            setIoStatus('Pobrano plik zadania.json.');
+        }
+
+        // Event Listeners
+        addBtn.addEventListener('click', addTask);
+        newTaskInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') addTask();
+        });
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderTasks();
+            });
+        });
+
+        [searchInput, priorityFilter, tagFilter].forEach(el => {
+            el.addEventListener('input', renderTasks);
+            el.addEventListener('change', renderTasks);
+        });
+
+        clearCompletedBtn.addEventListener('click', clearCompleted);
+        undoBtn.addEventListener('click', undo);
+
+        ioToggle.addEventListener('click', () => {
+            const opening = ioPanel.hidden;
+            ioPanel.hidden = !opening;
+            ioToggle.setAttribute('aria-expanded', String(opening));
+            if (opening) exportTasks();
+        });
+        document.getElementById('export-btn').addEventListener('click', exportTasks);
+        document.getElementById('import-btn').addEventListener('click', importTasks);
+        document.getElementById('copy-btn').addEventListener('click', copyIoText);
+        document.getElementById('download-btn').addEventListener('click', downloadTasks);
+
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            lsSet('darkMode', isDarkMode);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement && document.activeElement.tagName);
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !typing) {
+                e.preventDefault();
+                undo();
+            } else if (e.key === '/' && !typing) {
+                e.preventDefault();
+                searchInput.focus();
+            } else if (e.key === 'Escape' && !ioPanel.hidden) {
+                ioPanel.hidden = true;
+                ioToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Initialize the app
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commodore 64 BASIC Interpreter</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'C64', 'Courier New', ui-monospace, monospace;
+            color: #6C5EB5;
+            text-shadow: 0 0 5px #6C5EB5;
+        }
+
+        .crt {
+            position: relative;
+            width: min(800px, 100%);
+            height: min(600px, calc(100vh - 20px));
+            background: #352879;
+            border: clamp(6px, 2vw, 15px) solid #6C5EB5;
+            border-radius: 15px;
+            box-shadow: 0 0 50px rgba(108, 94, 181, 0.8);
+            padding: clamp(10px, 3vw, 25px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .crt::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                linear-gradient(rgba(108, 94, 181, 0.15) 50%, transparent 50%),
+                linear-gradient(90deg, rgba(255,0,0,0.05), rgba(0,255,0,0.02), rgba(0,0,255,0.05));
+            background-size: 100% 6px, 4px 100%;
+            pointer-events: none;
+            animation: flicker 0.12s infinite;
+        }
+
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0%,
+                rgba(108, 94, 181, 0.12) 0.5%,
+                transparent 1%
+            );
+            pointer-events: none;
+        }
+
+        .toolbar {
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            z-index: 1;
+        }
+
+        .toolbar button {
+            font: inherit;
+            font-size: clamp(9px, 2vw, 12px);
+            color: #d8d0ff;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid #6C5EB5;
+            border-radius: 3px;
+            padding: 3px 7px;
+            cursor: pointer;
+            text-shadow: none;
+        }
+
+        .toolbar button:hover, .toolbar button:focus-visible {
+            background: #6C5EB5;
+            color: #111;
+            outline: none;
+        }
+
+        .content {
+            position: relative;
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            padding: 6px;
+            font-size: clamp(11px, 2.6vw, 15px);
+            line-height: 1.3;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            scrollbar-color: #6C5EB5 #352879;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 0.7em;
+            height: 1.1em;
+            background-color: #6C5EB5;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+
+        .hint {
+            position: relative;
+            z-index: 1;
+            font-size: clamp(9px, 2vw, 11px);
+            opacity: 0.8;
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+        @keyframes flicker { 0%, 100% { opacity: 0.9; } 50% { opacity: 1; } }
+
+        @media (prefers-reduced-motion: reduce) {
+            .crt::before, .cursor { animation: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="crt">
+        <div class="scanlines" aria-hidden="true"></div>
+        <div class="toolbar" aria-label="Szybkie akcje">
+            <button type="button" onclick="submitCommand('HELP')">HELP</button>
+            <button type="button" onclick="submitCommand('LIST')">LIST</button>
+            <button type="button" onclick="submitCommand('RUN')">RUN</button>
+            <button type="button" onclick="submitCommand('CLS')">CLS</button>
+            <button type="button" onclick="submitCommand('SAMPLES')">PRZYKŁADY</button>
+        </div>
+        <div class="content" id="screen" role="log" aria-live="polite" aria-label="Ekran konsoli BASIC" tabindex="0"></div>
+        <div class="hint">↑/↓ — historia · Tab — uzupełnianie · Ctrl+L — czyść ekran · HELP — lista komend</div>
+    </div>
+
+    <script>
+        // Pełny interpreter BASIC-a Commodore 64 (działa offline)
+        const SAMPLE_PROGRAMS = [
+            {
+                name: 'PRZYKŁAD 1 — kwadraty 1..5',
+                lines: ['10 REM KWADRATY', '20 FOR I = 1 TO 5', '30 PRINT I; "^2 = "; I * I', '40 NEXT I', '50 END']
+            },
+            {
+                name: 'PRZYKŁAD 2 — sums and IF',
+                lines: ['10 REM SUMA I WARUNEK', '20 LET S = 0', '30 FOR I = 1 TO 10', '40 LET S = S + I', '50 NEXT I', '60 IF S > 50 THEN PRINT "SUMA > 50": GOTO 80', '70 PRINT "SUMA = "; S', '80 PRINT "KONIEC"', '90 END']
+            },
+            {
+                name: 'PRZYKŁAD 3 — GOSUB / RETURN',
+                lines: ['10 REM PODPROGRAM', '20 FOR I = 1 TO 3', '30 GOSUB 100', '40 NEXT I', '50 END', '100 PRINT "POWITANIE NR "; I', '110 RETURN']
+            },
+            {
+                name: 'PRZYKŁAD 4 — DATA / READ',
+                lines: ['10 REM DANE', '20 DATA 10, 20, 30', '30 FOR I = 1 TO 3', '40 READ X', '50 PRINT "X = "; X', '60 NEXT I', '70 END']
+            }
+        ];
+
+        const COMMANDS = [
+            'HELP', 'LIST', 'RUN', 'END', 'STOP', 'NEW', 'CLEAR', 'CLS',
+            'PRINT', 'LET', 'INPUT', 'IF', 'THEN', 'ELSE', 'FOR', 'TO', 'STEP',
+            'NEXT', 'GOTO', 'GOSUB', 'RETURN', 'DATA', 'READ', 'RESTORE',
+            'SAVE', 'LOAD', 'SAMPLES', 'SAMPLE', 'REM'
+        ];
+
+        class C64Basic {
+            constructor() {
+                this.memory = 38911;
+                this.program = [];
+                this.variables = {};
+                this.forLoops = {};
+                this.dataPointer = 0;
+                this.programData = [];
+                this.currentLine = 0;
+                this.isRunning = false;
+                this.error = null;
+                this.jumpTo = null;
+                this.returnStack = [];
+                this.pendingInput = null;
+                this.inputPrompt = '';
+            }
+
+            splitStatements(text) {
+                const parts = [];
+                let cur = '', inQuote = false;
+                for (const ch of text) {
+                    if (ch === '"') inQuote = !inQuote;
+                    if (ch === ':' && !inQuote) {
+                        parts.push(cur.trim());
+                        cur = '';
+                    } else {
+                        cur += ch;
+                    }
+                }
+                parts.push(cur.trim());
+                return parts.filter(Boolean);
+            }
+
+            execute(command) {
+                try {
+                    const cmd = command.trim();
+                    this.error = null;
+
+                    // Jeśli to numer linii (np. "10 PRINT...")
+                    if (/^\d+/.test(cmd)) {
+                        const lineNum = parseInt(cmd, 10);
+                        this.storeProgramLine(lineNum, cmd);
+                        return;
+                    }
+
+                    // Separator instrukcji „:” w jednej linii
+                    const statements = this.splitStatements(cmd);
+                    if (statements.length > 1) {
+                        statements.forEach(part => this.execute(part));
+                        return;
+                    }
+
+                    // Komendy bezpośrednie
+                    const upperCmd = cmd.toUpperCase();
+                    if (upperCmd === 'LIST') {
+                        this.listProgram();
+                    }
+                    else if (upperCmd === 'RUN') {
+                        this.runProgram();
+                    }
+                    else if (upperCmd === 'CLEAR') {
+                        this.clearProgram();
+                    }
+                    else if (upperCmd === 'NEW') {
+                        this.newProgram();
+                    }
+                    else if (upperCmd === 'CLS' || upperCmd === 'HOME') {
+                        this.clearScreen();
+                    }
+                    else if (upperCmd === 'HELP' || upperCmd === '?') {
+                        this.executeHelp();
+                    }
+                    else if (upperCmd === 'SAMPLES') {
+                        this.printSamples();
+                    }
+                    else if (upperCmd.startsWith('SAMPLE')) {
+                        this.loadSample(cmd.substring(6).trim());
+                    }
+                    else if (upperCmd.startsWith('SAVE')) {
+                        this.executeSave(cmd.substring(4).trim());
+                    }
+                    else if (upperCmd.startsWith('LOAD')) {
+                        this.executeLoad(cmd.substring(4).trim());
+                    }
+                    else if (upperCmd === 'END' || upperCmd === 'STOP') {
+                        this.isRunning = false;
+                        this.print('READY.');
+                    }
+                    else if (upperCmd.startsWith('PRINT') || cmd.startsWith('?')) {
+                        const expr = cmd.startsWith('?') ? cmd.substring(1) : cmd.substring(5);
+                        this.executePrint(expr);
+                    }
+                    else if (upperCmd.startsWith('LET ')) {
+                        this.executeLet(cmd.substring(4));
+                    }
+                    else if (upperCmd.startsWith('IF ')) {
+                        this.executeIf(cmd.substring(3));
+                    }
+                    else if (upperCmd.startsWith('FOR ')) {
+                        this.executeFor(cmd.substring(4));
+                    }
+                    else if (upperCmd.startsWith('NEXT')) {
+                        this.executeNext(cmd.substring(4).trim());
+                    }
+                    else if (upperCmd.startsWith('GOTO ')) {
+                        this.executeGoto(parseInt(cmd.substring(5), 10));
+                    }
+                    else if (upperCmd.startsWith('GOSUB ')) {
+                        this.executeGosub(parseInt(cmd.substring(6), 10));
+                    }
+                    else if (upperCmd === 'RETURN') {
+                        this.executeReturn();
+                    }
+                    else if (upperCmd.startsWith('DATA ')) {
+                        // DATA jest obsługiwane tylko w programie
+                        this.print('?DIRECT STATEMENT ERROR');
+                    }
+                    else if (upperCmd.startsWith('READ ')) {
+                        this.executeRead(cmd.substring(5));
+                    }
+                    else if (upperCmd.startsWith('RESTORE')) {
+                        this.dataPointer = 0;
+                    }
+                    else if (upperCmd.startsWith('INPUT')) {
+                        this.executeInput(cmd.substring(5).trim());
+                    }
+                    else if (cmd !== '') {
+                        this.print('?SYNTAX ERROR — wpisz HELP, aby zobaczyć komendy.');
+                    }
+                } catch (e) {
+                    this.error = e;
+                    this.print(this.formatError(e));
+                }
+            }
+
+            formatError(error) {
+                const message = String(error && error.message || error).toUpperCase();
+                const known = ['SYNTAX', 'TYPE MISMATCH', 'UNDEFINED STATEMENT', 'OUT OF DATA',
+                    'REDIMENSIONED ARRAY', 'OVERFLOW', 'RETURN WITHOUT GOSUB', 'NEXT WITHOUT FOR'];
+                const code = known.find(k => message.includes(k)) || 'SYNTAX';
+                return '?' + code + ' ERROR' + (message.includes('LINIA') ? ' — ' + message : '');
+            }
+
+            storeProgramLine(lineNum, line) {
+                // Usuń istniejącą linię o tym numerze
+                this.program = this.program.filter(l => l.lineNum !== lineNum);
+
+                // Jeśli linia nie jest pusta, dodaj ją do programu
+                if (line.trim().length > lineNum.toString().length + 1) {
+                    this.program.push({ lineNum, text: line });
+                    this.program.sort((a, b) => a.lineNum - b.lineNum);
+                }
+            }
+
+            listProgram() {
+                if (this.program.length === 0) {
+                    this.print('NO PROGRAM IN MEMORY');
+                    return;
+                }
+                let output = '';
+                this.program.forEach(line => {
+                    output += `${line.lineNum} ${line.text.substring(line.lineNum.toString().length)}\n`;
+                });
+                this.print(output.trim());
+            }
+
+            runProgram() {
+                if (this.program.length === 0) {
+                    this.print('NO PROGRAM IN MEMORY');
+                    return;
+                }
+                this.isRunning = true;
+                this.currentLine = 0;
+                this.jumpTo = null;
+                this.returnStack = [];
+                this.forLoops = {};
+                this.variables = {};
+                this.dataPointer = 0;
+                this.error = null;
+                this.collectData();
+                this.executeNextLine();
+            }
+
+            collectData() {
+                this.programData = [];
+                this.program.forEach(line => {
+                    const cmd = line.text.substring(line.lineNum.toString().length).trim();
+                    if (/^DATA\s+/i.test(cmd)) {
+                        this.programData.push(...cmd.substring(4).split(',').map(s => s.trim()));
+                    }
+                });
+            }
+
+            executeNextLine() {
+                if (!this.isRunning || this.currentLine >= this.program.length) {
+                    this.isRunning = false;
+                    this.print('READY.');
+                    return;
+                }
+
+                const line = this.program[this.currentLine];
+                try {
+                    // Pomiń numer linii (np. "10 PRINT..." -> "PRINT...")
+                    const cmd = line.text.substring(line.lineNum.toString().length).trim();
+                    this.jumpTo = null;
+                    this.execute(cmd);
+
+                    if (!this.isRunning) return;
+                    if (this.pendingInput) return;        // czekamy na dane z klawiatury
+                    if (this.jumpTo !== null) {
+                        this.currentLine = this.jumpTo;
+                    } else {
+                        this.currentLine++;
+                    }
+                    setTimeout(() => this.executeNextLine(), 0);
+                } catch (e) {
+                    this.isRunning = false;
+                    this.print(this.formatError(e) + ' IN LINE ' + line.lineNum);
+                    this.print('READY.');
+                }
+            }
+
+            resumeAfterInput() {
+                if (!this.isRunning || !this.pendingInput) return;
+                this.pendingInput = null;
+                this.inputPrompt = '';
+                if (this.jumpTo !== null) this.currentLine = this.jumpTo;
+                else this.currentLine++;
+                setTimeout(() => this.executeNextLine(), 0);
+            }
+
+            // Tokenizer + prosty parser wyrażeń (bez eval)
+            tokenize(expr) {
+                const tokens = [];
+                let i = 0;
+                while (i < expr.length) {
+                    const ch = expr[i];
+                    if (/\s/.test(ch)) { i++; continue; }
+                    if (ch === '"') {
+                        const end = expr.indexOf('"', i + 1);
+                        if (end === -1) throw new Error('SYNTAX: brak cudzysłowu');
+                        tokens.push({ type: 'str', value: expr.slice(i + 1, end) });
+                        i = end + 1;
+                        continue;
+                    }
+                    const num = expr.slice(i).match(/^(?:\d+\.?\d*|\.\d+)/);
+                    if (num) {
+                        tokens.push({ type: 'num', value: parseFloat(num[0]) });
+                        i += num[0].length;
+                        continue;
+                    }
+                    const ident = expr.slice(i).match(/^[A-Za-z][A-Za-z0-9_$]*/);
+                    if (ident) {
+                        tokens.push({ type: 'ident', value: ident[0].toUpperCase() });
+                        i += ident[0].length;
+                        continue;
+                    }
+                    const two = expr.slice(i, i + 2);
+                    if (['<=', '>=', '<>', '!='].includes(two)) {
+                        tokens.push({ type: 'op', value: two === '!=' ? '<>' : two });
+                        i += 2;
+                        continue;
+                    }
+                    if ('+-*/^()<>=;,'.includes(ch)) {
+                        tokens.push({ type: 'op', value: ch });
+                        i++;
+                        continue;
+                    }
+                    throw new Error('SYNTAX: nieznany znak ' + ch);
+                }
+                return tokens;
+            }
+
+            evaluateExpression(expr) {
+                const tokens = this.tokenize(String(expr).trim());
+                if (tokens.length === 0) return '';
+                let pos = 0;
+                const peek = () => tokens[pos];
+                const take = () => tokens[pos++];
+                const isOp = value => peek() && peek().type === 'op' && peek().value === value;
+
+                function primary() {
+                    const tok = take();
+                    if (!tok) throw new Error('SYNTAX: brak wartości');
+                    if (tok.type === 'num') return tok.value;
+                    if (tok.type === 'str') return tok.value;
+                    if (tok.type === 'op' && tok.value === '(') {
+                        const value = comparison.call(this);
+                        if (!isOp(')')) throw new Error('SYNTAX: brak nawiasu zamykającego');
+                        take();
+                        return value;
+                    }
+                    if (tok.type === 'op' && (tok.value === '-' || tok.value === '+')) {
+                        const value = primary();
+                        return tok.value === '-' ? -Number(value) : Number(value);
+                    }
+                    if (tok.type === 'ident') {
+                        const functions = {
+                            ABS: Math.abs, INT: Math.floor, SQR: Math.sqrt,
+                            SIN: Math.sin, COS: Math.cos, RND: Math.random
+                        };
+                        if (functions[tok.value] && isOp('(')) {
+                            take();
+                            const arg = comparison.call(this);
+                            if (!isOp(')')) throw new Error('SYNTAX: brak nawiasu zamykającego');
+                            take();
+                            return functions[tok.value](Number(arg));
+                        }
+                        return this.variables[tok.value] !== undefined ? this.variables[tok.value] : 0;
+                    }
+                    throw new Error('SYNTAX: nieoczekiwany token');
+                }
+
+                function power() {
+                    let left = primary.call(this);
+                    while (isOp('^')) {
+                        take();
+                        left = Math.pow(Number(left), Number(primary.call(this)));
+                    }
+                    return left;
+                }
+
+                function multiply() {
+                    let left = power.call(this);
+                    while (peek() && peek().type === 'op' && ['*', '/'].includes(peek().value)) {
+                        const op = take().value;
+                        const right = power.call(this);
+                        if (typeof left !== 'number' || typeof right !== 'number') throw new Error('TYPE MISMATCH');
+                        left = op === '*' ? left * right : left / right;
+                    }
+                    return left;
+                }
+
+                function addition() {
+                    let left = multiply.call(this);
+                    while (peek() && peek().type === 'op' && ['+', '-'].includes(peek().value)) {
+                        const op = take().value;
+                        const right = multiply.call(this);
+                        if (op === '+' && (typeof left === 'string' || typeof right === 'string')) {
+                            left = String(left) + String(right);
+                        } else {
+                            if (typeof left !== 'number' || typeof right !== 'number') throw new Error('TYPE MISMATCH');
+                            left = op === '+' ? left + right : left - right;
+                        }
+                    }
+                    return left;
+                }
+
+                function comparison() {
+                    let left = addition.call(this);
+                    while (peek() && peek().type === 'op' && ['<', '>', '<=', '>=', '=', '<>'].includes(peek().value)) {
+                        const op = take().value;
+                        const right = addition.call(this);
+                        let result;
+                        if (typeof left === 'string' || typeof right === 'string') {
+                            const a = String(left), b = String(right);
+                            result = op === '=' ? a === b : op === '<>' ? a !== b : op === '<' ? a < b : op === '>' ? a > b : op === '<=' ? a <= b : a >= b;
+                        } else {
+                            result = op === '=' ? left === right : op === '<>' ? left !== right : op === '<' ? left < right : op === '>' ? left > right : op === '<=' ? left <= right : left >= right;
+                        }
+                        left = result ? 1 : 0;
+                    }
+                    return left;
+                }
+
+                const result = comparison.call(this);
+                if (pos < tokens.length && tokens[pos].value !== ',') throw new Error('SYNTAX: nieoczekiwany fragment wyrażenia');
+                return result;
+            }
+
+            splitPrint(str) {
+                const res = [];
+                let cur = '', inQ = false, depth = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const ch = str[i];
+                    if (ch === '"') inQ = !inQ;
+                    if (!inQ && ch === '(') depth++;
+                    if (!inQ && ch === ')') depth--;
+                    if (!inQ && depth === 0 && (ch === ';' || ch === ',')) {
+                        res.push({ expr: cur.trim(), sep: ch });
+                        cur = '';
+                    } else {
+                        cur += ch;
+                    }
+                }
+                if (cur.trim() !== '') res.push({ expr: cur.trim(), sep: null });
+                return res;
+            }
+
+            executePrint(expr) {
+                if (!expr || !expr.trim()) {
+                    this.print('');
+                    return;
+                }
+                let lineStr = '', trailing = false;
+                this.splitPrint(expr).forEach(part => {
+                    if (part.expr) lineStr += String(this.evaluateExpression(part.expr));
+                    if (part.sep === ',') lineStr += '\t';
+                    trailing = part.sep === ';' || part.sep === ',';
+                });
+                this.print(lineStr + (trailing ? '' : '\n'));
+            }
+
+            executeLet(expr) {
+                const m = expr.match(/^([A-Za-z][A-Za-z0-9_$]*)\s*=\s*(.+)$/);
+                if (!m) throw new Error('SYNTAX');
+                this.variables[m[1].toUpperCase()] = this.evaluateExpression(m[2]);
+            }
+
+            executeIf(expr) {
+                const m = expr.match(/^(.+?)\s+THEN\s+(.+)$/i);
+                if (!m) throw new Error('SYNTAX: brak THEN');
+                const condition = this.evaluateExpression(m[1]);
+                const rest = m[2].trim();
+                const elseMatch = rest.match(/^(.*?)\s+ELSE\s+(.+)$/i);
+                if (condition) {
+                    this.execute(elseMatch ? elseMatch[1].trim() : rest);
+                } else if (elseMatch) {
+                    this.execute(elseMatch[2].trim());
+                }
+            }
+
+            executeFor(expr) {
+                const m = expr.match(/^([A-Za-z][A-Za-z0-9_$]*)\s*=\s*(.+?)\s+TO\s+(.+?)(?:\s+STEP\s+(.+))?$/i);
+                if (!m) throw new Error('SYNTAX: zła pętla FOR');
+                const name = m[1].toUpperCase();
+                const start = Number(this.evaluateExpression(m[2]));
+                const end = Number(this.evaluateExpression(m[3]));
+                const step = m[4] ? Number(this.evaluateExpression(m[4])) : 1;
+                if (!step) throw new Error('SYNTAX: STEP = 0');
+                this.variables[name] = start;
+                this.forLoops[name] = { end, step, startPc: this.currentLine, resumePc: this.currentLine + 1 };
+            }
+
+            executeNext(name) {
+                const key = (name || Object.keys(this.forLoops)[0] || '').toUpperCase();
+                const loop = this.forLoops[key];
+                if (!loop) throw new Error('NEXT WITHOUT FOR');
+                this.variables[key] = Number(this.variables[key] || 0) + loop.step;
+                const done = loop.step >= 0 ? this.variables[key] > loop.end : this.variables[key] < loop.end;
+                if (done) {
+                    delete this.forLoops[key];
+                } else {
+                    this.jumpTo = loop.resumePc;
+                }
+            }
+
+            executeGoto(target) {
+                if (!this.lineIndex(target)) throw new Error('UNDEFINED STATEMENT: brak linii ' + target);
+                this.jumpTo = this.lineIndex(target);
+            }
+
+            executeGosub(target) {
+                if (!this.lineIndex(target)) throw new Error('UNDEFINED STATEMENT: brak linii ' + target);
+                this.returnStack.push(this.currentLine + 1);
+                this.jumpTo = this.lineIndex(target);
+            }
+
+            executeReturn() {
+                if (!this.returnStack.length) throw new Error('RETURN WITHOUT GOSUB');
+                this.jumpTo = this.returnStack.pop();
+            }
+
+            lineIndex(num) {
+                const i = this.program.findIndex(l => l.lineNum === num);
+                return i === -1 ? null : i;
+            }
+
+            executeRead(vars) {
+                const names = vars.split(',').map(v => v.trim().toUpperCase()).filter(Boolean);
+                names.forEach(name => {
+                    if (this.dataPointer >= this.programData.length) throw new Error('OUT OF DATA');
+                    const value = this.programData[this.dataPointer++];
+                    const num = Number(value);
+                    this.variables[name] = isNaN(num) ? value : num;
+                });
+            }
+
+            executeInput(rest) {
+                let prompt = '';
+                let vars = rest;
+                if (rest.startsWith('"')) {
+                    const end = rest.indexOf('"', 1);
+                    if (end !== -1) {
+                        prompt = rest.slice(1, end);
+                        vars = rest.slice(end + 1).replace(/^[;,]\s*/, '').trim();
+                    }
+                }
+                const names = vars.split(',').map(v => v.trim().toUpperCase()).filter(Boolean);
+                if (!names.length) throw new Error('SYNTAX');
+                this.pendingInput = names;
+                this.inputPrompt = prompt;
+                this.print(prompt + '? ');
+            }
+
+            executeSave(slot) {
+                const key = slot ? 'c64_basic_slot_' + slot.replace(/[^A-Za-z0-9]/g, '') : 'c64_basic_program';
+                try {
+                    localStorage.setItem(key, JSON.stringify(this.program));
+                    this.print('ZAPISANO DO PAMIĘCI: ' + key);
+                } catch (e) {
+                    this.print('?BŁĄD ZAPISU — pamięć lokalna niedostępna.');
+                }
+            }
+
+            executeLoad(arg) {
+                const sampleMatch = arg.match(/^SAMPLE\s*:?\s*(\d+)$/i);
+                if (sampleMatch) {
+                    this.loadSample(sampleMatch[1]);
+                    return;
+                }
+                const key = arg ? 'c64_basic_slot_' + arg.replace(/[^A-Za-z0-9]/g, '') : 'c64_basic_program';
+                try {
+                    const data = JSON.parse(localStorage.getItem(key) || 'null');
+                    if (!Array.isArray(data)) {
+                        this.print('BRAK ZAPISANEGO PROGRAMU: ' + key);
+                        return;
+                    }
+                    this.program = data.filter(l => l && typeof l.lineNum === 'number' && typeof l.text === 'string');
+                    this.program.sort((a, b) => a.lineNum - b.lineNum);
+                    this.variables = {};
+                    this.forLoops = {};
+                    this.print('WCZYTANO ' + this.program.length + ' LINII. WPISZ LIST LUB RUN.');
+                } catch (e) {
+                    this.print('?BŁĄD ODCZYTU — pamięć lokalna niedostępna.');
+                }
+            }
+
+            printSamples() {
+                SAMPLE_PROGRAMS.forEach((sample, i) => this.print((i + 1) + '. ' + sample.name));
+                this.print('WPISZ SAMPLE 1..4 LUB LOAD SAMPLE:N, ABY WCZYTAĆ PRZYKŁAD.');
+            }
+
+            loadSample(which) {
+                const index = parseInt(which, 10) - 1;
+                const sample = SAMPLE_PROGRAMS[index];
+                if (!sample) {
+                    this.print('BRAK PRZYKŁADU ' + which + '. WPISZ SAMPLES.');
+                    return;
+                }
+                this.program = [];
+                sample.lines.forEach((line, i) => this.storeProgramLine((i + 1) * 10, line));
+                this.variables = {};
+                this.forLoops = {};
+                this.dataPointer = 0;
+                this.print('WCZYTANO: ' + sample.name + ' — WPISZ RUN.');
+                this.listProgram();
+            }
+
+            executeHelp() {
+                this.print('KOMENDY: HELP, LIST, RUN, CLS, NEW, CLEAR');
+                this.print('PROGRAM: PRINT, LET, INPUT, IF...THEN...ELSE, FOR...TO...STEP...NEXT');
+                this.print('SKOKI: GOTO, GOSUB, RETURN, END, STOP, REM');
+                this.print('DANE: DATA, READ, RESTORE');
+                this.print('PLIK: SAVE [nr], LOAD [nr], SAMPLES, SAMPLE 1..4');
+                this.print('FUNKCJE: ABS, INT, SQR, SIN, COS, RND');
+            }
+
+            clearScreen() {
+                const screen = document.getElementById('screen');
+                const prompt = document.getElementById('input-line');
+                Array.from(screen.children).forEach(child => {
+                    if (child !== prompt) screen.removeChild(child);
+                });
+            }
+
+            print(text) {
+                const screen = document.getElementById('screen');
+                const div = document.createElement('div');
+                div.textContent = text;
+                const prompt = document.getElementById('input-line');
+                if (prompt) screen.insertBefore(div, prompt);
+                else screen.appendChild(div);
+                screen.scrollTop = screen.scrollHeight;
+                this.memory -= String(text).length * 2;
+                if (this.memory < 0) this.memory = 0;
+            }
+
+            clearProgram() {
+                this.program = [];
+                this.variables = {};
+                this.forLoops = {};
+                this.dataPointer = 0;
+                this.programData = [];
+                this.returnStack = [];
+                this.isRunning = false;
+                this.print('READY.');
+            }
+
+            newProgram() {
+                const screen = document.getElementById('screen');
+                screen.innerHTML = '';
+                this.clearProgram();
+                this.print('**** COMMODORE 64 BASIC V2 ****');
+                this.print('64K RAM SYSTEM  38911 BASIC BYTES FREE');
+                this.print('READY.');
+                addInputLine();
+            }
+        }
+
+        // Inicjalizacja
+        const basic = new C64Basic();
+        basic.print('**** COMMODORE 64 BASIC V2 ****');
+        basic.print('64K RAM SYSTEM  38911 BASIC BYTES FREE');
+        basic.print('READY.');
+
+        const history = [];
+        let historyIndex = 0;
+
+        function addInputLine() {
+            const screen = document.getElementById('screen');
+            const existing = document.getElementById('input-line');
+            if (existing) existing.remove();
+
+            const inputLine = document.createElement('div');
+            inputLine.id = 'input-line';
+            inputLine.style.display = 'flex';
+
+            const input = document.createElement('span');
+            input.id = 'input';
+            input.style.flexGrow = '1';
+            input.setAttribute('aria-label', 'Wpisz komendę BASIC');
+
+            const cursor = document.createElement('span');
+            cursor.className = 'cursor';
+            cursor.setAttribute('aria-hidden', 'true');
+
+            inputLine.appendChild(input);
+            inputLine.appendChild(cursor);
+            screen.appendChild(inputLine);
+            screen.scrollTop = screen.scrollHeight;
+        }
+
+        function submitCommand(command) {
+            const input = document.getElementById('input');
+            if (input) input.textContent = command;
+            if (command.trim() !== '') {
+                history.push(command);
+                if (history.length > 100) history.shift();
+            }
+            historyIndex = history.length;
+            basic.execute(command);
+            if (input) input.textContent = '';
+            addInputLine();
+            document.getElementById('screen').focus();
+        }
+
+        function completeCommand(value) {
+            const upper = value.toUpperCase();
+            const matches = COMMANDS.filter(c => c.startsWith(upper));
+            if (matches.length === 1) return matches[0];
+            if (matches.length > 1) {
+                basic.print(matches.join('  '));
+            }
+            return value;
+        }
+
+        function handleKeyPress(e) {
+            const input = document.getElementById('input');
+            if (!input) return;
+            // Przyciski na pasku obsługują własne kliknięcia
+            if (document.activeElement && document.activeElement.tagName === 'BUTTON') return;
+
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const value = input.textContent;
+                if (basic.pendingInput) {
+                    const names = basic.pendingInput;
+                    value.split(',').forEach((part, i) => {
+                        if (i >= names.length) return;
+                        const num = Number(part.trim());
+                        basic.variables[names[i]] = part.trim() !== '' && !isNaN(num) ? num : part.trim();
+                    });
+                    basic.print(value);
+                    basic.resumeAfterInput();
+                } else {
+                    submitCommand(value);
+                }
+                return;
+            }
+            if (e.key === 'Backspace') {
+                e.preventDefault();
+                input.textContent = input.textContent.slice(0, -1);
+            }
+            else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (!history.length) return;
+                historyIndex = Math.max(0, historyIndex - 1);
+                input.textContent = history[historyIndex];
+            }
+            else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (!history.length) return;
+                historyIndex = Math.min(history.length, historyIndex + 1);
+                input.textContent = history[historyIndex] || '';
+            }
+            else if (e.key === 'Tab') {
+                e.preventDefault();
+                input.textContent = completeCommand(input.textContent);
+            }
+            else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+                e.preventDefault();
+                basic.clearScreen();
+            }
+            else if (e.key === 'Escape') {
+                e.preventDefault();
+                input.textContent = '';
+            }
+            else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+                e.preventDefault();
+                input.textContent += e.key;
+            }
+        }
+
+        // Jeden globalny listener (bez duplikowania przy każdej nowej linii)
+        document.addEventListener('keydown', handleKeyPress);
+
+        addInputLine();
+        document.getElementById('screen').focus();
+
+        // Efekt losowego glitcha
+        setInterval(() => {
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const screen = document.getElementById('screen');
+            if (Math.random() > 0.97) {
+                screen.style.transform = `translateX(${Math.random() * 6 - 3}px)`;
+                setTimeout(() => { screen.style.transform = 'translateX(0)'; }, 100);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
