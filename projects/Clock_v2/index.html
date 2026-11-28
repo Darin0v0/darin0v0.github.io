@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multi-Style Divergence Meter</title>
+<style>
+/* Base Styles — czcionki systemowe, bez połączeń zewnętrznych */
+body {
+    margin: 0;
+    padding: 20px 12px;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.5s;
+    font-family: 'Orbitron', 'Courier New', ui-monospace, monospace;
+    background-color: #000;
+    overflow-x: hidden;
+}
+
+.container {
+    position: relative;
+    width: min(600px, 100%);
+    padding: clamp(16px, 5vw, 40px);
+    border-radius: 10px;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+/* Initially hide all content sections */
+.steins-content,
+.eva-content,
+.blair-content { display: none; }
+
+/* Show only the active theme */
+.steins-gate .steins-content,
+.evangelion .eva-content,
+.blair-witch .blair-content { display: block; }
+
+/* Steins;Gate Theme */
+.steins-gate {
+    background: radial-gradient(circle, #0f0f23 0%, #1a1a2e 100%);
+    color: #ff6600;
+    border: 3px solid #ff6600;
+    box-shadow: 0 0 30px rgba(255, 102, 0, 0.3);
+}
+.steins-gate .title { text-shadow: 0 0 15px #ff6600; margin-bottom: 20px; }
+.steins-gate .clock {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: clamp(4px, 2vw, 15px);
+    margin: 20px 0;
+}
+.steins-gate .time-unit { font-size: clamp(2rem, 11vw, 4em); color: #ff6600; text-shadow: 0 0 10px #ff6600; }
+.steins-gate .separator { font-size: clamp(2rem, 11vw, 4em); color: #ff9933; }
+.steins-gate .divergence { font-size: clamp(1rem, 5vw, 2em); text-shadow: 0 0 8px #ff6600; }
+
+/* Evangelion Theme */
+.evangelion {
+    background: #000 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" opacity="0.1"><circle cx="50" cy="50" r="40" fill="none" stroke="%23ff0000" stroke-width="2"/></svg>');
+    font-family: 'Courier New', monospace;
+    color: #ff0000;
+    border: 1px solid #ff0000;
+}
+.evangelion .title { border-bottom: 1px solid #ff0000; padding-bottom: 10px; margin-bottom: 20px; }
+.evangelion .system-info { font-size: 0.8em; color: #ff6666; margin-bottom: 20px; }
+.evangelion .clock { font-family: 'Courier New', monospace; font-size: clamp(1.7rem, 9vw, 3em); text-shadow: 0 0 5px #ff0000; margin: 20px 0; }
+.evangelion .status { border-top: 1px dashed #ff0000; padding-top: 15px; font-size: 1.1em; }
+.evangelion .status-value { color: #ff9999; }
+
+/* Blair Witch Theme */
+.blair-witch {
+    background: #111;
+    font-family: 'Courier New', monospace;
+    color: #fff;
+    border: 1px solid #333;
+}
+.blair-witch .timestamp { position: absolute; top: 8px; left: 8px; font-size: 0.7em; color: #aaa; }
+.blair-witch .clock { font-family: 'Courier New', monospace; font-size: clamp(1.7rem, 9vw, 3em); margin: 40px 0 20px; color: #fff; }
+.blair-witch .day-counter { color: #ccc; font-size: 1.1em; margin-top: 20px; }
+.blair-witch .battery-warning { position: absolute; bottom: 8px; right: 8px; color: #f00; font-size: 0.7em; }
+
+/* Style Switcher */
+.style-switcher,
+.tool-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+}
+.style-switcher { margin-bottom: 12px; }
+.tool-row { margin-top: 12px; }
+
+.title { font-size: clamp(1.2rem, 6vw, 2rem); margin-top: 0; }
+
+button, select, input {
+    background: rgba(0,0,0,0.7);
+    color: inherit;
+    border: 1px solid rgba(255,255,255,0.35);
+    padding: 5px 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.78rem;
+    border-radius: 3px;
+}
+button:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+button[aria-pressed="true"] { background: currentColor; filter: brightness(0.35); }
+
+.meter-title { font-size: 0.85rem; letter-spacing: 1px; margin: 14px 0 6px; opacity: 0.9; }
+.world-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    font-size: 0.68rem;
+}
+.world-strip > div {
+    border: 1px solid currentColor;
+    border-radius: 4px;
+    padding: 4px 2px;
+    min-width: 0;
+    overflow: hidden;
+}
+.world-strip .city { display: block; opacity: 0.7; overflow: hidden; text-overflow: ellipsis; }
+.world-strip .city-time { display: block; font-size: 0.85rem; }
+
+.timer-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 5px; }
+#timer-input { width: 62px; }
+#timer-display { font-size: 1.4rem; letter-spacing: 2px; }
+.status-line { font-size: 0.72rem; min-height: 1.2em; margin-top: 10px; opacity: 0.85; }
+
+body.reduced-motion, body.reduced-motion * { animation: none !important; transition: none !important; }
+
+@media (max-width: 480px) {
+    body { padding: 10px 8px; }
+    .world-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .style-switcher button, .tool-row button { font-size: 0.7rem; padding: 4px 6px; }
+}
+</style>
+</head>
+<body class="steins-gate">
+<div class="container">
+    <div class="style-switcher" role="group" aria-label="Motyw zegara">
+        <button type="button" onclick="setTheme('steins-gate')" aria-pressed="true">Steins;Gate</button>
+        <button type="button" onclick="setTheme('evangelion')" aria-pressed="false">Evangelion</button>
+        <button type="button" onclick="setTheme('blair-witch')" aria-pressed="false">Blair Witch</button>
+    </div>
+
+    <!-- Steins;Gate Content -->
+    <div class="steins-content">
+        <h1 class="title">EL PSY CONGROO</h1>
+        <div class="clock">
+            <div class="time-unit" id="sg-hours">08</div>
+            <div class="separator">:</div>
+            <div class="time-unit" id="sg-minutes">45</div>
+            <div class="separator">:</div>
+            <div class="time-unit" id="sg-seconds">22</div>
+        </div>
+        <div class="divergence">DIVERGENCE: <span id="sg-divergence">1.048596</span>%</div>
+    </div>
+
+    <!-- Evangelion Content -->
+    <div class="eva-content">
+        <div class="title">NERV MAGI SYSTEM</div>
+        <div class="system-info">TERMINAL 07 - RESTRICTED ACCESS</div>
+        <div class="clock" id="eva-time">08:45:22</div>
+        <div class="status">AT FIELD STATUS: <span class="status-value" id="eva-status">98.6%</span></div>
+    </div>
+
+    <!-- Blair Witch Content -->
+    <div class="blair-content">
+        <div class="timestamp">REC 10/21/94 02:37 AM</div>
+        <div class="clock" id="blair-time">08:45:22</div>
+        <div class="day-counter">DAY 3 - NO SIGNAL</div>
+        <div class="battery-warning">LOW BATTERY</div>
+    </div>
+
+    <div class="meter-title">WORLD LINE — STREFY CZASOWE</div>
+    <div class="world-strip" id="world-strip" aria-label="Czas w innych strefach"></div>
+
+    <div class="meter-title">TIMER</div>
+    <div class="timer-row">
+        <input type="number" id="timer-input" min="1" max="180" value="5" aria-label="Minuty timera">
+        <span>min</span>
+        <button type="button" data-preset="1">1</button>
+        <button type="button" data-preset="5">5</button>
+        <button type="button" data-preset="10">10</button>
+        <button type="button" id="timer-start">Start</button>
+        <button type="button" id="timer-pause">Pauza</button>
+        <button type="button" id="timer-reset">Reset</button>
+    </div>
+    <div id="timer-display" role="timer">05:00</div>
+
+    <div class="tool-row">
+        <select id="tz-select" aria-label="Strefa czasowa">
+            <option value="local">Czas lokalny</option>
+            <option value="Europe/Warsaw">Warszawa</option>
+            <option value="Asia/Tokyo">Tokio</option>
+            <option value="America/New_York">Nowy Jork</option>
+            <option value="UTC">UTC</option>
+        </select>
+        <button type="button" id="format-toggle">24H / 12H</button>
+        <button type="button" id="motion-toggle" aria-pressed="false">Ogranicz ruch</button>
+        <button type="button" id="share-btn">Udostępnij chwilę</button>
+        <button type="button" id="fullscreen-btn">Pełny ekran</button>
+    </div>
+
+    <div class="status-line" id="status-line" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+// Theme switcher — zachowana publiczna funkcja setTheme(theme)
+let use24Hour = true;
+let reducedMotion = false;
+let selectedTz = 'local';
+let timerRemaining = 0;
+let timerEndsAt = 0;
+let timerInterval = null;
+let timerRunning = false;
+let audioContext = null;
+
+function safeGet(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+}
+function safeSet(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { /* brak uprawnień */ }
+}
+function setStatus(message) {
+    const el = document.getElementById('status-line');
+    if (el) el.textContent = message;
+}
+
+function setTheme(theme) {
+    // Reset all classes on body
+    document.body.className = theme;
+    if (reducedMotion) document.body.classList.add('reduced-motion');
+    document.querySelectorAll('.style-switcher button').forEach(btn => {
+        btn.setAttribute('aria-pressed', String(btn.getAttribute('onclick') === "setTheme('" + theme + "')"));
+    });
+    safeSet('clock2_theme', theme);
+    // Update clock immediately after theme change
+    updateClock();
+}
+
+function timeParts(now, tz) {
+    const opts = {
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: !use24Hour
+    };
+    if (tz && tz !== 'local') opts.timeZone = tz;
+    const parts = new Intl.DateTimeFormat('pl-PL', opts).formatToParts(now);
+    const get = type => (parts.find(p => p.type === type) || {}).value || '';
+    return { hour: get('hour'), minute: get('minute'), second: get('second'), dayPeriod: get('dayPeriod') || '' };
+}
+
+function formatHms(now, tz) {
+    const p = timeParts(now, tz);
+    return p.hour + ':' + p.minute + ':' + p.second + (use24Hour ? '' : ' ' + p.dayPeriod);
+}
+
+// Clock function — zachowana publiczna funkcja updateClock()
+function updateClock() {
+    const now = new Date();
+    try {
+        const p = timeParts(now, selectedTz);
+        const hms = p.hour + ':' + p.minute + ':' + p.second;
+
+        document.getElementById('sg-hours').textContent = p.hour;
+        document.getElementById('sg-minutes').textContent = p.minute;
+        document.getElementById('sg-seconds').textContent = p.second;
+
+        document.getElementById('eva-time').textContent = hms;
+        document.getElementById('blair-time').textContent = hms;
+
+        const world = document.getElementById('world-strip');
+        if (world) {
+            world.querySelectorAll('[data-tz]').forEach(chip => {
+                const local = chip.dataset.tz === 'local';
+                const tp = timeParts(now, local ? null : chip.dataset.tz);
+                chip.querySelector('.city-time').textContent = tp.hour + ':' + tp.minute + (use24Hour ? '' : ' ' + tp.dayPeriod);
+            });
+        }
+
+        // Update additional data
+        if (document.body.classList.contains('steins-gate')) {
+            const divergence = 1.048596 + (Math.random() - 0.5) * 0.0001;
+            document.getElementById('sg-divergence').textContent = divergence.toFixed(6);
+        } else if (document.body.classList.contains('evangelion')) {
+            const atField = 98.6 + (Math.random() - 0.5) * 0.1;
+            document.getElementById('eva-status').textContent = atField.toFixed(1) + '%';
+        }
+    } catch (e) {
+        setStatus('Nie udało się odczytać czasu: ' + e.message);
+    }
+}
+
+function buildWorldStrip() {
+    const strip = document.getElementById('world-strip');
+    const zones = [
+        { key: 'Lokalny', tz: 'local' },
+        { key: 'Tokio', tz: 'Asia/Tokyo' },
+        { key: 'Warszawa', tz: 'Europe/Warsaw' },
+        { key: 'UTC', tz: 'UTC' }
+    ];
+    strip.innerHTML = zones.map(z => '<div data-tz="' + z.tz + '"><span class="city">' + z.key + '</span><span class="city-time">--:--</span></div>').join('');
+}
+
+function beep() {
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!audioContext) audioContext = new AudioCtx();
+        if (audioContext.state === 'suspended') {
+            const resumed = audioContext.resume();
+            if (resumed && resumed.catch) resumed.catch(() => {});
+        }
+        const osc = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = 660;
+        gain.gain.value = 0.05;
+        osc.connect(gain).connect(audioContext.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.5);
+        osc.stop(audioContext.currentTime + 0.5);
+    } catch (e) {
+        setStatus('Dźwięk niedostępny.');
+    }
+}
+
+function timerText(seconds) {
+    return String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0');
+}
+function startCountdown() {
+    if (timerRunning) return;
+    const minutes = Math.max(1, Math.min(180, parseInt(document.getElementById('timer-input').value, 10) || 5));
+    document.getElementById('timer-input').value = minutes;
+    if (timerRemaining <= 0) timerRemaining = minutes * 60;
+    timerEndsAt = Date.now() + timerRemaining * 1000;
+    timerRunning = true;
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        timerRemaining = Math.max(0, Math.ceil((timerEndsAt - Date.now()) / 1000));
+        document.getElementById('timer-display').textContent = timerText(timerRemaining);
+        if (timerRemaining === 0) {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            beep();
+            setStatus('Timer zakończony! Dywergencja: 1.048596%');
+        }
+    }, 250);
+    setStatus('Timer rozpoczęty.');
+}
+function pauseCountdown() {
+    if (!timerRunning) return;
+    timerRunning = false;
+    clearInterval(timerInterval);
+    setStatus('Timer wstrzymany.');
+}
+function resetCountdown() {
+    timerRunning = false;
+    clearInterval(timerInterval);
+    timerRemaining = 0;
+    document.getElementById('timer-display').textContent = '05:00';
+    setStatus('Timer zresetowany.');
+}
+
+function copyText(text, ok) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => setStatus(ok)).catch(() => setStatus('Schowek niedostępny — adres jest w pasku przeglądarki.'));
+    } else {
+        setStatus('Schowek niedostępny — adres jest w pasku przeglądarki.');
+    }
+}
+function shareMoment() {
+    const now = new Date();
+    const url = location.href.split('#')[0] + '#t=' + encodeURIComponent(now.toISOString()) + '&tz=' + encodeURIComponent(selectedTz);
+    try { history.replaceState(null, '', url); } catch (e) { setStatus('Nie udało się zmienić adresu — link jest w schowku.'); }
+    copyText(url, 'Link do tej chwili skopiowany.');
+    setStatus('Udostępniona chwila: ' + formatHms(now, selectedTz));
+}
+
+// Initialize
+(function init() {
+    const savedTheme = safeGet('clock2_theme');
+    if (savedTheme && ['steins-gate', 'evangelion', 'blair-witch'].includes(savedTheme)) {
+        document.body.className = savedTheme;
+    }
+    const savedTz = safeGet('clock2_tz');
+    if (savedTz) selectedTz = savedTz;
+    if (safeGet('clock2_format') === '12') {
+        use24Hour = false;
+        document.getElementById('format-toggle').textContent = '12H / 24H';
+    }
+    if (safeGet('clock2_motion') === 'reduced') {
+        reducedMotion = true;
+        document.body.classList.add('reduced-motion');
+        document.getElementById('motion-toggle').setAttribute('aria-pressed', 'true');
+    }
+
+    buildWorldStrip();
+
+    const tzSelect = document.getElementById('tz-select');
+    tzSelect.value = selectedTz;
+    tzSelect.addEventListener('change', () => {
+        selectedTz = tzSelect.value;
+        safeSet('clock2_tz', selectedTz);
+        updateClock();
+        setStatus('Strefa: ' + tzSelect.options[tzSelect.selectedIndex].text);
+    });
+
+    document.getElementById('format-toggle').addEventListener('click', () => {
+        use24Hour = !use24Hour;
+        safeSet('clock2_format', use24Hour ? '24' : '12');
+        document.getElementById('format-toggle').textContent = use24Hour ? '24H / 12H' : '12H / 24H';
+        updateClock();
+        setStatus(use24Hour ? 'Format 24-godzinny.' : 'Format 12-godzinny.');
+    });
+
+    document.getElementById('motion-toggle').addEventListener('click', () => {
+        reducedMotion = !reducedMotion;
+        document.body.classList.toggle('reduced-motion', reducedMotion);
+        document.getElementById('motion-toggle').setAttribute('aria-pressed', String(reducedMotion));
+        safeSet('clock2_motion', reducedMotion ? 'reduced' : 'full');
+        setStatus(reducedMotion ? 'Ograniczony ruch włączony.' : 'Efekty włączone.');
+    });
+
+    document.getElementById('share-btn').addEventListener('click', shareMoment);
+    document.getElementById('fullscreen-btn').addEventListener('click', () => {
+        try {
+            if (document.fullscreenElement) document.exitFullscreen();
+            else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => setStatus('Pełny ekran niedostępny.'));
+            else setStatus('Pełny ekran niedostępny.');
+        } catch (e) { setStatus('Pełny ekran niedostępny.'); }
+    });
+
+    document.getElementById('timer-start').addEventListener('click', startCountdown);
+    document.getElementById('timer-pause').addEventListener('click', pauseCountdown);
+    document.getElementById('timer-reset').addEventListener('click', resetCountdown);
+    document.querySelectorAll('[data-preset]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('timer-input').value = btn.dataset.preset;
+            resetCountdown();
+        });
+    });
+
+    setTheme(savedTheme || 'steins-gate');
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Add VHS effect to Blair Witch theme
+    setInterval(() => {
+        if (document.body.classList.contains('blair-witch') && !reducedMotion) {
+            const glitch = Math.random() > 0.7;
+            const content = document.querySelector('.blair-content');
+            if (content) content.style.opacity = glitch ? '0.8' : '1';
+        }
+    }, 200);
+
+    const params = new URLSearchParams(location.hash.slice(1));
+    const raw = params.get('t');
+    if (raw && !isNaN(new Date(raw).getTime())) {
+        const moment = new Date(raw);
+        const tz = params.get('tz') || 'local';
+        setStatus('Udostępniona chwila: ' + formatHms(moment, tz === 'local' ? null : tz));
+    }
+})();
+</script>
+</body>
+</html>

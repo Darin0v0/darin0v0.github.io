@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="COMPILER LAB // pełny potok: lekser, parser AST, kompilator bytecode'u i stosowa maszyna wirtualna z debuggerem.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%232f6fed'/%3E%3Cpath d='M24 18L10 32l14 14M40 18l14 14-14 14' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <title>Compiler Lab — potok kompilacji</title>
+  <style>
+    :root {
+      --bg:#f3f5f9; --surface:#fff; --border:#dfe4ea; --text:#1d2430; --muted:#6b7280;
+      --accent:#2f6fed; --accent2:#7c3aed; --green:#059669; --amber:#b45309; --red:#d92d20;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; height:100%; }
+    body {
+      background:var(--bg); color:var(--text);
+      font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      display:flex; flex-direction:column; overflow:hidden;
+    }
+    header {
+      display:flex; align-items:center; gap:8px; flex-wrap:wrap; padding:9px 13px;
+      background:var(--surface); border-bottom:1px solid var(--border);
+    }
+    .brand { font-weight:700; font-size:13px; margin-right:5px; }
+    .brand span { color:var(--accent); }
+    button, select {
+      font:inherit; color:var(--text); background:#fff; border:1px solid var(--border);
+      border-radius:6px; padding:6px 9px; cursor:pointer;
+    }
+    button:hover, select:hover { background:#f2f6ff; border-color:#b8d0ff; }
+    button.primary { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+    button.primary:hover { background:#245dd6; color:#fff; }
+    button.active { background:#e8f0ff; color:var(--accent); border-color:#a9c6ff; }
+    .sep { width:1px; height:20px; background:var(--border); margin:0 3px; }
+    .label { color:var(--muted); font-size:10px; text-transform:uppercase; letter-spacing:.05em; }
+    .main { flex:1; display:grid; grid-template-columns:minmax(300px,1.15fr) minmax(250px,.85fr) minmax(240px,.8fr); min-height:0; }
+    .col { display:flex; flex-direction:column; min-width:0; min-height:0; border-right:1px solid var(--border); }
+    .col:last-child { border-right:0; }
+    .pane { display:flex; flex-direction:column; min-height:0; flex:1; border-bottom:1px solid var(--border); }
+    .pane-head {
+      display:flex; justify-content:space-between; align-items:center; gap:8px;
+      padding:8px 11px; background:#fafbfc; border-bottom:1px solid var(--border);
+      font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+      flex:none;
+    }
+    .pane-head b { color:var(--accent); font-weight:700; }
+    .pane-head { flex-wrap:wrap; }
+    .pane-head button { padding:2px 6px; font-size:10px; }
+    .editor { display:flex; flex:1; min-height:0; position:relative; }
+    .gutter {
+      width:38px; flex:none; padding:11px 7px 11px 0; text-align:right; color:#a1a8b3;
+      background:#fbfcfe; border-right:1px solid #eef1f5; overflow:hidden;
+      font:12px/1.6 ui-monospace,"SFMono-Regular",Consolas,monospace; user-select:none;
+    }
+    .gutter span { display:block; }
+    .code-area { position:relative; flex:1; min-width:0; }
+    .line-hint {
+      position:absolute; left:0; right:0; height:19.2px; pointer-events:none;
+      background:rgba(47,111,237,.10); box-shadow:inset 2px 0 var(--accent);
+    }
+    .code-area pre, .code-area textarea {
+      position:absolute; inset:0; margin:0; padding:11px 13px; border:0;
+      font:12px/1.6 ui-monospace,"SFMono-Regular",Consolas,monospace;
+      white-space:pre; overflow:auto; tab-size:2; word-wrap:normal;
+    }
+    .code-area pre { pointer-events:none; color:var(--text); background:#fff; }
+    .code-area textarea { background:transparent; color:transparent; caret-color:var(--text); resize:none; outline:none; }
+    .code-area textarea::selection { background:rgba(47,111,237,.22); }
+    .kw { color:#7c3aed; font-weight:600; }
+    .fn { color:#2f6fed; font-weight:600; }
+    .str { color:#b45309; }
+    .num { color:#0f766e; }
+    .cm { color:#9aa1ac; font-style:italic; }
+    .op { color:#6b7280; }
+    .scroll { overflow:auto; flex:1; min-height:0; padding:7px 0; }
+    table { width:100%; border-collapse:collapse; font-size:11px; }
+    td, th { padding:3px 9px; text-align:left; white-space:nowrap; }
+    th { color:var(--muted); font-weight:600; position:sticky; top:0; background:#fafbfc; z-index:1; }
+    .dis-row { cursor:pointer; }
+    .dis-row:hover { background:#f3f7ff; }
+    .dis-row.current { background:#e8f0ff; color:var(--accent); font-weight:600; }
+    .dis-row.break .addr::before { content:'●'; color:var(--red); margin-right:5px; }
+    .addr, .opcode, .operand, .line { font-family:ui-monospace,Consolas,monospace; }
+    .addr { color:#9aa1ac; }
+    .opcode { color:var(--accent2); font-weight:600; }
+    .operand { color:#374151; }
+    .line { color:#9aa1ac; text-align:right; }
+    .ast { padding:9px 12px 16px; }
+    .ast-node {
+      border-left:1px solid #dce3ec; padding:2px 0 2px 10px; margin-left:var(--depth);
+      font:11px/1.65 ui-monospace,Consolas,monospace;
+    }
+    .ast-kind { display:inline-block; min-width:64px; color:var(--accent2); font-weight:600; }
+    .ast-val { color:#374151; }
+    .console { padding:8px 11px; font:11px/1.65 ui-monospace,Consolas,monospace; }
+    .console-line { border-bottom:1px solid #f0f2f5; padding:2px 0; white-space:pre-wrap; word-break:break-word; }
+    .console-line::before { content:'›'; color:var(--accent); margin-right:7px; }
+    .kv { padding:7px 11px; }
+    .kv .row { display:flex; justify-content:space-between; gap:8px; padding:2px 0; }
+    .kv .row span { color:var(--muted); }
+    .kv .row b { font-family:ui-monospace,Consolas,monospace; font-weight:600; }
+    .stack-view { padding:7px 11px 12px; display:flex; flex-wrap:wrap; gap:5px; }
+    .slot { background:#f0f3f7; border:1px solid #e2e7ee; border-radius:4px; padding:2px 7px; font:11px ui-monospace,Consolas,monospace; }
+    .slot.top { background:#e8f0ff; border-color:#a9c6ff; color:var(--accent); }
+    .empty { color:#9aa1ac; padding:8px 11px; font-size:11px; }
+    .hi { background:#eef4ff !important; box-shadow:inset 0 0 0 1px rgba(47,111,237,.45); }
+    .tok {
+      display:inline-block; margin:2px 4px 2px 0; padding:1px 5px; border:1px solid var(--border);
+      border-radius:4px; background:#fbfcfe; font:11px/1.5 ui-monospace,Consolas,monospace; cursor:help;
+    }
+    .tok[data-kind="kw"] { color:#7c3aed; } .tok[data-kind="str"] { color:#b45309; }
+    .tok[data-kind="num"] { color:#0f766e; } .tok[data-kind="op"] { color:#6b7280; }
+    .error-box {
+      flex:none; max-height:130px; overflow:auto; padding:8px 11px; background:#fff6f5;
+      border-top:1px solid #f3c9c4; color:var(--red);
+    }
+    .error-box b { display:block; margin-bottom:4px; font-size:11px; }
+    .error-box button {
+      display:inline-block; margin:3px 5px 0 0; padding:3px 7px; font-size:11px;
+      border-color:#e7a9a2; color:var(--red); background:#fff;
+    }
+    .status {
+      display:flex; gap:16px; flex-wrap:wrap; padding:7px 13px; background:#fafbfc;
+      border-top:1px solid var(--border); color:var(--muted); font-size:10px;
+    }
+    .status b { color:var(--text); font-variant-numeric:tabular-nums; }
+    .ok { color:var(--green) !important; } .bad { color:var(--red) !important; }
+    :where(button,select,textarea):focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+    @media (max-width:1000px) { .main { grid-template-columns:1fr 1fr; } .col:last-child { grid-column:1/-1; border-top:1px solid var(--border); } }
+    @media (max-width:680px) { .main { grid-template-columns:1fr; } .col { border-right:0; border-bottom:1px solid var(--border); } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">COMPILER <span>LAB</span></div>
+    <select id="sample" aria-label="Program przykładowy">
+      <option value="factorial">1 · Rekurencja: silnia</option>
+      <option value="fib">2 · Pętla: Fibonacci</option>
+      <option value="primes">3 · Funkcje: liczby pierwsze</option>
+      <option value="fizz">4 · Zagnieżdżenia: FizzBuzz</option>
+      <option value="max">5 · Warunki: maximum z trzech</option>
+      <option value="gcd">6 · Pętla: NWD (Euklides)</option>
+    </select>
+    <button type="button" id="compileBtn" class="primary">⚙ Kompiluj</button>
+    <button type="button" id="runBtn">▶ Uruchom</button>
+    <button type="button" id="stepBtn">↷ Krok</button>
+    <button type="button" id="resetBtn">↺ Reset VM</button>
+    <div class="sep"></div>
+    <span class="label">Szybkość</span>
+    <input type="range" id="speed" min="1" max="18" step="1" value="6">
+    <span class="label" id="speedValue">6 kroków/s</span>
+    <div class="sep"></div>
+    <span class="label" id="compileStatus">Gotowe.</span>
+  </header>
+
+  <div class="main">
+    <div class="col">
+      <div class="pane" style="flex:1.1">
+        <div class="pane-head"><span>Źródło · NOVA</span><b>Lexer → Parser</b></div>
+        <div class="editor">
+          <div class="gutter" id="gutter">1</div>
+          <div class="code-area">
+            <pre id="highlight" aria-hidden="true"></pre>
+            <div id="sourceLineHint" class="line-hint" hidden aria-hidden="true"></div>
+            <textarea id="source" spellcheck="false" aria-label="Kod źródłowy NOVA"></textarea>
+          </div>
+        </div>
+        <div id="errorBox" class="error-box" hidden aria-live="polite"></div>
+      </div>
+      <div class="pane">
+        <div class="pane-head"><span>Drzewo AST</span><b id="astCount">0 węzłów</b></div>
+        <div class="scroll ast" id="ast"></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="pane" style="flex:0 0 25%">
+        <div class="pane-head"><span>Tokeny · najedź, aby zsynchronizować</span><b id="tokenCount">0 tokenów</b></div>
+        <div class="scroll" id="tokens"></div>
+      </div>
+      <div class="pane">
+        <div class="pane-head">
+          <span>Bytecode</span><b id="codeCount">0 instrukcji</b>
+          <button type="button" id="copyIrBtn">Kopiuj IR</button>
+          <button type="button" id="downloadIrBtn">Pobierz IR</button>
+        </div>
+        <div class="scroll">
+          <table>
+            <thead><tr><th>Adr</th><th>Opcode</th><th>Argument</th><th style="text-align:right">Linia</th></tr></thead>
+            <tbody id="disassembly"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="pane" style="flex:1">
+        <div class="pane-head"><span>Konsola</span><b id="outCount">0 linii</b><button type="button" id="copyOutBtn">Kopiuj wyjście</button></div>
+        <div class="scroll console" id="console"></div>
+      </div>
+      <div class="pane">
+        <div class="pane-head"><span>Stan maszyny</span><b id="vmState">IDLE</b></div>
+        <div class="kv" id="variables"></div>
+        <div class="pane-head" style="border-top:1px solid var(--border)"><span>Stos</span><b id="stackDepth">0</b></div>
+        <div class="stack-view" id="stack"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status">
+    <span>Stan: <b id="status">Skompiluj program, aby rozpocząć.</b></span>
+    <span>IP: <b id="ipInfo">0</b></span>
+    <span>Kroki: <b id="stepsInfo">0</b></span>
+    <span>Ramy: <b id="framesInfo">1</b></span>
+    <span>Kompilacja: <b id="compileTime">0.00 ms</b></span>
+    <span>Kliknij adres w bytecode, aby ustawić punkt przerwania</span>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const KEYWORDS = new Set(['let', 'if', 'else', 'while', 'fn', 'return', 'print', 'true', 'false']);
+      const $ = (id) => document.getElementById(id);
+      const source = $('source');
+      const highlight = $('highlight');
+      const gutter = $('gutter');
+      const samples = {
+        factorial: `fn fact(n) {\n  if (n <= 1) { return 1; }\n  return n * fact(n - 1);\n}\n\nprint "6! =";\nprint fact(6);`,
+        fib: `let a = 0;\nlet b = 1;\nlet i = 0;\nwhile (i < 12) {\n  print a;\n  let t = a + b;\n  a = b;\n  b = t;\n  i = i + 1;\n}`,
+        primes: `fn isPrime(n) {\n  if (n < 2) { return false; }\n  let d = 2;\n  while (d * d <= n) {\n    if (n % d == 0) { return false; }\n    d = d + 1;\n  }\n  return true;\n}\n\nlet n = 2;\nwhile (n <= 40) {\n  if (isPrime(n)) { print n; }\n  n = n + 1;\n}`,
+        fizz: `let i = 1;\nwhile (i <= 20) {\n  if (i % 15 == 0) {\n    print "FizzBuzz";\n  } else {\n    if (i % 3 == 0) {\n      print "Fizz";\n    } else {\n      if (i % 5 == 0) { print "Buzz"; } else { print i; }\n    }\n  }\n  i = i + 1;\n}`,
+        max: `let a = 17;\nlet b = 42;\nlet c = 9;\nlet m = a;\nif (b > m) { m = b; }\nif (c > m) { m = c; }\nprint "Maximum:";\nprint m;`,
+        gcd: `let a = 252;\nlet b = 105;\nwhile (b != 0) {\n  let t = b;\n  b = a % b;\n  a = t;\n}\nprint "NWD:";\nprint a;`
+      };
+
+      function tokenize(text) {
+        const tokens = [];
+        let i = 0, line = 1;
+        while (i < text.length) {
+          const char = text[i];
+          if (char === '\n') { line += 1; i += 1; continue; }
+          if (/\s/.test(char)) { i += 1; continue; }
+          if (text.startsWith('//', i)) {
+            while (i < text.length && text[i] !== '\n') i += 1;
+            continue;
+          }
+          if (char === '"') {
+            let j = i + 1, value = '';
+            while (j < text.length && text[j] !== '"') {
+              if (text[j] === '\\' && j + 1 < text.length) { value += text[j + 1]; j += 2; }
+              else { if (text[j] === '\n') line += 1; value += text[j++]; }
+            }
+            if (text[j] !== '"') throw new Error(`Linia ${line}: niezamknięty ciąg`);
+            tokens.push({ t: 'str', v: value, line }); i = j + 1; continue;
+          }
+          if (/\d/.test(char)) {
+            let j = i;
+            while (/\d|\./.test(text[j] || '')) j += 1;
+            tokens.push({ t: 'num', v: parseFloat(text.slice(i, j)), line }); i = j; continue;
+          }
+          if (/[A-Za-z_]/.test(char)) {
+            let j = i;
+            while (/[A-Za-z0-9_]/.test(text[j] || '')) j += 1;
+            const word = text.slice(i, j);
+            tokens.push({ t: KEYWORDS.has(word) ? 'kw' : 'id', v: word, line });
+            i = j; continue;
+          }
+          const pair = text.slice(i, i + 2);
+          if (['==', '!=', '<=', '>='].includes(pair)) {
+            tokens.push({ t: 'op', v: pair, line }); i += 2; continue;
+          }
+          if ('+-*/%!<>=(){};,='.includes(char)) {
+            tokens.push({ t: 'op', v: char, line }); i += 1; continue;
+          }
+          throw new Error(`Linia ${line}: nieznany znak "${char}"`);
+        }
+        tokens.push({ t: 'eof', v: '', line });
+        return tokens;
+      }
+
+      class Parser {
+        constructor(tokens) { this.tokens = tokens; this.pos = 0; }
+        peek() { return this.tokens[this.pos]; }
+        at(value) { return this.peek().v === value; }
+        eat(value) { if (this.at(value)) { this.pos += 1; return true; } return false; }
+        expect(value) {
+          if (!this.eat(value)) throw new Error(`Linia ${this.peek().line}: oczekiwano "${value}", znaleziono "${this.peek().v || 'koniec'}"`);
+        }
+        parse() {
+          const body = [];
+          while (this.peek().t !== 'eof') body.push(this.statement());
+          return { type: 'Program', body };
+        }
+        block() {
+          this.expect('{');
+          const body = [];
+          while (!this.at('}') && this.peek().t !== 'eof') body.push(this.statement());
+          this.expect('}');
+          return body;
+        }
+        statement() {
+          const line = this.peek().line;
+          const node = this.parseStatement();
+          if (node && typeof node === 'object' && node.line === undefined) node.line = line;
+          return node;
+        }
+        parseStatement() {
+          const token = this.peek();
+          if (token.v === 'let') {
+            this.pos += 1;
+            const name = this.expectId();
+            this.expect('=');
+            const expr = this.expression();
+            this.expect(';');
+            return { type: 'Let', name, expr };
+          }
+          if (token.v === 'print') {
+            this.pos += 1;
+            const expr = this.expression();
+            this.expect(';');
+            return { type: 'Print', expr };
+          }
+          if (token.v === 'return') {
+            this.pos += 1;
+            const expr = this.expression();
+            this.expect(';');
+            return { type: 'Return', expr };
+          }
+          if (token.v === 'if') {
+            this.pos += 1;
+            this.expect('(');
+            const test = this.expression();
+            this.expect(')');
+            const then = this.block();
+            const otherwise = this.eat('else') ? this.block() : [];
+            return { type: 'If', test, then, else: otherwise };
+          }
+          if (token.v === 'while') {
+            this.pos += 1;
+            this.expect('(');
+            const test = this.expression();
+            this.expect(')');
+            return { type: 'While', test, body: this.block() };
+          }
+          if (token.v === 'fn') {
+            this.pos += 1;
+            const name = this.expectId();
+            this.expect('(');
+            const params = [];
+            if (!this.at(')')) {
+              do { params.push(this.expectId()); } while (this.eat(','));
+            }
+            this.expect(')');
+            return { type: 'Fn', name, params, body: this.block() };
+          }
+          const expr = this.expression();
+          this.expect(';');
+          return { type: 'ExprStmt', expr };
+        }
+        expectId() {
+          if (this.peek().t !== 'id') throw new Error(`Linia ${this.peek().line}: oczekiwano identyfikatora`);
+          return this.tokens[this.pos++].v;
+        }
+        expression() { return this.assignment(); }
+        assignment() {
+          if (this.peek().t === 'id' && this.tokens[this.pos + 1]?.v === '=') {
+            const name = this.tokens[this.pos++].v;
+            this.pos += 1;
+            return { type: 'Assign', name, expr: this.assignment() };
+          }
+          return this.equality();
+        }
+        equality() {
+          let node = this.comparison();
+          while (this.at('==') || this.at('!=')) {
+            const op = this.tokens[this.pos++].v;
+            node = { type: 'Binary', op, left: node, right: this.comparison() };
+          }
+          return node;
+        }
+        comparison() {
+          let node = this.additive();
+          while (['<', '>', '<=', '>='].includes(this.peek().v)) {
+            const op = this.tokens[this.pos++].v;
+            node = { type: 'Binary', op, left: node, right: this.additive() };
+          }
+          return node;
+        }
+        additive() {
+          let node = this.multiplicative();
+          while (this.at('+') || this.at('-')) {
+            const op = this.tokens[this.pos++].v;
+            node = { type: 'Binary', op, left: node, right: this.multiplicative() };
+          }
+          return node;
+        }
+        multiplicative() {
+          let node = this.unary();
+          while (this.at('*') || this.at('/') || this.at('%')) {
+            const op = this.tokens[this.pos++].v;
+            node = { type: 'Binary', op, left: node, right: this.unary() };
+          }
+          return node;
+        }
+        unary() {
+          if (this.at('-') || this.at('!')) {
+            const op = this.tokens[this.pos++].v;
+            return { type: 'Unary', op, arg: this.unary() };
+          }
+          return this.call();
+        }
+        call() {
+          let node = this.primary();
+          while (this.at('(')) {
+            this.pos += 1;
+            const args = [];
+            if (!this.at(')')) {
+              do { args.push(this.expression()); } while (this.eat(','));
+            }
+            this.expect(')');
+            if (node.type !== 'Ident') throw new Error('Wołanie tylko po nazwie funkcji');
+            node = { type: 'Call', name: node.name, args };
+          }
+          return node;
+        }
+        primary() {
+          const token = this.peek();
+          if (token.t === 'num') { this.pos += 1; return { type: 'Num', value: token.v }; }
+          if (token.t === 'str') { this.pos += 1; return { type: 'Str', value: token.v }; }
+          if (token.v === 'true' || token.v === 'false') { this.pos += 1; return { type: 'Bool', value: token.v === 'true' ? 1 : 0 }; }
+          if (token.t === 'id') { this.pos += 1; return { type: 'Ident', name: token.v }; }
+          if (this.eat('(')) {
+            const node = this.expression();
+            this.expect(')');
+            return node;
+          }
+          throw new Error(`Linia ${token.line}: nieoczekiwany token "${token.v || 'koniec'}"`);
+        }
+      }
+
+      const BIN_OPS = {
+        '+': (a, b) => a + b, '-': (a, b) => a - b, '*': (a, b) => a * b,
+        '/': (a, b) => (b === 0 ? 0 : a / b), '%': (a, b) => (b === 0 ? 0 : a % b),
+        '==': (a, b) => (a === b ? 1 : 0), '!=': (a, b) => (a !== b ? 1 : 0),
+        '<': (a, b) => (a < b ? 1 : 0), '>': (a, b) => (a > b ? 1 : 0),
+        '<=': (a, b) => (a <= b ? 1 : 0), '>=': (a, b) => (a >= b ? 1 : 0)
+      };
+
+      class Compiler {
+        constructor() { this.code = []; this.functions = new Map(); this.line = 0; }
+        emit(op, arg, line) { this.code.push({ op, arg, line: line || this.line || 0 }); return this.code.length - 1; }
+        compile(node) {
+          if (node && node.line) this.line = node.line;
+          switch (node.type) {
+            case 'Program':
+              node.body.forEach((child) => this.compile(child));
+              this.emit('HALT', null, 0);
+              break;
+            case 'Let':
+            case 'Assign':
+              this.compile(node.expr);
+              this.emit('STORE', node.name, 0);
+              break;
+            case 'ExprStmt':
+              this.compile(node.expr);
+              this.emit('POP', null, 0);
+              break;
+            case 'Print':
+              this.compile(node.expr);
+              this.emit('PRINT', null, 0);
+              break;
+            case 'Return':
+              this.compile(node.expr);
+              this.emit('RET', null, 0);
+              break;
+            case 'Num': this.emit('PUSH', node.value, 0); break;
+            case 'Str': this.emit('PUSH', node.value, 0); break;
+            case 'Bool': this.emit('PUSH', node.value, 0); break;
+            case 'Ident': this.emit('LOAD', node.name, 0); break;
+            case 'Binary':
+              this.compile(node.left);
+              this.compile(node.right);
+              this.emit('BIN', node.op, 0);
+              break;
+            case 'Unary':
+              this.compile(node.arg);
+              this.emit(node.op === '-' ? 'NEG' : 'NOT', null, 0);
+              break;
+            case 'Call':
+              node.args.forEach((arg) => this.compile(arg));
+              this.emit('CALL', { name: node.name, argc: node.args.length }, 0);
+              break;
+            case 'If': {
+              this.compile(node.test);
+              const jumpElse = this.emit('JZ', null, 0);
+              node.then.forEach((child) => this.compile(child));
+              const jumpEnd = this.emit('JMP', null, 0);
+              this.code[jumpElse].arg = this.code.length;
+              node.else.forEach((child) => this.compile(child));
+              this.code[jumpEnd].arg = this.code.length;
+              break;
+            }
+            case 'While': {
+              const start = this.code.length;
+              this.compile(node.test);
+              const jumpOut = this.emit('JZ', null, 0);
+              node.body.forEach((child) => this.compile(child));
+              this.emit('JMP', start, 0);
+              this.code[jumpOut].arg = this.code.length;
+              break;
+            }
+            case 'Fn': {
+              const skip = this.emit('JMP', null, 0);
+              const address = this.code.length;
+              this.functions.set(node.name, { address, params: node.params });
+              node.body.forEach((child) => this.compile(child));
+              this.emit('PUSH', 0, 0);
+              this.emit('RET', null, 0);
+              this.code[skip].arg = this.code.length;
+              break;
+            }
+            default: throw new Error(`Nieznany węzeł AST: ${node.type}`);
+          }
+        }
+      }
+
+      class VM {
+        constructor(code, functions) {
+          this.code = code;
+          this.functions = functions;
+          this.ip = 0;
+          this.stack = [];
+          this.frames = [{ vars: Object.create(null), ret: null }];
+          this.steps = 0;
+          this.halted = false;
+          this.output = [];
+        }
+        load(name) {
+          for (let i = this.frames.length - 1; i >= 0; i -= 1) {
+            if (Object.prototype.hasOwnProperty.call(this.frames[i].vars, name)) return this.frames[i].vars[name];
+          }
+          throw new Error(`Nieznana zmienna "${name}"`);
+        }
+        step() {
+          if (this.halted) return;
+          const instruction = this.code[this.ip];
+          if (!instruction) { this.halted = true; return; }
+          const arg = instruction.arg;
+          switch (instruction.op) {
+            case 'PUSH': this.stack.push(arg); this.ip += 1; break;
+            case 'POP': this.stack.pop(); this.ip += 1; break;
+            case 'LOAD': this.stack.push(this.load(arg)); this.ip += 1; break;
+            case 'STORE': this.frames[this.frames.length - 1].vars[arg] = this.stack.pop(); this.ip += 1; break;
+            case 'BIN': {
+              const b = this.stack.pop(), a = this.stack.pop();
+              const operation = BIN_OPS[arg];
+              if (!operation) throw new Error(`Nieznany operator "${arg}"`);
+              this.stack.push(operation(a, b)); this.ip += 1; break;
+            }
+            case 'NEG': this.stack.push(-this.stack.pop()); this.ip += 1; break;
+            case 'NOT': this.stack.push(this.stack.pop() ? 0 : 1); this.ip += 1; break;
+            case 'JMP': this.ip = arg; break;
+            case 'JZ': { const value = this.stack.pop(); this.ip = value ? this.ip + 1 : arg; break; }
+            case 'CALL': {
+              const fn = this.functions.get(arg.name);
+              if (!fn) throw new Error(`Nieznana funkcja "${arg.name}"`);
+              const args = this.stack.splice(Math.max(0, this.stack.length - arg.argc), arg.argc);
+              const vars = Object.create(null);
+              fn.params.forEach((name, index) => { vars[name] = args[index] ?? 0; });
+              this.frames.push({ vars, ret: this.ip + 1 });
+              this.ip = fn.address;
+              break;
+            }
+            case 'RET': {
+              const value = this.stack.pop();
+              const frame = this.frames.pop();
+              if (!this.frames.length) { this.halted = true; break; }
+              this.ip = frame.ret;
+              this.stack.push(value);
+              break;
+            }
+            case 'PRINT': {
+              const value = this.stack.pop();
+              this.output.push(String(value)); this.ip += 1; break;
+            }
+            case 'HALT': this.halted = true; break;
+            default: throw new Error(`Nieznana instrukcja "${instruction.op}"`);
+          }
+          this.steps += 1;
+        }
+      }
+
+      let ast = null, code = [], functions = new Map(), vm = null, tokens = [];
+      let running = false, timer = null, breakpoints = new Set(), disRows = [];
+      let skipBreak = false, lastError = null, syncLine = 0;
+
+      const escapeHtml = (text) => String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      function highlightSource() {
+        const value = source.value;
+        highlight.innerHTML = value.replace(/\/\/[^\n]*|"(?:\\.|[^"])*"|\b\d+(?:\.\d+)?\b|\b[A-Za-z_]\w*\b|==|!=|<=|>=|[+\-*/%!<>=(){};,=]/g, (match) => {
+          if (match.startsWith('//')) return `<span class="cm">${escapeHtml(match)}</span>`;
+          if (match.startsWith('"')) return `<span class="str">${escapeHtml(match)}</span>`;
+          if (/^\d/.test(match)) return `<span class="num">${escapeHtml(match)}</span>`;
+          if (KEYWORDS.has(match)) return `<span class="kw">${escapeHtml(match)}</span>`;
+          if (['+', '-', '*', '/', '%', '!', '<', '>', '=', '==', '!=', '<=', '>='].includes(match)) return `<span class="op">${escapeHtml(match)}</span>`;
+          return escapeHtml(match);
+        }) + '\n';
+        const lines = value.split('\n').length;
+        gutter.replaceChildren();
+        for (let i = 1; i <= lines; i += 1) {
+          const number = document.createElement('span');
+          number.textContent = String(i);
+          number.dataset.line = String(i);
+          gutter.appendChild(number);
+        }
+        gutter.scrollTop = source.scrollTop;
+      }
+
+      function astChildren(node) {
+        switch (node.type) {
+          case 'Program': return node.body;
+          case 'Let': case 'Assign': return [node.expr];
+          case 'ExprStmt': case 'Print': case 'Return': return [node.expr];
+          case 'If': return [node.test, ...node.then, ...node.else];
+          case 'While': return [node.test, ...node.body];
+          case 'Fn': return node.body;
+          case 'Binary': return [node.left, node.right];
+          case 'Unary': return [node.arg];
+          case 'Call': return node.args;
+          default: return [];
+        }
+      }
+
+      function renderAst(node, host, depth = 0) {
+        if (!node) return;
+        const row = document.createElement('div');
+        row.className = 'ast-node';
+        if (node.line) {
+          row.dataset.line = String(node.line);
+          row.addEventListener('mouseenter', () => syncFromLine(node.line));
+          row.addEventListener('mouseleave', () => syncFromLine(0));
+        }
+        row.style.setProperty('--depth', `${depth * 12}px`);
+        const kind = document.createElement('span');
+        kind.className = 'ast-kind'; kind.textContent = node.type;
+        const value = document.createElement('span');
+        value.className = 'ast-val';
+        const detail = node.value ?? node.name ?? node.op ?? (node.params?.length ? `params: ${node.params.join(', ')}` : '');
+        value.textContent = detail === '' || detail === undefined ? '' : ` ${detail}`;
+        row.append(kind, value);
+        host.appendChild(row);
+        astChildren(node).forEach((child) => renderAst(child, host, depth + 1));
+      }
+
+      function syncFromLine(line) {
+        syncLine = line;
+        document.querySelectorAll('.hi').forEach((el) => el.classList.remove('hi'));
+        const hint = $('sourceLineHint');
+        if (!line) { hint.hidden = true; return; }
+        document.querySelectorAll(`[data-line="${line}"]`).forEach((el) => el.classList.add('hi'));
+        if (line > gutter.children.length) { hint.hidden = true; return; }
+        const top = 10 + (line - 1) * 19.2 - source.scrollTop;
+        if (top < -19.2 || top > source.clientHeight) { hint.hidden = true; return; }
+        hint.hidden = false;
+        hint.style.top = `${top}px`;
+      }
+
+      function renderTokens() {
+        const host = $('tokens');
+        host.replaceChildren();
+        tokens.filter((token) => token.t !== 'eof').forEach((token) => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'tok';
+          chip.dataset.kind = token.t;
+          chip.dataset.line = String(token.line);
+          chip.textContent = token.v === '' ? '␣' : String(token.v);
+          chip.title = `Linia ${token.line} · ${token.t}`;
+          chip.addEventListener('mouseenter', () => syncFromLine(token.line));
+          chip.addEventListener('focus', () => syncFromLine(token.line));
+          chip.addEventListener('mouseleave', () => syncFromLine(0));
+          chip.addEventListener('blur', () => syncFromLine(0));
+          host.appendChild(chip);
+        });
+        $('tokenCount').textContent = `${tokens.length} tokenów`;
+      }
+
+      function renderDisassembly() {
+        const body = $('disassembly');
+        body.replaceChildren();
+        disRows = [];
+        code.forEach((instruction, index) => {
+          const row = document.createElement('tr');
+          row.className = 'dis-row';
+          row.title = 'Kliknij, aby ustawić/usunąć punkt przerwania';
+          if (instruction.line) row.dataset.line = String(instruction.line);
+          row.addEventListener('mouseenter', () => syncFromLine(instruction.line));
+          row.addEventListener('mouseleave', () => syncFromLine(0));
+          const addr = document.createElement('td'); addr.className = 'addr';
+          addr.textContent = String(index).padStart(3, '0');
+          const opcode = document.createElement('td'); opcode.className = 'opcode'; opcode.textContent = instruction.op;
+          const operand = document.createElement('td'); operand.className = 'operand';
+          operand.textContent = typeof instruction.arg === 'object' && instruction.arg
+            ? `${instruction.arg.name || ''} ×${instruction.arg.argc ?? ''}`
+            : (instruction.arg ?? '');
+          const line = document.createElement('td'); line.className = 'line';
+          line.textContent = instruction.line || '';
+          row.append(addr, opcode, operand, line);
+          if (breakpoints.has(index)) row.classList.add('break');
+          row.addEventListener('click', () => {
+            if (breakpoints.has(index)) breakpoints.delete(index); else breakpoints.add(index);
+            row.classList.toggle('break');
+          });
+          body.appendChild(row);
+          disRows.push(row);
+        });
+        $('codeCount').textContent = `${code.length} instrukcji`;
+      }
+
+      function renderRuntime() {
+        if (!vm) return;
+        $('vmState').textContent = vm.halted ? 'HALTED' : running ? 'RUNNING' : 'PAUSED';
+        $('ipInfo').textContent = String(vm.ip);
+        $('stepsInfo').textContent = String(vm.steps);
+        $('framesInfo').textContent = String(vm.frames.length);
+        $('stackDepth').textContent = String(vm.stack.length);
+        disRows.forEach((row, index) => row.classList.toggle('current', index === vm.ip));
+        const consoleEl = $('console');
+        consoleEl.replaceChildren();
+        vm.output.slice(-80).forEach((line) => {
+          const div = document.createElement('div');
+          div.className = 'console-line'; div.textContent = line;
+          consoleEl.appendChild(div);
+        });
+        $('outCount').textContent = `${vm.output.length} linii`;
+        const vars = $('variables');
+        vars.replaceChildren();
+        const scope = vm.frames[vm.frames.length - 1]?.vars || {};
+        const entries = Object.entries(scope);
+        if (!entries.length) {
+          const div = document.createElement('div'); div.className = 'empty'; div.textContent = 'Brak zmiennych w tej ramie.';
+          vars.appendChild(div);
+        } else {
+          entries.forEach(([name, value]) => {
+            const row = document.createElement('div'); row.className = 'row';
+            const label = document.createElement('span'); label.textContent = name;
+            const val = document.createElement('b'); val.textContent = String(value);
+            row.append(label, val); vars.appendChild(row);
+          });
+        }
+        const stackEl = $('stack');
+        stackEl.replaceChildren();
+        if (!vm.stack.length) {
+          const div = document.createElement('div'); div.className = 'empty'; div.textContent = 'Stos pusty';
+          stackEl.appendChild(div);
+        } else {
+          vm.stack.slice(-16).forEach((value, index, array) => {
+            const slot = document.createElement('span');
+            slot.className = `slot${index === array.length - 1 ? ' top' : ''}`;
+            slot.textContent = String(value);
+            stackEl.appendChild(slot);
+          });
+        }
+      }
+
+      function setStatus(text, bad = false) {
+        $('status').textContent = text;
+        $('status').classList.toggle('bad', bad);
+        $('status').classList.toggle('ok', !bad);
+        $('compileStatus').textContent = text;
+        $('compileStatus').classList.toggle('bad', bad);
+      }
+
+      function suggestionsFor(message) {
+        const text = message.toLowerCase();
+        if (text.includes('niezamknięty ciąg')) return [{ id: 'quote', label: 'Dodaj brakujący cudzysłów' }];
+        if (text.includes('nieznany znak')) return [{ id: 'removeChar', label: 'Usuń znak pod kursorem' }];
+        if (text.includes('oczekiwano ";"')) return [{ id: 'semicolon', label: 'Dodaj średnik w tej linii' }];
+        if (text.includes('}')) return [{ id: 'brace', label: 'Dodaj brakującą klamrę }' }];
+        if (text.includes('identyfikatora')) return [{ id: 'placeholder', label: 'Wstaw nazwę x' }];
+        return [{ id: 'sample', label: 'Wczytaj przykład silni' }];
+      }
+
+      function showError(message) {
+        const box = $('errorBox');
+        box.replaceChildren();
+        box.hidden = false;
+        const title = document.createElement('b');
+        title.textContent = `Błąd: ${message}`;
+        box.appendChild(title);
+        const lead = document.createElement('span');
+        lead.textContent = 'Szybka naprawa: ';
+        box.appendChild(lead);
+        suggestionsFor(message).forEach((suggestion) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = suggestion.label;
+          button.addEventListener('click', () => applyFix(suggestion.id));
+          box.appendChild(button);
+        });
+      }
+
+      function applyFix(kind) {
+        let value = source.value;
+        let start = source.selectionStart ?? value.length;
+        let end = source.selectionEnd ?? start;
+        let label = 'naprawa';
+        if (kind === 'sample') {
+          value = samples.factorial;
+          start = end = value.length;
+          label = 'przykład silni';
+        } else if (kind === 'brace') {
+          value = `${value.trimEnd()}\n}`;
+          start = end = value.length;
+          label = 'klamra';
+        } else {
+          const lineStart = value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
+          const nextBreak = value.indexOf('\n', start);
+          const lineEnd = nextBreak < 0 ? value.length : nextBreak;
+          if (kind === 'semicolon' && !value.slice(lineStart, lineEnd).trimEnd().endsWith(';')) {
+            value = `${value.slice(0, lineEnd)};${value.slice(lineEnd)}`;
+            start = end = lineEnd + 1;
+            label = 'średnik';
+          } else if (kind === 'quote') {
+            value = `${value.slice(0, lineEnd)}"${value.slice(lineEnd)}`;
+            start = end = lineEnd + 1;
+            label = 'cudzysłów';
+          } else if (kind === 'placeholder') {
+            value = `${value.slice(0, start)}x${value.slice(end)}`;
+            end += 1;
+            start = end;
+            label = 'identyfikator';
+          } else if (kind === 'removeChar') {
+            const from = end > start ? start : Math.max(0, start - 1);
+            const to = end > start ? end : start;
+            value = `${value.slice(0, from)}${value.slice(to)}`;
+            start = end = from;
+            label = 'usunięcie znaku';
+          }
+        }
+        source.value = value;
+        source.focus();
+        source.selectionStart = start;
+        source.selectionEnd = end;
+        highlightSource();
+        compile();
+        setStatus(`Zastosowano: ${label}.`);
+      }
+
+      function stop() {
+        running = false;
+        if (timer) { clearInterval(timer); timer = null; }
+        $('runBtn').textContent = '▶ Uruchom';
+        $('runBtn').classList.remove('active');
+      }
+
+      function compile() {
+        stop();
+        lastError = null;
+        const started = performance.now();
+        try {
+          tokens = tokenize(source.value);
+          ast = new Parser(tokens).parse();
+          const compiler = new Compiler();
+          compiler.compile(ast);
+          code = compiler.code;
+          functions = compiler.functions;
+          vm = new VM(code, functions);
+          skipBreak = false;
+          let count = 0;
+          const walk = (node) => { if (!node) return; count += 1; astChildren(node).forEach(walk); };
+          walk(ast);
+          $('astCount').textContent = `${count} węzłów`;
+          const astHost = $('ast'); astHost.replaceChildren(); renderAst(ast, astHost);
+          renderTokens();
+          renderDisassembly();
+          renderRuntime();
+          $('errorBox').hidden = true;
+          syncFromLine(0);
+          $('compileTime').textContent = `${(performance.now() - started).toFixed(2)} ms`;
+          setStatus('Kompilacja zakończona pomyślnie.');
+          return true;
+        } catch (error) {
+          lastError = error.message;
+          $('errorBox').hidden = true;
+          $('compileTime').textContent = `${(performance.now() - started).toFixed(2)} ms`;
+          setStatus(`Błąd: ${error.message}`, true);
+          showError(error.message);
+          return false;
+        }
+      }
+
+      function tick() {
+        if (!vm || vm.halted) { stop(); renderRuntime(); return; }
+        if (breakpoints.has(vm.ip) && !skipBreak) {
+          skipBreak = true;
+          stop();
+          setStatus(`Punkt przerwania @ ${vm.ip}`);
+          renderRuntime();
+          return;
+        }
+        skipBreak = false;
+        try {
+          vm.step();
+          renderRuntime();
+          if (vm.halted) {
+            stop();
+            setStatus(`Wykonywanie zakończone · ${vm.steps} kroków · ${vm.output.length} linii wyjścia`);
+          }
+        } catch (error) {
+          stop();
+          setStatus(`Błąd wykonania: ${error.message}`, true);
+        }
+      }
+
+      function startTimer() {
+        stop();
+        running = true;
+        timer = setInterval(tick, Math.max(20, 1000 / parseInt($('speed').value, 10)));
+        $('runBtn').textContent = '❚❚ Pauza';
+        $('runBtn').classList.add('active');
+        renderRuntime();
+      }
+
+      source.addEventListener('input', () => { highlightSource(); setStatus('Źródło zmienione — skompiluj ponownie.'); });
+      source.addEventListener('scroll', () => {
+        highlight.scrollTop = source.scrollTop;
+        highlight.scrollLeft = source.scrollLeft;
+        gutter.scrollTop = source.scrollTop;
+        if (syncLine) syncFromLine(syncLine);
+      });
+      source.addEventListener('keydown', (event) => {
+        if (event.key === 'Tab') {
+          event.preventDefault();
+          const start = source.selectionStart;
+          source.value = `${source.value.slice(0, start)}  ${source.value.slice(source.selectionEnd)}`;
+          source.selectionStart = source.selectionEnd = start + 2;
+          highlightSource();
+        }
+        if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); compile(); }
+      });
+      $('sample').addEventListener('change', (event) => {
+        source.value = samples[event.target.value];
+        source.scrollTop = 0;
+        highlightSource();
+        compile();
+      });
+      $('compileBtn').addEventListener('click', compile);
+      $('runBtn').addEventListener('click', () => {
+        if (running) { stop(); renderRuntime(); return; }
+        if (!vm || lastError) { if (!compile()) return; }
+        if (vm.halted) compile();
+        startTimer();
+      });
+      $('stepBtn').addEventListener('click', () => {
+        stop();
+        if (!vm || lastError) { if (!compile()) return; }
+        if (vm.halted) compile();
+        tick();
+      });
+      $('resetBtn').addEventListener('click', () => {
+        stop();
+        if (compile()) setStatus('VM zresetowana.');
+      });
+      $('speed').addEventListener('input', (event) => {
+        $('speedValue').textContent = `${event.target.value} kroków/s`;
+        if (running) startTimer();
+      });
+
+      async function copyText(text) {
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return true;
+          }
+          const helper = document.createElement('textarea');
+          helper.value = text;
+          helper.setAttribute('readonly', '');
+          helper.style.position = 'fixed';
+          helper.style.opacity = '0';
+          document.body.appendChild(helper);
+          helper.select();
+          const ok = typeof document.execCommand === 'function' ? document.execCommand('copy') : false;
+          helper.remove();
+          return ok;
+        } catch (_) { return false; }
+      }
+
+      $('copyIrBtn').addEventListener('click', async () => {
+        const text = code.map((instruction, index) =>
+          `${String(index).padStart(3, '0')}  ${instruction.op.padEnd(5)} ${instruction.arg === null ? '' : typeof instruction.arg === 'object' ? `${instruction.arg.name} ×${instruction.arg.argc}` : instruction.arg}  ; linia ${instruction.line || '—'}`
+        ).join('\n');
+        const ok = await copyText(text);
+        setStatus(ok ? 'IR skopiowane do schowka.' : 'Nie udało się skopiować IR.', !ok);
+      });
+      $('copyOutBtn').addEventListener('click', async () => {
+        const text = vm ? vm.output.join('\n') : '';
+        const ok = await copyText(text);
+        setStatus(ok ? 'Wyjście skopiowane do schowka.' : 'Nie udało się skopiować wyjścia.', !ok);
+      });
+      $('downloadIrBtn').addEventListener('click', () => {
+        const payload = {
+          generatedAt: new Date().toISOString(),
+          source: source.value,
+          tokens: tokens.map(({ t, v, line }) => ({ type: t, value: v, line })),
+          functions: [...functions].map(([name, info]) => ({ name, address: info.address, params: info.params })),
+          code
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'compiler_ir.json';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        setStatus('IR pobrany jako compiler_ir.json.');
+      });
+
+      source.value = samples.factorial;
+      highlightSource();
+      compile();
+    })();
+  </script>
+</body>
+</html>

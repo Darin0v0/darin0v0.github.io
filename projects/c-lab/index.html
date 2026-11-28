@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C++ Lab | Edukacyjna aplikacja do nauki programowania</title>
+    <meta name="description" content="C++ Lab — interaktywny przewodnik po podstawach C++ z przykładami, wyjaśnieniem krok po kroku i quizem.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
+    <style>
+        :root {
+            --bg: #08080a;
+            --bg-alt: #0c0c10;
+            --surface: #121218;
+            --surface-hover: #1a1a22;
+            --border: #2a2a35;
+            --border-light: #3a3a48;
+            --text: #f0f0f5;
+            --text-muted: #8888a0;
+            --accent: #6366f1;
+            --accent-glow: #818cf8;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --cyan: #22d3ee;
+            --green: #10b981;
+            --pink: #ec4899;
+            --yellow: #facc15;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        [hidden] { display: none !important; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Space Grotesk', 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden;
+        }
+        :focus-visible { outline: 3px solid var(--accent-glow); outline-offset: 2px; border-radius: 4px; }
+        .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+        .cursor { width: 20px; height: 20px; border: 2px solid var(--accent); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transition: transform .1s; mix-blend-mode: difference; }
+        .cursor.hover { border-color: var(--accent-glow); box-shadow: 0 0 14px var(--accent); }
+        .bg-grid { position: fixed; inset: 0; background-image: linear-gradient(rgba(99,102,241,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,.03) 1px, transparent 1px); background-size: 60px 60px; z-index: -2; }
+        .bg-glow { position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle at 30% 30%, rgba(99,102,241,.15) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(168,85,247,.1) 0%, transparent 50%); z-index: -3; animation: glowPulse 10s ease-in-out infinite; }
+        @keyframes glowPulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+
+        .navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 1rem 0; background: rgba(8,8,10,.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,.05); }
+        .nav-container { max-width: 1400px; margin: 0 auto; padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+        .logo { display: flex; align-items: center; gap: .5rem; text-decoration: none; color: var(--text); font-weight: 700; font-size: 1.4rem; white-space: nowrap; }
+        .logo-icon { font-size: 1.5rem; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        .logo .accent { background: var(--accent-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; align-items: center; gap: 2rem; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: .95rem; font-weight: 500; transition: color .3s; }
+        .nav-links a:hover { color: var(--text); }
+        .btn-nav { background: var(--surface); border: 1px solid var(--border); padding: .5rem 1.25rem; border-radius: 8px; color: var(--text) !important; }
+        .menu-toggle { display: none; flex-direction: column; gap: 5px; background: none; border: none; cursor: pointer; padding: .5rem; }
+        .menu-toggle span { width: 24px; height: 2px; background: var(--text); transition: .3s; }
+
+        .hero { min-height: 100vh; display: grid; grid-template-columns: 1fr 1.2fr; gap: 4rem; align-items: center; max-width: 1400px; margin: 0 auto; padding: 8rem 2rem 4rem; }
+        .hero-badge { display: inline-flex; align-items: center; gap: .75rem; background: var(--surface); border: 1px solid var(--border); padding: .5rem 1rem; border-radius: 50px; font-size: .85rem; margin-bottom: 1.5rem; }
+        .pulse { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: blink 1.5s ease-in-out infinite; }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+        .version { color: var(--text-muted); padding-left: .5rem; border-left: 1px solid var(--border); }
+        .hero-title { font-size: clamp(2.2rem, 5vw, 4.5rem); font-weight: 700; line-height: 1.1; margin-bottom: 1.5rem; }
+        .title-line { display: block; }
+        .title-gradient { display: block; background: var(--accent-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: gradientShift 3s ease-in-out infinite; }
+        @keyframes gradientShift { 0%,100% { filter: hue-rotate(0deg); } 50% { filter: hue-rotate(30deg); } }
+        .hero-desc { font-size: 1.15rem; color: var(--text-muted); margin-bottom: 2rem; max-width: 500px; }
+        .hero-actions { display: flex; gap: 1rem; margin-bottom: 3rem; flex-wrap: wrap; }
+        .btn { display: inline-flex; align-items: center; gap: .5rem; padding: .9rem 1.75rem; border-radius: 12px; font-size: 1rem; font-weight: 600; text-decoration: none; transition: all .3s; border: 0; cursor: pointer; font-family: inherit; }
+        .btn-primary { background: var(--accent-gradient); color: white; box-shadow: 0 4px 20px rgba(99,102,241,.3); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99,102,241,.5); }
+        .btn-primary svg { width: 18px; height: 18px; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { background: var(--surface); border-color: var(--text-muted); }
+        .btn-small { padding: .5rem .9rem; font-size: .85rem; border-radius: 8px; }
+        .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .hero-stats { display: flex; gap: 3rem; flex-wrap: wrap; }
+        .stat { display: flex; flex-direction: column; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+        .stat-label { font-size: .85rem; color: var(--text-muted); }
+
+        .hero-visual { position: relative; min-width: 0; }
+        .editor-container { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,.5); }
+        .editor-header { display: flex; align-items: center; padding: .75rem 1rem; background: var(--bg-alt); border-bottom: 1px solid var(--border); gap: .5rem; }
+        .editor-dots { display: flex; gap: 8px; }
+        .editor-dots span { width: 12px; height: 12px; border-radius: 50%; }
+        .editor-dots span:nth-child(1) { background: #ff5f57; }
+        .editor-dots span:nth-child(2) { background: #febc2e; }
+        .editor-dots span:nth-child(3) { background: #28c840; }
+        .editor-tabs { display: flex; gap: .25rem; margin-left: 1rem; }
+        .tab { padding: .35rem 1rem; font-size: .85rem; color: var(--text-muted); border-radius: 6px 6px 0 0; }
+        .tab.active { background: var(--surface); color: var(--text); }
+        .editor-actions { margin-left: auto; }
+        .run-btn { background: var(--green); color: var(--bg); padding: .35rem 1rem; border-radius: 6px; font-size: .85rem; font-weight: 600; }
+        .editor-body { display: grid; grid-template-columns: auto 1fr; }
+        .line-numbers { display: flex; flex-direction: column; padding: 1rem .75rem; background: var(--bg-alt); text-align: right; font-family: ui-monospace, 'JetBrains Mono', 'Courier New', monospace; font-size: .9rem; color: var(--text-muted); line-height: 1.8; }
+        .code-content { padding: 1rem; font-family: ui-monospace, 'JetBrains Mono', 'Courier New', monospace; font-size: .9rem; line-height: 1.8; overflow-x: auto; margin: 0; }
+        .code-content .kw { color: #c084fc; }
+        .code-content .str { color: #34d399; }
+        .code-content .type { color: #60a5fa; }
+        .code-content .func { color: #f472b6; }
+        .code-content .num { color: #facc15; }
+        .terminal { grid-column: 1 / -1; background: var(--bg-alt); border-top: 1px solid var(--border); }
+        .terminal-header { padding: .5rem 1rem; font-size: .8rem; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+        .terminal-output { padding: .75rem 1rem; font-family: ui-monospace, 'JetBrains Mono', 'Courier New', monospace; font-size: .85rem; overflow-wrap: anywhere; }
+        .prompt { color: var(--pink); margin-right: .5rem; }
+        .success { color: var(--green); margin-left: .5rem; }
+        .output { color: var(--cyan); margin-left: .5rem; }
+        .blink { animation: blink .8s ease-in-out infinite; }
+        .floating-card { position: absolute; background: var(--surface); border: 1px solid var(--border); padding: .75rem 1rem; border-radius: 12px; display: flex; align-items: center; gap: .5rem; font-size: .9rem; box-shadow: 0 10px 30px rgba(0,0,0,.3); animation: float 3s ease-in-out infinite; }
+        .card-1 { top: 20%; right: -10px; }
+        .card-2 { bottom: 20%; left: -10px; animation-delay: 1.5s; }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        main section { padding: 6rem 2rem; max-width: 1200px; margin: 0 auto; }
+        .section-header { text-align: center; margin-bottom: 4rem; }
+        .section-tag { display: inline-block; font-family: ui-monospace, monospace; font-size: .8rem; color: var(--accent); background: rgba(99,102,241,.1); padding: .3rem .75rem; border-radius: 4px; margin-bottom: 1rem; }
+        .section-header h2 { font-size: clamp(1.8rem, 4vw, 2.5rem); margin-bottom: .5rem; }
+        .section-header p { color: var(--text-muted); font-size: 1.1rem; }
+        .features-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+        .feature-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; transition: all .3s; }
+        .feature-card:hover { border-color: var(--accent); transform: translateY(-4px); box-shadow: 0 10px 40px rgba(99,102,241,.2); }
+        .feature-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .feature-card h3 { font-size: 1.2rem; margin-bottom: .5rem; }
+        .feature-card p { font-size: .9rem; color: var(--text-muted); }
+        .feature-line { width: 40px; height: 3px; background: var(--accent-gradient); margin-top: 1.5rem; border-radius: 2px; }
+
+        .detail-section { background: var(--surface); max-width: none; }
+        .detail-section > * { max-width: 1200px; margin-left: auto; margin-right: auto; }
+        .details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+        .detail-item { display: flex; gap: 1.5rem; padding: 1.5rem; background: var(--bg-alt); border-radius: 16px; border: 1px solid transparent; transition: all .3s; }
+        .detail-item:hover { border-color: var(--border); }
+        .detail-number { font-size: 2.5rem; font-weight: 700; color: var(--accent); opacity: .3; font-family: ui-monospace, monospace; }
+        .detail-content h3 { font-size: 1.2rem; margin-bottom: .5rem; }
+        .detail-content p { font-size: .9rem; color: var(--text-muted); }
+
+        .tech-section { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+        .tech-section .section-header { text-align: left; margin-bottom: 0; }
+        .tech-list { list-style: none; margin-top: 2rem; }
+        .tech-list li { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border); font-size: .95rem; }
+        .tech-badge { background: var(--accent-gradient); color: white; padding: .35rem .75rem; border-radius: 6px; font-size: .85rem; font-weight: 600; white-space: nowrap; }
+        .code-block { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; min-width: 0; }
+        .code-block-header { padding: .75rem 1rem; background: var(--bg-alt); border-bottom: 1px solid var(--border); font-family: ui-monospace, monospace; font-size: .85rem; color: var(--text-muted); }
+        .code-block pre { padding: 1.5rem; font-family: ui-monospace, 'Courier New', monospace; font-size: .85rem; line-height: 1.8; overflow-x: auto; margin: 0; }
+
+        .setup-steps { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 3rem; flex-wrap: wrap; }
+        .setup-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; max-width: 300px; transition: all .3s; flex: 1 1 240px; }
+        .setup-card:hover { border-color: var(--accent); }
+        .setup-number { font-size: 3rem; font-weight: 700; color: var(--accent); opacity: .2; margin-bottom: .5rem; font-family: ui-monospace, monospace; }
+        .setup-content h3 { font-size: 1.2rem; margin-bottom: .5rem; }
+        .setup-content p { font-size: .9rem; color: var(--text-muted); margin-bottom: 1rem; }
+        .setup-content code { display: block; background: var(--bg-alt); padding: .75rem 1rem; border-radius: 8px; font-family: ui-monospace, monospace; font-size: .9rem; color: var(--accent); overflow-wrap: anywhere; }
+        .setup-arrow { font-size: 2rem; color: var(--text-muted); }
+        .setup-links { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+        .link-card { background: var(--surface); border: 1px solid var(--border); padding: 1rem 2rem; border-radius: 12px; text-decoration: none; color: var(--text); transition: all .3s; }
+        .link-card:hover { background: var(--surface-hover); border-color: var(--accent); }
+
+        .demo-section { text-align: center; }
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 20px 50px rgba(0,0,0,.5); }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .footer { background: var(--surface); border-top: 1px solid var(--border); padding: 3rem 2rem; text-align: center; max-width: none; }
+        .footer-content { max-width: 600px; margin: 0 auto; }
+        .footer-brand { display: flex; align-items: center; justify-content: center; gap: .5rem; font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; flex-wrap: wrap; }
+        .footer-content p { color: var(--text-muted); margin-bottom: 1.5rem; }
+        .footer-links { display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: .9rem; }
+        .footer-links a:hover { color: var(--accent); }
+
+        /* --- Interaktywny eksplorator pojęć C++ --- */
+        .explorer-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 1.5rem; }
+        .explorer-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .progress-wrap { display: flex; align-items: center; gap: .75rem; flex: 1 1 240px; min-width: 0; }
+        .progress-track { flex: 1; min-width: 80px; height: 8px; background: var(--bg-alt); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+        .progress-fill { height: 100%; width: 0; background: var(--accent-gradient); transition: width .4s ease; }
+        .progress-label { font-size: .85rem; color: var(--text-muted); white-space: nowrap; }
+        .explorer-grid { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 1.5rem; }
+        .lesson-list, .lesson-workspace { min-width: 0; }
+        .lesson-list { display: grid; gap: .5rem; align-content: start; }
+        .lesson-btn {
+            display: flex; justify-content: space-between; align-items: center; gap: .5rem; width: 100%;
+            text-align: left; background: var(--bg-alt); border: 1px solid var(--border); color: var(--text);
+            padding: .75rem 1rem; border-radius: 10px; cursor: pointer; font: inherit; font-size: .9rem;
+        }
+        .lesson-btn:hover { border-color: var(--accent); }
+        .lesson-btn.active { border-color: var(--accent); background: rgba(99,102,241,.12); }
+        .lesson-btn .check { color: var(--green); }
+        .lesson-meta { font-size: .75rem; color: var(--text-muted); display: block; }
+        .workspace-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .workspace-head h3 { font-size: 1.3rem; }
+        .workspace-head p { color: var(--text-muted); font-size: .9rem; }
+        .code-view { background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .code-view-header { display: flex; justify-content: space-between; align-items: center; gap: .5rem; padding: .5rem .75rem; border-bottom: 1px solid var(--border); font-size: .8rem; color: var(--text-muted); }
+        .code-view pre { margin: 0; padding: 1rem .5rem; font-family: ui-monospace, 'JetBrains Mono', 'Courier New', monospace; font-size: .85rem; line-height: 1.8; overflow-x: auto; }
+        .code-line { display: block; white-space: pre; padding: 0 .75rem; border-left: 3px solid transparent; }
+        .code-line.is-active { background: rgba(99,102,241,.16); border-left-color: var(--accent); }
+        .ln { display: inline-block; width: 2.2em; color: var(--text-muted); user-select: none; }
+        .tok-kw { color: #c084fc; }
+        .tok-str { color: #34d399; }
+        .tok-num { color: #facc15; }
+        .tok-com { color: #6b7280; font-style: italic; }
+        .tok-pre { color: #f472b6; }
+        .step-box { margin-top: 1rem; background: var(--bg-alt); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; }
+        .step-count { font-size: .75rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+        .step-text { margin: .5rem 0 1rem; font-size: .95rem; }
+        .step-controls { display: flex; gap: .5rem; flex-wrap: wrap; }
+        .step-controls button:disabled { opacity: .4; cursor: not-allowed; }
+        .quiz-box { margin-top: 1rem; border: 1px solid var(--border); border-radius: 12px; padding: 1rem; background: var(--surface-hover); }
+        .quiz-box h4 { font-size: 1rem; margin-bottom: .75rem; }
+        .quiz-options { display: grid; gap: .5rem; }
+        .quiz-option { text-align: left; padding: .7rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-alt); color: var(--text); cursor: pointer; font: inherit; font-size: .9rem; }
+        .quiz-option:hover { border-color: var(--accent); }
+        .quiz-option.correct { border-color: var(--green); background: rgba(16,185,129,.12); }
+        .quiz-option.wrong { border-color: #ef4444; background: rgba(239,68,68,.1); }
+        .quiz-feedback { margin-top: .75rem; font-size: .9rem; min-height: 1.4em; }
+        .explorer-status { margin-top: 1rem; font-size: .85rem; color: var(--cyan); min-height: 1.4em; }
+
+        @media (max-width: 1024px) {
+            .hero { grid-template-columns: 1fr; text-align: center; padding-top: 6rem; }
+            .hero-desc { max-width: 100%; margin-left: auto; margin-right: auto; }
+            .hero-actions, .hero-stats { justify-content: center; }
+            .hero-visual { display: none; }
+            .features-grid { grid-template-columns: repeat(2, 1fr); }
+            .details-grid, .tech-section { grid-template-columns: 1fr; }
+            .tech-section .section-header { text-align: center; }
+            .tech-list { text-align: left; }
+            .setup-steps { flex-direction: column; }
+            .setup-arrow { transform: rotate(90deg); }
+            .explorer-grid { grid-template-columns: 1fr; }
+            .lesson-list { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .nav-links { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); flex-direction: column; align-items: stretch; gap: 0; padding: 1rem 2rem; border-bottom: 1px solid var(--border); }
+            .nav-links.open { display: flex; }
+            .nav-links a { padding: .75rem 0; border-bottom: 1px solid var(--border); }
+            .menu-toggle { display: flex; }
+            .hero-title { font-size: 2.2rem; }
+            .hero-actions { flex-direction: column; }
+            .features-grid { grid-template-columns: 1fr; }
+            .setup-links { flex-direction: column; align-items: center; }
+            main section { padding: 4rem 1rem; }
+            .nav-container { padding: 0 1rem; }
+            .footer-links { gap: 1rem; }
+        }
+        @media (max-width: 480px) {
+            .lesson-list { grid-template-columns: 1fr; }
+            .explorer-panel { padding: 1rem; }
+            .step-controls .btn, .workspace-head .btn { flex: 1 1 130px; justify-content: center; }
+            .cursor { display: none; }
+            .code-view pre { font-size: .78rem; }
+        }
+        @media (hover: none) { .cursor { display: none; } }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor" aria-hidden="true"></div>
+    <div class="bg-grid" aria-hidden="true"></div>
+    <div class="bg-glow" aria-hidden="true"></div>
+
+    <nav class="navbar" aria-label="Nawigacja główna">
+        <div class="nav-container">
+            <a href="#" class="logo" aria-label="C++ Lab — strona główna">
+                <span class="logo-icon" aria-hidden="true">⚡</span>
+                <span class="logo-text">C++ <span class="accent">Lab</span></span>
+            </a>
+            <div class="nav-links" id="clabNavLinks">
+                <a href="#about">O aplikacji</a>
+                <a href="#features">Funkcje</a>
+                <a href="#explorer">Ćwiczenia</a>
+                <a href="#tech">Technologie</a>
+                <a href="#setup">Start</a>
+                <a href="#demo" class="btn-nav">Demo</a>
+            </div>
+            <button class="menu-toggle" type="button" aria-label="Otwórz menu" aria-expanded="false" aria-controls="clabNavLinks">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="pulse" aria-hidden="true"></span>
+                    <span>Open Source</span>
+                    <span class="version">v1.0</span>
+                </div>
+                <h1 class="hero-title">
+                    <span class="title-line">Naucz się</span>
+                    <span class="title-gradient">programowania</span>
+                    <span class="title-line">w C++</span>
+                </h1>
+                <p class="hero-desc">Nowoczesna aplikacja webowa do nauki programowania w szkole. Uczniowie piszą kod, nauczyciel widzi wszystko w czasie rzeczywistym przez Socket.IO.</p>
+                <div class="hero-actions">
+                    <a href="#explorer" class="btn btn-primary">
+                        <span>Rozpocznij naukę</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </a>
+                    <a href="#demo" class="btn btn-outline"><span>Oglądaj demo</span></a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat"><span class="stat-value">100%</span><span class="stat-label">Open Source</span></div>
+                    <div class="stat"><span class="stat-value">Real-time</span><span class="stat-label">WebSocket</span></div>
+                    <div class="stat"><span class="stat-value">Free</span><span class="stat-label">Brak kosztów</span></div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="editor-container">
+                    <div class="editor-header">
+                        <div class="editor-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+                        <div class="editor-tabs"><div class="tab active">main.cpp</div><div class="tab">utils.h</div></div>
+                        <div class="editor-actions"><span class="run-btn">▶ Run</span></div>
+                    </div>
+                    <div class="editor-body">
+                        <div class="line-numbers" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span></div>
+                        <pre class="code-content"><code><span class="kw">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="kw">#include</span> <span class="str">&lt;vector&gt;</span>
+
+<span class="type">int</span> <span class="func">main</span>() {
+    <span class="type">std::vector</span>&lt;<span class="type">int</span>&gt; numbers = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>};
+    <span class="kw">for</span> (<span class="type">auto</span> n : numbers) {
+        <span class="type">std::cout</span> &lt;&lt; n &lt;&lt; <span class="str">" "</span>;
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}</code></pre>
+                        <div class="terminal">
+                            <div class="terminal-header">Terminal</div>
+                            <div class="terminal-output">
+                                <span class="prompt">$</span> g++ main.cpp -o main
+                                <span class="success">✓ Kompilacja zakończona</span>
+                                <span class="prompt">$</span> ./main
+                                <span class="output">1 2 3</span>
+                                <span class="prompt">$</span><span class="blink">▋</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="floating-card card-1"><span aria-hidden="true">👨‍🎓</span><span>12 uczniów online</span></div>
+                <div class="floating-card card-2"><span aria-hidden="true">👨‍🏫</span><span>Monitorowanie</span></div>
+            </div>
+        </section>
+
+        <section id="about" class="features-section">
+            <div class="section-header">
+                <span class="section-tag">about</span>
+                <h2>Stworzony dla szkoły</h2>
+                <p>Aplikacja idealna na lekcje informatyki</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card"><div class="feature-icon" aria-hidden="true">🎓</div><h3>Dla uczniów</h3><p>Edytor C++ z podświetlaniem składni, uruchamianie programów w jeden klik, autozapis kodu</p><div class="feature-line"></div></div>
+                <div class="feature-card"><div class="feature-icon" aria-hidden="true">📊</div><h3>Dla nauczyciela</h3><p>Podgląd wszystkich uczniów, historia aktywności, wysyłanie wiadomości broadcast</p><div class="feature-line"></div></div>
+                <div class="feature-card"><div class="feature-icon" aria-hidden="true">🌐</div><h3>Sieć LAN</h3><p>Działa w lokalnej sieci szkolnej, połączenie przez Socket.IO w czasie rzeczywistym</p><div class="feature-line"></div></div>
+                <div class="feature-card"><div class="feature-icon" aria-hidden="true">💾</div><h3>Backup</h3><p>Automatyczny zapis do database.json, eksport do pliku JSON, przywracanie</p><div class="feature-line"></div></div>
+            </div>
+        </section>
+
+        <section id="features" class="detail-section">
+            <div class="section-header">
+                <span class="section-tag">features</span>
+                <h2>Wszystko czego potrzebujesz</h2>
+            </div>
+            <div class="details-grid">
+                <div class="detail-item"><div class="detail-number">01</div><div class="detail-content"><h3>CodeMirror Editor</h3><p>Profesjonalny edytor z kolorowaniem składni C++, numeracją linii, automatycznym wcięciem i indywidualnymi ustawieniami</p></div></div>
+                <div class="detail-item"><div class="detail-number">02</div><div class="detail-content"><h3>Kompilacja C++</h3><p>Uruchamianie kodu bezpośrednio w przeglądarce przez Node.js, wyniki wyświetlane w terminalu</p></div></div>
+                <div class="detail-item"><div class="detail-number">03</div><div class="detail-content"><h3>Monitoring aktywności</h3><p>Nauczyciel widzi kto jest aktywny, co pisze w danej chwili, jakie wykonuje operacje (run, copy, paste)</p></div></div>
+                <div class="detail-item"><div class="detail-number">04</div><div class="detail-content"><h3>Broadcast wiadomości</h3><p>Wysyłaj wiadomości do wszystkich uczniów jednocześnie, np. "czas minął", "sprawdźcie zadanie"</p></div></div>
+                <div class="detail-item"><div class="detail-number">05</div><div class="detail-content"><h3>Zarządzanie bazą</h3><p>Usuwanie pojedynczych uczniów, czyszczenie całej bazy, eksport do pliku backup</p></div></div>
+                <div class="detail-item"><div class="detail-number">06</div><div class="detail-content"><h3>API REST</h3><p>Pełne API do zarządzania: /api/students, /api/activities-all, /api/database/export</p></div></div>
+            </div>
+        </section>
+
+        <section id="explorer" class="explorer-section" aria-labelledby="explorerHeading">
+            <div class="section-header">
+                <span class="section-tag">practice</span>
+                <h2 id="explorerHeading">Przewodnik po C++ krok po kroku</h2>
+                <p>Wybierz pojęcie, przejdź przez wyjaśnienie linijka po linijce i sprawdź się w quizie. Postęp zapisuje się lokalnie.</p>
+            </div>
+            <div class="explorer-panel">
+                <div class="explorer-top">
+                    <div class="progress-wrap">
+                        <span class="progress-label" id="progressText">Ukończono 0 z 6</span>
+                        <div class="progress-track" role="progressbar" aria-label="Postęp nauki" aria-valuemin="0" aria-valuemax="6" aria-valuenow="0" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div>
+                    </div>
+                    <button type="button" class="btn btn-small btn-ghost" id="resetProgress">Wyczyść postęp</button>
+                </div>
+                <div class="explorer-grid">
+                    <div class="lesson-list" id="lessonList" role="group" aria-label="Wybierz pojęcie"></div>
+                    <div class="lesson-workspace">
+                        <div class="workspace-head">
+                            <div><h3 id="lessonTitle">Zmienne i typy</h3><p id="lessonHint"></p></div>
+                            <button type="button" class="btn btn-small btn-ghost" id="copyCode" aria-label="Kopiuj przykładowy kod">⧉ Kopiuj kod</button>
+                        </div>
+                        <div class="code-view">
+                            <div class="code-view-header"><span id="fileName">main.cpp</span><span>C++</span></div>
+                            <pre><code id="codeOutput"></code></pre>
+                        </div>
+                        <div class="step-box">
+                            <span class="step-count" id="stepCount">Krok 1 z 1</span>
+                            <p class="step-text" id="stepText"></p>
+                            <div class="step-controls">
+                                <button type="button" class="btn btn-small btn-ghost" id="prevStep">← Poprzedni</button>
+                                <button type="button" class="btn btn-small btn-primary" id="nextStep">Następny krok →</button>
+                            </div>
+                        </div>
+                        <div class="quiz-box" id="quizBox" hidden>
+                            <h4 id="quizQuestion"></h4>
+                            <div class="quiz-options" id="quizOptions" role="group" aria-label="Odpowiedzi do quizu"></div>
+                            <p class="quiz-feedback" id="quizFeedback" role="status" aria-live="polite"></p>
+                        </div>
+                        <div class="explorer-status" id="explorerStatus" role="status" aria-live="polite"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tech" class="tech-section">
+            <div class="tech-content">
+                <span class="section-tag">stack</span>
+                <h2>Technologie</h2>
+                <p>Zbudowane na nowoczesnym stacku Node.js</p>
+                <ul class="tech-list">
+                    <li><span class="tech-badge">Node.js</span> Serwer i środowisko uruchomieniowe</li>
+                    <li><span class="tech-badge">Express</span> Framework webowy</li>
+                    <li><span class="tech-badge">Socket.IO</span> Komunikacja real-time</li>
+                    <li><span class="tech-badge">CodeMirror</span> Edytor kodu</li>
+                    <li><span class="tech-badge">JSON</span> Baza danych</li>
+                </ul>
+            </div>
+            <div class="tech-visual">
+                <div class="code-block">
+                    <div class="code-block-header">server.js</div>
+                    <pre><code><span class="kw">const</span> express = <span class="func">require</span>(<span class="str">'express'</span>);
+<span class="kw">const</span> http = <span class="func">require</span>(<span class="str">'http'</span>);
+<span class="kw">const</span> { Server } = <span class="func">require</span>(<span class="str">"socket.io"</span>);
+
+<span class="kw">const</span> app = <span class="func">express</span>();
+<span class="kw">const</span> server = <span class="func">http</span>.<span class="func">createServer</span>(app);
+<span class="kw">const</span> io = <span class="func">new</span> Server(server);
+
+io.<span class="func">on</span>(<span class="str">'connection'</span>, (socket) => {
+    socket.<span class="func">on</span>(<span class="str">'code-change'</span>, (data) => {
+        io.<span class="func">emit</span>(<span class="str">'code-update'</span>, data);
+    });
+});
+
+server.<span class="func">listen</span>(<span class="num">3000</span>);</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section id="setup" class="setup-section">
+            <div class="section-header">
+                <span class="section-tag">quickstart</span>
+                <h2>Jak zacząć?</h2>
+                <p>Uruchom w 3 minuty</p>
+            </div>
+            <div class="setup-steps">
+                <div class="setup-card"><div class="setup-number">01</div><div class="setup-content"><h3>Klonowanie</h3><p>Sklonuj repozytorium lub pobierz kod</p><code>git clone https://github.com/...</code></div></div>
+                <div class="setup-arrow" aria-hidden="true">→</div>
+                <div class="setup-card"><div class="setup-number">02</div><div class="setup-content"><h3>Instalacja</h3><p>Zainstaluj zależności npm</p><code>npm install</code></div></div>
+                <div class="setup-arrow" aria-hidden="true">→</div>
+                <div class="setup-card"><div class="setup-number">03</div><div class="setup-content"><h3>Uruchomienie</h3><p>Uruchom serwer i otwórz w przeglądarce</p><code>npm start</code></div></div>
+            </div>
+            <div class="setup-links">
+                <a href="#explorer" class="link-card"><span>🌐 Uruchom eksplorator offline</span></a>
+                <a href="#explorer" class="link-card"><span>📊 Sprawdź quiz i postęp</span></a>
+                <a href="#explorer" class="link-card"><span>📝 Przejdź do lekcji C++</span></a>
+            </div>
+        </section>
+
+        <section id="demo" class="demo-section">
+            <div class="section-header">
+                <span class="section-tag">watch</span>
+                <h2>Zobacz w działaniu</h2>
+                <p>Film pokazuje jak aplikacja działa od środka</p>
+                <p>Dzwięk uszkodzony na wideo !!! sry</p>
+            </div>
+            <div class="video-wrapper" style="display:grid;place-items:center;text-align:center;padding:2rem;gap:1rem">
+                <div>
+                    <strong>Wersja offline</strong>
+                    <p style="margin:.5rem 0;color:var(--text-muted)">Zamiast filmu możesz od razu przejść przez lekcje i quiz w wbudowanym eksploratorze.</p>
+                    <a href="#explorer" class="link-card"><span>▶ Otwórz interaktywny eksplorator</span></a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand"><span class="logo-icon" aria-hidden="true">⚡</span><span>C++ Lab</span></div>
+            <p>Aplikacja edukacyjna do nauki programowania w C++</p>
+            <div class="footer-links">
+                <a href="#about">O aplikacji</a>
+                <a href="#explorer">Ćwiczenia</a>
+                <a href="#features">Funkcje</a>
+                <a href="#setup">Start</a>
+                <a href="#demo">Demo</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        'use strict';
+
+        var lessons = [
+            {
+                id: 'zmienne', title: 'Zmienne i typy', level: 'Podstawy', tag: 'typy danych',
+                hint: 'Jak przechowywać dane różnych rodzajów?',
+                code: '#include <iostream>\nusing namespace std;\n\nint main() {\n    int wiek = 17;\n    double srednia = 4.5;\n    bool aktywny = true;\n\n    cout << "Wiek: " << wiek << endl;\n    return 0;\n}',
+                steps: [
+                    { line: 0, text: '#include <iostream> dołącza bibliotekę odpowiedzialną za wejście i wyjście — bez niej nie użyjemy cout.' },
+                    { line: 4, text: 'int to liczba całkowita. Zmienna „wiek” otrzymuje wartość 17. Nazwa zmiennej nie może zaczynać się od cyfry.' },
+                    { line: 5, text: 'double przechowuje liczby zmiennoprzecinkowe, np. 4.5. Używaj go tam, gdzie potrzebna jest dokładność po przecinku.' },
+                    { line: 6, text: 'bool ma tylko dwie wartości: true albo false. Idealnie nadaje się do warunków.' },
+                    { line: 8, text: 'cout wypisuje tekst i wartości na ekran, a endl kończy linię. Operator << „przesyła” dane do strumienia.' }
+                ],
+                quiz: { q: 'Który typ najlepiej przechowa ocenę 4.5?', options: ['int', 'double', 'bool', 'char'], answer: 1, why: 'double obsługuje liczby z częścią dziesiętną — int obciąłby wynik do 4.' }
+            },
+            {
+                id: 'petle', title: 'Pętla for', level: 'Podstawy', tag: 'sterowanie',
+                hint: 'Jak powtarzać czynności bez pisania ich wielokrotnie?',
+                code: '#include <iostream>\nusing namespace std;\n\nint main() {\n    for (int i = 0; i < 5; i++) {\n        cout << i << " ";\n    }\n    cout << "Koniec" << endl;\n    return 0;\n}',
+                steps: [
+                    { line: 4, text: 'Pętla for ma trzy części: inicjalizację (i = 0), warunek (i < 5) i inkrementację (i++).' },
+                    { line: 4, text: 'Warunek jest sprawdzany przed każdym przebiegiem. Gdy przestanie być prawdziwy, pętla się kończy.' },
+                    { line: 5, text: 'Treść pętli wypisuje bieżącą wartość i. Wynik to: 0 1 2 3 4.' },
+                    { line: 7, text: 'Po pętli zmienna i już nie istnieje — została zadeklarowana w jej nagłówku.' }
+                ],
+                quiz: { q: 'Ile razy wykona się pętla for (int i = 0; i < 5; i++)?', options: ['4 razy', '5 razy', '6 razy', 'Bez końca'], answer: 1, why: 'Wartości i to 0, 1, 2, 3, 4 — czyli pięć przebiegów.' }
+            },
+            {
+                id: 'funkcje', title: 'Funkcje', level: 'Średni', tag: 'struktura',
+                hint: 'Jak wydzielić kawałek kodu, który używasz wielokrotnie?',
+                code: '#include <iostream>\nusing namespace std;\n\nint suma(int a, int b) {\n    return a + b;\n}\n\nint main() {\n    int wynik = suma(3, 4);\n    cout << wynik << endl;\n    return 0;\n}',
+                steps: [
+                    { line: 4, text: 'Deklaracja funkcji składa się z typu zwracanego (int), nazwy (suma) i listy parametrów (int a, int b).' },
+                    { line: 5, text: 'return kończy pracę funkcji i przekazuje wynik z powrotem do miejsca wywołania.' },
+                    { line: 9, text: 'Wywołanie suma(3, 4) podstawia 3 pod a, a 4 pod b. Wynik 7 trafia do zmiennej wynik.' }
+                ],
+                quiz: { q: 'Co zwróci funkcja suma(10, 20) z powyższego kodu?', options: ['10', '20', '30', 'Brak odpowiedzi'], answer: 2, why: 'Funkcja dodaje oba parametry i zwraca ich sumę, czyli 30.' }
+            },
+            {
+                id: 'wektory', title: 'Wektory (vector)', level: 'Średni', tag: 'kolekcje',
+                hint: 'Jak przechowywać listę danych, gdy nie znasz jej długości?',
+                code: '#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n    vector<int> liczby;\n    liczby.push_back(10);\n    liczby.push_back(20);\n\n    for (int x : liczby) {\n        cout << x << " ";\n    }\n}',
+                steps: [
+                    { line: 5, text: 'vector<int> to dynamiczna tablica liczb całkowitych. W przeciwieństwie do tablicy może rosnąć.' },
+                    { line: 6, text: 'push_back dodaje element na koniec wektora. Kolejne wywołanie dodaje kolejną liczbę.' },
+                    { line: 9, text: 'Pętla zakresowa for (int x : liczby) przechodzi po wszystkich elementach wektora bez użycia indeksu.' }
+                ],
+                quiz: { q: 'Co robi metoda push_back(20)?', options: ['Usuwa element 20', 'Dodaje 20 na koniec wektora', 'Sortuje wektor', 'Zwiększa rozmiar o 20'], answer: 1, why: 'push_back dopisuje nowy element na koniec kontenera.' }
+            },
+            {
+                id: 'klasy', title: 'Klasy i obiekty', level: 'Zaawansowany', tag: 'OOP',
+                hint: 'Jak połączyć dane i zachowanie w jeden typ?',
+                code: '#include <iostream>\nusing namespace std;\n\nclass Uczen {\npublic:\n    string imie;\n    void przywitaj() {\n        cout << "Cześć, " << imie << endl;\n    }\n};\n\nint main() {\n    Uczen u;\n    u.imie = "Ania";\n    u.przywitaj();\n}',
+                steps: [
+                    { line: 4, text: 'class definiuje nowy typ. Blok public: udostępnia pola i metody na zewnątrz klasy.' },
+                    { line: 6, text: 'Metoda przywitaj() korzysta z pola imie należącego do tego samego obiektu.' },
+                    { line: 12, text: 'Uczen u; tworzy obiekt (instancję) klasy. Każdy obiekt ma własną kopię pola imie.' },
+                    { line: 14, text: 'Kropka pozwala odwołać się do pól i metod konkretnego obiektu.' }
+                ],
+                quiz: { q: 'Czym jest „u” w instrukcji Uczen u;?', options: ['Klasą', 'Obiektem klasy Uczen', 'Metodą', 'Typem liczbowym'], answer: 1, why: 'u to konkretny obiekt (instancja) utworzony na podstawie klasy Uczen.' }
+            },
+            {
+                id: 'referencje', title: 'Referencje', level: 'Zaawansowany', tag: 'OOP',
+                hint: 'Jak przekazać zmienną do funkcji bez kopiowania?',
+                code: '#include <iostream>\nusing namespace std;\n\nvoid zwieksz(int& x) {\n    x = x + 1;\n}\n\nint main() {\n    int liczba = 5;\n    zwieksz(liczba);\n    cout << liczba << endl;\n}',
+                steps: [
+                    { line: 4, text: 'Znak & w deklaracji parametru oznacza referencję — funkcja dostaje dostęp do oryginalnej zmiennej.' },
+                    { line: 5, text: 'Zmiana x zmienia wartość zmiennej liczba w funkcji main, bo to ten sam obiekt w pamięci.' },
+                    { line: 10, text: 'Wywołanie zwieksz(liczba) nie tworzy kopii. Po nim liczba wynosi 6.' }
+                ],
+                quiz: { q: 'Co wypisze program po wywołaniu zwieksz(liczba)?', options: ['5', '6', '0', 'Błąd kompilacji'], answer: 1, why: 'Referencja modyfikuje oryginalną zmienną, więc z 5 otrzymujemy 6.' }
+            }
+        ];
+
+        var STORAGE_KEY = 'clab.progress.v1';
+        function safeGet(key) { try { return window.localStorage.getItem(key); } catch (e) { return null; } }
+        function safeSet(key, value) { try { window.localStorage.setItem(key, value); } catch (e) { /* brak pamięci lokalnej */ } }
+        function escapeHtml(value) {
+            return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        var completed = {};
+        try {
+            var saved = JSON.parse(safeGet(STORAGE_KEY) || '{}');
+            if (saved && typeof saved === 'object') completed = saved;
+        } catch (e) { completed = {}; }
+
+        var currentIndex = 0;
+        var currentStep = 0;
+        var selectedAnswer = -1;
+        var answered = false;
+
+        var els = {
+            lessonList: document.getElementById('lessonList'),
+            title: document.getElementById('lessonTitle'),
+            hint: document.getElementById('lessonHint'),
+            file: document.getElementById('fileName'),
+            code: document.getElementById('codeOutput'),
+            stepCount: document.getElementById('stepCount'),
+            stepText: document.getElementById('stepText'),
+            prev: document.getElementById('prevStep'),
+            next: document.getElementById('nextStep'),
+            quizBox: document.getElementById('quizBox'),
+            quizQuestion: document.getElementById('quizQuestion'),
+            quizOptions: document.getElementById('quizOptions'),
+            quizFeedback: document.getElementById('quizFeedback'),
+            status: document.getElementById('explorerStatus'),
+            progressText: document.getElementById('progressText'),
+            progressFill: document.getElementById('progressFill'),
+            progressTrack: document.getElementById('progressTrack')
+        };
+
+        var tokenRe = /(\/\/[^\n]*)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(#include\b)|\b(int|double|bool|char|void|auto|const|return|for|while|if|else|class|public|private|string|vector|namespace|using|cout|cin|endl|push_back|true|false|new|delete)\b|\b(\d+(?:\.\d+)?)\b/g;
+
+        function highlight(line) {
+            return escapeHtml(line).replace(tokenRe, function (match, comment, str, pre, keyword, number) {
+                if (comment) return '<span class="tok-com">' + match + '</span>';
+                if (str) return '<span class="tok-str">' + match + '</span>';
+                if (pre) return '<span class="tok-pre">' + match + '</span>';
+                if (keyword) return '<span class="tok-kw">' + match + '</span>';
+                if (number) return '<span class="tok-num">' + match + '</span>';
+                return match;
+            });
+        }
+
+        function renderProgress() {
+            var count = lessons.filter(function (lesson) { return !!completed[lesson.id]; }).length;
+            var pct = Math.round(count / lessons.length * 100);
+            els.progressText.textContent = 'Ukończono ' + count + ' z ' + lessons.length;
+            els.progressFill.style.width = pct + '%';
+            els.progressTrack.setAttribute('aria-valuenow', String(count));
+        }
+
+        function renderLessonList() {
+            els.lessonList.innerHTML = '';
+            lessons.forEach(function (lesson, index) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'lesson-btn' + (index === currentIndex ? ' active' : '');
+                button.setAttribute('aria-pressed', index === currentIndex ? 'true' : 'false');
+                button.innerHTML = '<span>' + escapeHtml(lesson.title) + '<span class="lesson-meta">' + escapeHtml(lesson.level) + ' · ' + escapeHtml(lesson.tag) + '</span></span>' +
+                    '<span class="check" aria-label="' + (completed[lesson.id] ? 'Ukończone' : 'Nieukończone') + '">' + (completed[lesson.id] ? '✓' : '○') + '</span>';
+                button.addEventListener('click', function () { selectLesson(index); });
+                els.lessonList.appendChild(button);
+            });
+        }
+
+        function renderCode(lesson) {
+            var activeLine = lesson.steps[currentStep].line;
+            els.code.innerHTML = lesson.code.split('\n').map(function (line, index) {
+                return '<span class="code-line' + (index === activeLine ? ' is-active' : '') + '"><span class="ln" aria-hidden="true">' + (index + 1) + '</span>' + highlight(line) + '</span>';
+            }).join('');
+        }
+
+        function renderQuiz(lesson) {
+            els.quizBox.hidden = true;
+            els.quizFeedback.textContent = '';
+            if (currentStep !== lesson.steps.length - 1) return;
+            els.quizBox.hidden = false;
+            els.quizQuestion.textContent = lesson.quiz.q;
+            els.quizOptions.innerHTML = '';
+            lesson.quiz.options.forEach(function (option, index) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'quiz-option';
+                button.textContent = option;
+                button.setAttribute('aria-pressed', 'false');
+                button.addEventListener('click', function () {
+                    if (answered) return;
+                    selectedAnswer = index;
+                    checkAnswer(lesson);
+                });
+                els.quizOptions.appendChild(button);
+            });
+            if (answered) {
+                Array.prototype.forEach.call(els.quizOptions.children, function (button, index) {
+                    if (index === lesson.quiz.answer) button.classList.add('correct');
+                    else if (index === selectedAnswer) button.classList.add('wrong');
+                    button.disabled = true;
+                });
+                els.quizFeedback.textContent = selectedAnswer === lesson.quiz.answer ? '✓ ' + lesson.quiz.why : '✗ ' + lesson.quiz.why;
+            }
+        }
+
+        function checkAnswer(lesson) {
+            answered = true;
+            var correct = selectedAnswer === lesson.quiz.answer;
+            if (correct) {
+                completed[lesson.id] = true;
+                safeSet(STORAGE_KEY, JSON.stringify(completed));
+                renderProgress();
+                renderLessonList();
+            }
+            Array.prototype.forEach.call(els.quizOptions.children, function (button, index) {
+                if (index === lesson.quiz.answer) button.classList.add('correct');
+                else if (index === selectedAnswer) button.classList.add('wrong');
+                button.disabled = true;
+                button.setAttribute('aria-pressed', index === selectedAnswer ? 'true' : 'false');
+            });
+            els.quizFeedback.textContent = correct ? '✓ Poprawnie! ' + lesson.quiz.why : '✗ Jeszcze raz przeanalizuj kod. ' + lesson.quiz.why;
+            els.status.textContent = correct ? 'Pojęcie zaliczone — postęp zapisany.' : 'Spróbuj innej odpowiedzi, wybierając nowe pojęcie i wracając tutaj.';
+        }
+
+        function renderStep(lesson) {
+            els.stepCount.textContent = 'Krok ' + (currentStep + 1) + ' z ' + lesson.steps.length;
+            els.stepText.textContent = lesson.steps[currentStep].text;
+            els.prev.disabled = currentStep === 0;
+            els.next.disabled = currentStep === lesson.steps.length - 1;
+            renderCode(lesson);
+            renderQuiz(lesson);
+        }
+
+        function selectLesson(index) {
+            currentIndex = index;
+            currentStep = 0;
+            answered = false;
+            selectedAnswer = -1;
+            var lesson = lessons[index];
+            els.title.textContent = lesson.title;
+            els.hint.textContent = lesson.hint + ' · ' + lesson.level;
+            els.file.textContent = lesson.id + '.cpp';
+            els.status.textContent = 'Wyjaśnienie krok po kroku — podświetlony wiersz opisuje aktualny krok.';
+            renderLessonList();
+            renderStep(lesson);
+        }
+
+        els.prev.addEventListener('click', function () {
+            if (currentStep > 0) { currentStep--; renderStep(lessons[currentIndex]); }
+        });
+        els.next.addEventListener('click', function () {
+            if (currentStep < lessons[currentIndex].steps.length - 1) { currentStep++; renderStep(lessons[currentIndex]); }
+        });
+
+        els.status.setAttribute('role', 'status');
+        document.getElementById('copyCode').addEventListener('click', function () {
+            var text = lessons[currentIndex].code;
+            function done(ok) {
+                els.status.textContent = ok ? 'Kod skopiowany do schowka.' : 'Nie udało się skopiować — zaznacz kod ręcznie.';
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+            } else {
+                try {
+                    var temp = document.createElement('textarea');
+                    temp.value = text;
+                    temp.setAttribute('readonly', '');
+                    temp.style.position = 'fixed';
+                    temp.style.opacity = '0';
+                    document.body.appendChild(temp);
+                    temp.select();
+                    var ok = document.execCommand('copy');
+                    temp.remove();
+                    done(ok);
+                } catch (e) { done(false); }
+            }
+        });
+
+        document.getElementById('resetProgress').addEventListener('click', function () {
+            completed = {};
+            safeSet(STORAGE_KEY, JSON.stringify(completed));
+            answered = false;
+            renderProgress();
+            renderLessonList();
+            renderStep(lessons[currentIndex]);
+            els.status.textContent = 'Postęp wyczyszczony. Możesz zacząć od początku.';
+        });
+
+        /* Menu mobilne i lekki kursor */
+        var menuToggle = document.querySelector('.menu-toggle');
+        var navLinks = document.getElementById('clabNavLinks');
+        menuToggle.setAttribute('aria-label', 'Otwórz menu');
+        menuToggle.addEventListener('click', function () {
+            var isOpen = navLinks.classList.toggle('open');
+            menuToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            menuToggle.setAttribute('aria-label', isOpen ? 'Zamknij menu' : 'Otwórz menu');
+        });
+        navLinks.addEventListener('click', function (e) {
+            if (e.target.tagName === 'A') {
+                navLinks.classList.remove('open');
+                menuToggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && navLinks.classList.contains('open')) {
+                navLinks.classList.remove('open');
+                menuToggle.setAttribute('aria-expanded', 'false');
+                menuToggle.focus();
+            }
+        });
+
+        var cursor = document.querySelector('.cursor');
+        if (window.matchMedia('(pointer: fine)').matches) {
+            document.addEventListener('pointermove', function (e) {
+                cursor.style.transform = 'translate(' + (e.clientX - 10) + 'px,' + (e.clientY - 10) + 'px)';
+            });
+            document.querySelectorAll('a, button').forEach(function (el) {
+                el.addEventListener('pointerenter', function () { cursor.classList.add('hover'); });
+                el.addEventListener('pointerleave', function () { cursor.classList.remove('hover'); });
+            });
+        }
+
+        renderProgress();
+        selectLesson(0);
+    });
+    </script>
+</body>
+</html>

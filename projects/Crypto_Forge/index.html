@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="CRYPTO FORGE // kryptografia od podstaw: SHA-256, PBKDF2-HMAC, AES-256-CBC, RSA i Diffie–Hellman z własnymi testami wektorowymi.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%230f766e'/%3E%3Cpath d='M20 28v-6a12 12 0 0 1 24 0v6' fill='none' stroke='white' stroke-width='4'/%3E%3Crect x='14' y='28' width='36' height='26' rx='5' fill='white'/%3E%3Ccircle cx='32' cy='40' r='4' fill='%230f766e'/%3E%3C/svg%3E">
+  <title>Crypto Forge — silnia kryptograficzna</title>
+  <style>
+    :root {
+      --bg:#f2f5f8; --surface:#fff; --border:#dde3ea; --text:#1a2430; --muted:#667085;
+      --accent:#0f766e; --accent-soft:#e6f5f2; --amber:#b45309; --danger:#d92d20; --violet:#6d28d9;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; min-height:100%; }
+    body {
+      background:var(--bg); color:var(--text);
+      font:13px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      padding:clamp(12px,2vw,26px);
+    }
+    .app { max-width:1180px; margin:0 auto; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:0 14px 44px rgba(20,30,50,.08); overflow:hidden; }
+    header { display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:14px 18px; border-bottom:1px solid var(--border); }
+    .brand { font-size:15px; font-weight:700; letter-spacing:-.01em; }
+    .brand span { color:var(--accent); }
+    .badge { background:var(--accent-soft); color:var(--accent); border-radius:20px; padding:4px 10px; font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+    .spacer { flex:1; }
+    button, select, input, textarea {
+      font:inherit; color:var(--text); background:#fff; border:1px solid var(--border);
+      border-radius:6px; padding:7px 10px;
+    }
+    button { cursor:pointer; }
+    button:hover, select:hover { background:#f5f9ff; border-color:#a9c6ff; }
+    button.primary { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:600; }
+    button.primary:hover { background:#0b5f59; color:#fff; }
+    button.ghost { background:#f7f9fb; }
+    .tabs { display:flex; gap:4px; padding:0 18px; border-bottom:1px solid var(--border); background:#fafbfc; overflow-x:auto; }
+    .tab { padding:11px 15px; border:0; border-bottom:2px solid transparent; background:transparent; border-radius:0; color:var(--muted); font-weight:600; white-space:nowrap; }
+    .tab:hover { background:#f0f5ff; }
+    .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+    .panel { padding:20px; display:none; }
+    .panel.active { display:block; }
+    .grid { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:20px; }
+    .card { border:1px solid var(--border); border-radius:9px; padding:15px; margin-bottom:14px; background:#fff; }
+    .card h3 { margin:0 0 12px; font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+    .field { display:grid; gap:5px; margin-bottom:12px; }
+    .field label { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+    .field > button, .card > button { justify-self:start; margin-top:5px; }
+    .toolbar label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+    input[type="range"] { accent-color:var(--accent); }
+    input.invalid { border-color:var(--danger); background:#fff7f7; }
+    input.mono, textarea.mono, .out.mono { font-family:ui-monospace,"SFMono-Regular",Consolas,monospace; font-size:12px; }
+    textarea { width:100%; min-height:88px; resize:vertical; }
+    .out {
+      background:#f7f9fb; border:1px solid var(--border); border-radius:6px; padding:9px 11px;
+      min-height:38px; word-break:break-all; white-space:pre-wrap;
+    }
+    .out.good { border-color:#a9dbc8; background:#f0fbf6; }
+    .out.bad { border-color:#f3b5b5; background:#fff5f5; color:var(--danger); }
+    .toolbar { display:flex; gap:7px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+    .kv { display:flex; justify-content:space-between; gap:10px; padding:5px 0; border-bottom:1px solid #f0f2f5; font-size:12px; }
+    .kv span { color:var(--muted); }
+    .kv b { font-family:ui-monospace,Consolas,monospace; font-weight:600; }
+    .meter { height:6px; border-radius:3px; background:#edf0f4; overflow:hidden; margin:7px 0 3px; }
+    .meter > div { height:100%; width:0; background:linear-gradient(90deg,#22c55e,#eab308,#ef4444); transition:width .2s; }
+    .hint { font-size:11px; color:var(--muted); line-height:1.7; }
+    .hint code { background:#f1f3f6; padding:1px 4px; border-radius:3px; color:var(--text); }
+    .status { border-top:1px solid var(--border); background:#fafbfc; padding:10px 18px; color:var(--muted); font-size:11px; display:flex; gap:16px; flex-wrap:wrap; }
+    .status b { color:var(--text); }
+    .tests { display:grid; gap:6px; }
+    .test-row { display:flex; justify-content:space-between; gap:8px; padding:6px 9px; background:#f7f9fb; border-radius:5px; font-size:11px; }
+    .test-row b.ok { color:#059669; } .test-row b.fail { color:var(--danger); }
+    :where(button,select,input,textarea):focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+    @media (max-width:900px) { .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="brand">CRYPTO <span>FORGE</span></div>
+      <span class="badge">Własne implementacje · zero bibliotek</span>
+      <div class="spacer"></div>
+      <button type="button" id="selfTestBtn" class="primary">✓ Uruchom self-testy</button>
+    </header>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="hash" type="button">SHA-256</button>
+      <button class="tab" data-tab="aes" type="button">AES-256-CBC</button>
+      <button class="tab" data-tab="rsa" type="button">RSA</button>
+      <button class="tab" data-tab="dh" type="button">Diffie–Hellman</button>
+      <button class="tab" data-tab="history" type="button">Historia</button>
+    </nav>
+
+    <section class="panel active" data-panel="hash">
+      <div class="grid">
+        <div>
+          <div class="card">
+            <h3>Funkcja skrótu od podstaw</h3>
+            <div class="field">
+              <label>Wiadomość</label>
+              <textarea id="hashInput" class="mono" spellcheck="false">abc</textarea>
+            </div>
+            <div class="toolbar"><button type="button" id="hashBtn" class="primary">Oblicz SHA-256</button><button type="button" id="hashCopy" class="ghost">Kopiuj</button></div>
+            <div class="field"><label>Skrót (256 bit)</label><div class="out mono" id="hashOut">—</div></div>
+          </div>
+          <div class="card">
+            <h3>Wizualizacja rund SHA-256 · blok 1</h3>
+            <div class="toolbar"><label for="hashRound">Runda</label><input id="hashRound" type="range" min="0" max="63" value="0" aria-label="Numer rundy SHA-256"><b id="hashRoundLabel">0 / 63</b></div>
+            <div class="out mono" id="hashTrace" style="font-size:11px">—</div>
+            <div class="hint" id="hashTraceHint">Oblicz skrót, aby przejść przez 64 rund kompresji.</div>
+          </div>
+          <div class="card">
+            <h3>Weryfikacja wektora testowego</h3>
+            <div class="hint">Dla <code>"abc"</code> wynik to <code>ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad</code>. Kliknij self-testy w nagłówku, aby sprawdzić implementationję.</div>
+          </div>
+        </div>
+        <aside>
+          <div class="card"><h3>Parametry</h3><div class="kv"><span>Rundy</span><b>64</b></div><div class="kv"><span>Stałe</span><b>K[0..63]</b></div><div class="kv"><span>Padding</span><b>0x80 + bit length</b></div><div class="kv"><span>Format</span><b>Uint8 → hex</b></div></div>
+          <div class="card"><h3>Zastosowania</h3><div class="hint">Skrót jest używany dalej jako baza HMAC oraz PBKDF2 do wyprowadzania klucza AES.</div></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="aes">
+      <div class="grid">
+        <div>
+          <div class="card">
+            <h3>Szyfrowanie symetryczne AES-256-CBC</h3>
+            <div class="field"><label>Tekst jawny</label><textarea id="aesPlain" class="mono" spellcheck="false">Atak na świt. Kod: ORION-7.</textarea></div>
+            <div class="field"><label>Hasło</label><input id="aesPass" type="password" value="correct horse battery staple" placeholder="Hasło" aria-label="Hasło"><div class="meter" aria-hidden="true"><div id="aesStrengthBar"></div></div><div class="hint" id="aesStrengthText">—</div></div>
+            <div class="toolbar"><input id="aesSalt" class="mono" value="73616c742d313233" placeholder="Sól (hex)" aria-label="Sól"><button type="button" id="aesIvBtn">Losuj IV</button></div>
+            <div class="field"><label>IV (hex, 16 bajtów)</label><input id="aesIv" class="mono" value="000102030405060708090a0b0c0d0e0f" aria-label="IV"></div>
+            <div class="toolbar"><button type="button" id="aesEncBtn" class="primary">Szyfruj</button><button type="button" id="aesDecBtn">Odszyfruj</button></div>
+            <div class="field"><label>Szyfrogram (IV + dane, hex)</label><div class="out mono" id="aesCipher">—</div><button type="button" class="ghost" data-copy-target="aesCipher">Kopiuj szyfrogram</button></div>
+            <div class="field"><label>Odszyfrowany tekst</label><div class="out mono" id="aesDecOut">—</div><button type="button" class="ghost" data-copy-target="aesDecOut">Kopiuj tekst</button></div>
+          </div>
+          <div class="card">
+            <h3>Wizualizacja rund AES · pierwszy blok</h3>
+            <div class="toolbar"><label for="aesRound">Krok</label><input id="aesRound" type="range" min="0" max="1" value="0" aria-label="Numer kroku AES"><b id="aesRoundLabel">0 / 1</b></div>
+            <div class="out mono" id="aesTrace" style="font-size:11px">—</div>
+          </div>
+        </div>
+        <aside>
+          <div class="card"><h3>Klucz</h3><div class="kv"><span>Wyprowadzanie</span><b>PBKDF2-HMAC-SHA256</b></div><div class="kv"><span>Iteracje</span><b>20 000</b></div><div class="kv"><span>Długość klucza</span><b>256 bit</b></div><div class="kv"><span>Tryb</span><b>CBC + PKCS#7</b></div><div class="field" style="margin-top:12px"><label>Klucz (hex)</label><div class="out mono" id="aesKeyOut" style="font-size:10px">—</div><button type="button" class="ghost" data-copy-target="aesKeyOut">Kopiuj klucz</button></div></div>
+          <div class="card"><h3>Schowek kluczy · localStorage</h3>
+            <div class="field"><label>Nazwa wpisu</label><input id="vaultName" placeholder="np. klucz-orion" aria-label="Nazwa wpisu w schowku"></div>
+            <div class="toolbar"><select id="vaultSelect" aria-label="Zapisane klucze"><option value="">— brak wpisów —</option></select></div>
+            <div class="toolbar"><button type="button" id="vaultSaveBtn">Zapisz</button><button type="button" id="vaultLoadBtn">Wczytaj</button><button type="button" id="vaultDeleteBtn" class="ghost">Usuń</button></div>
+            <div class="hint">Zapisuje wyprowadzony klucz i IV (nie hasło). Po wczytaniu klucz ze schowka jest używany do szyfrowania i odszyfrowania.</div>
+          </div>
+          <div class="card"><h3>Uwaga</h3><div class="hint">To implementacja edukacyjna. Do ochrony rzeczywistych danych używaj <code>WebCrypto</code> i uwierzytelnionego trybu, np. AES-GCM.</div></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="rsa">
+      <div class="grid">
+        <div>
+          <div class="card">
+            <h3>Kryptografia asymetryczna RSA</h3>
+            <div class="toolbar">
+              <select id="rsaBits" aria-label="Długość klucza"><option value="512">512 bit</option><option value="1024">1024 bit</option></select>
+              <button type="button" id="rsaGenBtn" class="primary">Generuj klucze</button>
+              <span id="rsaGenStatus" class="hint">Brak kluczy</span>
+            </div>
+            <div class="field"><label>Wiadomość (krótka)</label><textarea id="rsaPlain" class="mono" spellcheck="false">NOVA</textarea></div>
+            <div class="toolbar"><button type="button" id="rsaEncBtn">Szyfruj kluczem publicznym</button><button type="button" id="rsaDecBtn">Odszyfruj kluczem prywatnym</button></div>
+            <div class="field"><label>Szyfrogram (hex)</label><div class="out mono" id="rsaCipher">—</div><button type="button" class="ghost" data-copy-target="rsaCipher">Kopiuj szyfrogram</button></div>
+            <div class="field"><label>Wynik</label><div class="out mono" id="rsaOut">—</div><button type="button" class="ghost" data-copy-target="rsaOut">Kopiuj wynik</button></div>
+          </div>
+        </div>
+        <aside>
+          <div class="card"><h3>Klucze</h3><div class="kv"><span>Moduł n</span><b id="rsaN">—</b></div><div class="kv"><span>Wykładnik e</span><b id="rsaE">—</b></div><div class="kv"><span>Wykładnik d</span><b id="rsaD">—</b></div><div class="hint" style="margin-top:9px">Liczby pierwsze generowane testem Millera–Rabina, odwrotność modularna przez rozszerzony algorytm Euklidesa.</div></div>
+          <div class="card"><h3>Podpis cyfrowy</h3><div class="hint">Podpis to szyfrowanie skrótu SHA-256 kluczem prywatnym; weryfikacja odtwarza skrót kluczem publicznym.</div><div class="toolbar" style="margin-top:9px"><button type="button" id="rsaSignBtn">Podpisz wiadomość</button></div><div class="out mono" id="rsaSign" style="margin-top:8px;font-size:10px">—</div><button type="button" class="ghost" data-copy-target="rsaSign" style="margin-top:6px">Kopiuj podpis</button></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="dh">
+      <div class="grid">
+        <div>
+          <div class="card">
+            <h3>Uzgodnienie klucza Diffie–Hellmana</h3>
+            <div class="toolbar"><button type="button" id="dhGenBtn" class="primary">Wygeneruj moją parę</button><button type="button" id="dhPeerBtn">Wygeneruj „peer”</button></div>
+            <div class="field"><label>Mój klucz publiczny A = gᵃ mod p (hex)</label><div class="out mono" id="dhMine" style="font-size:10px">—</div><button type="button" class="ghost" data-copy-target="dhMine">Kopiuj klucz publiczny</button></div>
+            <div class="field"><label>Klucz publiczny rozmówcy B (hex)</label><textarea id="dhPeer" class="mono" spellcheck="false" placeholder="Wklej hex lub kliknij Wygeneruj peer"></textarea></div>
+            <div class="toolbar"><button type="button" id="dhSharedBtn">Oblicz sekret wspólny</button><button type="button" id="dhCopyBtn">Kopiuj skrót</button></div>
+            <div class="field"><label>Skrót sekretu · SHA-256</label><div class="out mono" id="dhShared">—</div></div>
+          </div>
+        </div>
+        <aside>
+          <div class="card"><h3>Grupa</h3><div class="kv"><span>Moduł</span><b>RFC 3526 · 1024-bit MODP</b></div><div class="kv"><span>Generator</span><b>g = 2</b></div><div class="kv"><span>Prywatny</span><b>256 bit · CSPRNG</b></div><div class="hint" style="margin-top:9px">Sekret wspólny to s = Bᵃ mod p = Aᵇ mod p. Nigdy nie przesyłamy a ani b.</div></div>
+          <div class="card"><h3>Self-testy</h3><div class="tests" id="testResults"><div class="test-row"><span>Uruchom testy, aby zobaczyć wyniki</span><b>—</b></div></div></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="panel" data-panel="history">
+      <div class="grid">
+        <div>
+          <div class="card">
+            <h3>Rejestr operacji · ostatnie 40</h3>
+            <div class="toolbar"><button type="button" id="historyClearBtn" class="ghost">Wyczyść historię</button><button type="button" id="reportBtn" class="primary">Eksport raportu .txt</button></div>
+            <div class="tests" id="historyList"><div class="test-row"><span>Brak operacji</span><b>—</b></div></div>
+          </div>
+        </div>
+        <aside>
+          <div class="card"><h3>Raport</h3><div class="hint">Raport zawiera znaczniki czasu, wszystkie zapisane operacje oraz aktualne wyniki skrótów, szyfrogramów i sekretu DH. Plik jest tworzony całkowicie lokalnie.</div></div>
+        </aside>
+      </div>
+    </section>
+
+    <div class="status"><span>Stan: <b id="globalStatus">Gotowe.</b></span><span>Implementacje: <b>SHA-256 · PBKDF2 · AES · RSA · DH</b></span><span>Losowość: <b>crypto.getRandomValues</b></span></div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const $ = (id) => document.getElementById(id);
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+      const status = (text) => { $('globalStatus').textContent = text; };
+      const hex = (bytes) => Array.from(bytes, (value) => value.toString(16).padStart(2, '0')).join('');
+      function fromHex(text) {
+        const clean = String(text).replace(/[^0-9a-f]/gi, '');
+        if (clean.length % 2) throw new Error('Nieparzysta liczba znaków hex');
+        const out = new Uint8Array(clean.length / 2);
+        for (let i = 0; i < out.length; i += 1) out[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16);
+        return out;
+      }
+      const randomBytes = (length) => {
+        const bytes = new Uint8Array(length);
+        crypto.getRandomValues(bytes);
+        return bytes;
+      };
+      const copy = async (text) => {
+        try { await navigator.clipboard.writeText(text); status('Skopiowano do schowka.'); }
+        catch (_) { status('Schowek niedostępny — zaznacz tekst ręcznie.'); }
+      };
+      const wordHex = (value) => (value >>> 0).toString(16).padStart(8, '0');
+      const stateText = (bytes) => {
+        const value = hex(bytes);
+        return value.match(/.{1,32}/g).join('\n');
+      };
+      const download = (name, text, type) => {
+        const blob = new Blob([text], { type: type || 'text/plain;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = name;
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+      };
+
+      const operations = [];
+      function logOp(name, detail) {
+        operations.push({ time: new Date().toLocaleTimeString('pl-PL', { hour12: false }), name, detail: String(detail) });
+        if (operations.length > 40) operations.shift();
+        renderHistory();
+      }
+      function renderHistory() {
+        const host = $('historyList');
+        host.replaceChildren();
+        if (!operations.length) {
+          const row = document.createElement('div');
+          row.className = 'test-row';
+          const label = document.createElement('span'); label.textContent = 'Brak operacji';
+          const value = document.createElement('b'); value.textContent = '—';
+          row.append(label, value); host.appendChild(row);
+          return;
+        }
+        operations.slice().reverse().forEach((entry) => {
+          const row = document.createElement('div');
+          row.className = 'test-row';
+          const label = document.createElement('span');
+          label.textContent = `${entry.time} · ${entry.name}`;
+          const value = document.createElement('b');
+          value.textContent = entry.detail.length > 42 ? `${entry.detail.slice(0, 42)}…` : entry.detail;
+          row.title = `${entry.name}: ${entry.detail}`;
+          row.append(label, value); host.appendChild(row);
+        });
+      }
+      const store = {
+        get(key) { try { return localStorage.getItem(key); } catch (_) { return null; } },
+        set(key, value) { try { localStorage.setItem(key, value); return true; } catch (_) { return false; } },
+        remove(key) { try { localStorage.removeItem(key); return true; } catch (_) { return false; } }
+      };
+
+      const K = [
+        0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+        0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+        0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+        0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+        0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+        0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+        0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+        0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+      ];
+      const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+
+      function sha256(message, trace) {
+        const bytes = message instanceof Uint8Array ? message : encoder.encode(String(message));
+        const length = bytes.length;
+        const padded = new Uint8Array((length + 9 + 63) & ~63);
+        padded.set(bytes);
+        padded[length] = 0x80;
+        const bits = length * 8;
+        const view = new DataView(padded.buffer);
+        view.setUint32(padded.length - 8, Math.floor(bits / 0x100000000), false);
+        view.setUint32(padded.length - 4, bits >>> 0, false);
+
+        const h = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+        const w = new Uint32Array(64);
+        for (let offset = 0; offset < padded.length; offset += 64) {
+          for (let i = 0; i < 16; i += 1) w[i] = view.getUint32(offset + i * 4, false);
+          for (let i = 16; i < 64; i += 1) {
+            const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+            const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+            w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+          }
+          let [a, b, c, d, e, f, g, hh] = h;
+          for (let i = 0; i < 64; i += 1) {
+            const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+            const ch = (e & f) ^ (~e & g);
+            const t1 = (hh + S1 + ch + K[i] + w[i]) >>> 0;
+            const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+            const maj = (a & b) ^ (a & c) ^ (b & c);
+            const t2 = (S0 + maj) >>> 0;
+            if (trace && offset === 0) {
+              trace.push({
+                round: i,
+                w: wordHex(w[i]),
+                k: wordHex(K[i]),
+                t1: wordHex(t1),
+                t2: wordHex(t2),
+                before: [a, b, c, d, e, f, g, hh].map(wordHex).join(' '),
+                after: [(t1 + t2) >>> 0, a, b, c, (d + t1) >>> 0, e, f, g].map(wordHex).join(' ')
+              });
+            }
+            hh = g; g = f; f = e; e = (d + t1) >>> 0;
+            d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+          }
+          h[0] = (h[0] + a) >>> 0; h[1] = (h[1] + b) >>> 0; h[2] = (h[2] + c) >>> 0; h[3] = (h[3] + d) >>> 0;
+          h[4] = (h[4] + e) >>> 0; h[5] = (h[5] + f) >>> 0; h[6] = (h[6] + g) >>> 0; h[7] = (h[7] + hh) >>> 0;
+        }
+        const out = new Uint8Array(32);
+        const outView = new DataView(out.buffer);
+        h.forEach((value, i) => outView.setUint32(i * 4, value, false));
+        return out;
+      }
+
+      function hmacSha256(key, message) {
+        let block = key;
+        if (block.length > 64) block = sha256(block);
+        const padded = new Uint8Array(64);
+        padded.set(block);
+        const inner = new Uint8Array(64 + message.length);
+        const outer = new Uint8Array(64 + 32);
+        for (let i = 0; i < 64; i += 1) {
+          inner[i] = padded[i] ^ 0x36;
+          outer[i] = padded[i] ^ 0x5c;
+        }
+        inner.set(message, 64);
+        const innerHash = sha256(inner);
+        outer.set(innerHash, 64);
+        return sha256(outer);
+      }
+
+      function pbkdf2(password, salt, iterations, length) {
+        const blocks = Math.ceil(length / 32);
+        const result = new Uint8Array(blocks * 32);
+        for (let block = 1; block <= blocks; block += 1) {
+          const input = new Uint8Array(salt.length + 4);
+          input.set(salt);
+          new DataView(input.buffer).setUint32(salt.length, block, false);
+          let u = hmacSha256(password, input);
+          const t = new Uint8Array(u);
+          for (let round = 1; round < iterations; round += 1) {
+            u = hmacSha256(password, u);
+            for (let i = 0; i < 32; i += 1) t[i] ^= u[i];
+          }
+          result.set(t, (block - 1) * 32);
+        }
+        return result.slice(0, length);
+      }
+
+      function gmul(a, b) {
+        let result = 0;
+        let x = a, y = b;
+        for (let i = 0; i < 8; i += 1) {
+          if (y & 1) result ^= x;
+          const high = x & 0x80;
+          x = (x << 1) & 0xff;
+          if (high) x ^= 0x1b;
+          y >>= 1;
+        }
+        return result;
+      }
+      const rotl8 = (value, shift) => ((value << shift) | (value >>> (8 - shift))) & 0xff;
+      const SBOX = new Uint8Array(256);
+      const INV_SBOX = new Uint8Array(256);
+      for (let i = 0; i < 256; i += 1) {
+        let inverse = 0;
+        if (i !== 0) for (let j = 1; j < 256; j += 1) if (gmul(i, j) === 1) { inverse = j; break; }
+        const value = i === 0 ? 0x63 : inverse ^ rotl8(inverse, 1) ^ rotl8(inverse, 2) ^ rotl8(inverse, 3) ^ rotl8(inverse, 4) ^ 0x63;
+        SBOX[i] = value;
+        INV_SBOX[value] = i;
+      }
+      const RCON = new Uint8Array(15);
+      RCON[1] = 1;
+      for (let i = 2; i < 15; i += 1) RCON[i] = gmul(RCON[i - 1], 2);
+
+      function expandKey(key) {
+        const nk = key.length / 4;
+        const rounds = nk + 6;
+        const words = [];
+        for (let i = 0; i < nk; i += 1) words.push([key[i * 4], key[i * 4 + 1], key[i * 4 + 2], key[i * 4 + 3]]);
+        for (let i = nk; i < 4 * (rounds + 1); i += 1) {
+          let temp = words[i - 1].slice();
+          if (i % nk === 0) {
+            temp = [temp[1], temp[2], temp[3], temp[0]].map((value) => SBOX[value]);
+            temp[0] ^= RCON[i / nk];
+          } else if (nk > 6 && i % nk === 4) {
+            temp = temp.map((value) => SBOX[value]);
+          }
+          words.push(words[i - nk].map((value, index) => value ^ temp[index]));
+        }
+        return { words, rounds };
+      }
+
+      function addRoundKey(state, words, round) {
+        for (let column = 0; column < 4; column += 1) {
+          for (let row = 0; row < 4; row += 1) state[column * 4 + row] ^= words[round * 4 + column][row];
+        }
+      }
+      function shiftRows(state) {
+        const copy = state.slice();
+        for (let row = 0; row < 4; row += 1) {
+          for (let column = 0; column < 4; column += 1) state[column * 4 + row] = copy[((column + row) % 4) * 4 + row];
+        }
+      }
+      function invShiftRows(state) {
+        const copy = state.slice();
+        for (let row = 0; row < 4; row += 1) {
+          for (let column = 0; column < 4; column += 1) state[((column + row) % 4) * 4 + row] = copy[column * 4 + row];
+        }
+      }
+      function mixColumns(state) {
+        for (let column = 0; column < 4; column += 1) {
+          const i = column * 4;
+          const a0 = state[i], a1 = state[i + 1], a2 = state[i + 2], a3 = state[i + 3];
+          state[i]     = gmul(a0, 2) ^ gmul(a1, 3) ^ a2 ^ a3;
+          state[i + 1] = a0 ^ gmul(a1, 2) ^ gmul(a2, 3) ^ a3;
+          state[i + 2] = a0 ^ a1 ^ gmul(a2, 2) ^ gmul(a3, 3);
+          state[i + 3] = gmul(a0, 3) ^ a1 ^ a2 ^ gmul(a3, 2);
+        }
+      }
+      function invMixColumns(state) {
+        for (let column = 0; column < 4; column += 1) {
+          const i = column * 4;
+          const a0 = state[i], a1 = state[i + 1], a2 = state[i + 2], a3 = state[i + 3];
+          state[i]     = gmul(a0, 14) ^ gmul(a1, 11) ^ gmul(a2, 13) ^ gmul(a3, 9);
+          state[i + 1] = gmul(a0, 9) ^ gmul(a1, 14) ^ gmul(a2, 11) ^ gmul(a3, 13);
+          state[i + 2] = gmul(a0, 13) ^ gmul(a1, 9) ^ gmul(a2, 14) ^ gmul(a3, 11);
+          state[i + 3] = gmul(a0, 11) ^ gmul(a1, 13) ^ gmul(a2, 9) ^ gmul(a3, 14);
+        }
+      }
+      function aesEncryptBlock(block, key, trace) {
+        const { words, rounds } = expandKey(key);
+        const state = Uint8Array.from(block);
+        const step = (round, label) => { if (trace) trace.push({ round, label, text: stateText(state) }); };
+        addRoundKey(state, words, 0);
+        step(0, 'AddRoundKey');
+        for (let round = 1; round < rounds; round += 1) {
+          for (let i = 0; i < 16; i += 1) state[i] = SBOX[state[i]];
+          step(round, 'SubBytes');
+          shiftRows(state);
+          step(round, 'ShiftRows');
+          mixColumns(state);
+          step(round, 'MixColumns');
+          addRoundKey(state, words, round);
+          step(round, 'AddRoundKey');
+        }
+        for (let i = 0; i < 16; i += 1) state[i] = SBOX[state[i]];
+        step(rounds, 'SubBytes (finał)');
+        shiftRows(state);
+        step(rounds, 'ShiftRows (finał)');
+        addRoundKey(state, words, rounds);
+        step(rounds, 'AddRoundKey (finał)');
+        return state;
+      }
+      function aesDecryptBlock(block, key) {
+        const { words, rounds } = expandKey(key);
+        const state = Uint8Array.from(block);
+        addRoundKey(state, words, rounds);
+        for (let round = rounds - 1; round >= 1; round -= 1) {
+          invShiftRows(state);
+          for (let i = 0; i < 16; i += 1) state[i] = INV_SBOX[state[i]];
+          addRoundKey(state, words, round);
+          invMixColumns(state);
+        }
+        invShiftRows(state);
+        for (let i = 0; i < 16; i += 1) state[i] = INV_SBOX[state[i]];
+        addRoundKey(state, words, 0);
+        return state;
+      }
+      function pkcs7(data) {
+        const pad = 16 - (data.length % 16);
+        const out = new Uint8Array(data.length + pad);
+        out.set(data); out.fill(pad, data.length);
+        return out;
+      }
+      function unpkcs7(data) {
+        const pad = data[data.length - 1];
+        if (pad < 1 || pad > 16 || pad > data.length) throw new Error('Nieprawidłowe wypełnienie PKCS#7');
+        for (let i = data.length - pad; i < data.length; i += 1) if (data[i] !== pad) throw new Error('Nieprawidłowe wypełnienie PKCS#7');
+        return data.slice(0, data.length - pad);
+      }
+      function aesCbcEncrypt(plaintext, key, iv) {
+        const padded = pkcs7(plaintext);
+        const out = new Uint8Array(16 + padded.length);
+        out.set(iv);
+        let previous = iv;
+        for (let offset = 0; offset < padded.length; offset += 16) {
+          const block = new Uint8Array(16);
+          for (let i = 0; i < 16; i += 1) block[i] = padded[offset + i] ^ previous[i];
+          previous = aesEncryptBlock(block, key);
+          out.set(previous, 16 + offset);
+        }
+        return out;
+      }
+      function aesCbcDecrypt(ciphertext, key) {
+        if (ciphertext.length < 32 || ciphertext.length % 16 !== 0) throw new Error('Nieprawidłowa długość szyfrogramu');
+        const iv = ciphertext.slice(0, 16);
+        const out = new Uint8Array(ciphertext.length - 16);
+        let previous = iv;
+        for (let offset = 16; offset < ciphertext.length; offset += 16) {
+          const block = ciphertext.slice(offset, offset + 16);
+          const plain = aesDecryptBlock(block, key);
+          for (let i = 0; i < 16; i += 1) out[offset - 16 + i] = plain[i] ^ previous[i];
+          previous = block;
+        }
+        return unpkcs7(out);
+      }
+
+      function bytesToBigInt(bytes) {
+        let value = 0n;
+        for (const byte of bytes) value = (value << 8n) | BigInt(byte);
+        return value;
+      }
+      function bigIntToBytes(value) {
+        let text = value.toString(16);
+        if (text.length % 2) text = `0${text}`;
+        return fromHex(text || '00');
+      }
+      function modPow(base, exponent, modulus) {
+        let result = 1n;
+        let current = base % modulus;
+        let power = exponent;
+        while (power > 0n) {
+          if (power & 1n) result = (result * current) % modulus;
+          current = (current * current) % modulus;
+          power >>= 1n;
+        }
+        return result;
+      }
+      function egcd(a, b) {
+        if (b === 0n) return [a, 1n, 0n];
+        const [g, x, y] = egcd(b, a % b);
+        return [g, y, x - (a / b) * y];
+      }
+      const modInverse = (a, m) => {
+        const [g, x] = egcd(((a % m) + m) % m, m);
+        if (g !== 1n) throw new Error('Brak odwrotności modularnej');
+        return ((x % m) + m) % m;
+      };
+      function isPrime(value) {
+        if (value < 2n) return false;
+        for (const small of [2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n]) {
+          if (value === small) return true;
+          if (value % small === 0n) return false;
+        }
+        let d = value - 1n, s = 0;
+        while (d % 2n === 0n) { d /= 2n; s += 1; }
+        for (const base of [2n, 3n, 5n, 7n, 11n, 13n, 17n, 19n, 23n, 29n, 31n, 37n]) {
+          let x = modPow(base, d, value);
+          if (x === 1n || x === value - 1n) continue;
+          let witness = false;
+          for (let i = 1; i < s; i += 1) {
+            x = (x * x) % value;
+            if (x === value - 1n) { witness = true; break; }
+          }
+          if (!witness) return false;
+        }
+        return true;
+      }
+      function randomPrime(bits) {
+        while (true) {
+          const bytes = randomBytes(Math.ceil(bits / 8));
+          bytes[0] |= 0xc0;
+          bytes[bytes.length - 1] |= 1;
+          const candidate = bytesToBigInt(bytes);
+          if (isPrime(candidate)) return candidate;
+        }
+      }
+      function generateRsa(bits) {
+        const p = randomPrime(bits / 2), q = randomPrime(bits / 2);
+        const n = p * q;
+        const phi = (p - 1n) * (q - 1n);
+        const e = 65537n;
+        const d = modInverse(e, phi);
+        return { n, e, d };
+      }
+      function rsaEncrypt(text, key) {
+        const message = bytesToBigInt(encoder.encode(text));
+        if (message >= key.n) throw new Error('Wiadomość zbyt długa dla tego klucza');
+        return bigIntToBytes(modPow(message, key.e, key.n));
+      }
+      function rsaDecrypt(cipher, key) {
+        return decoder.decode(bigIntToBytes(modPow(bytesToBigInt(cipher), key.d, key.n)));
+      }
+
+      const DH_PRIME_HEX = `
+        FFFFFFFF FFFFFFFF C90FDAA2 2168C234 C4C6628B 80DC1CD1
+        29024E08 8A67CC74 020BBEA6 3B139B22 514A0879 8E3404DD
+        EF9519B3 CD3A431B 302B0A6D F25F1437 4FE1356D 6D51C245
+        E485B576 625E7EC6 F44C42E9 A637ED6B 0BFF5CB6 F406B7ED
+        EE386BFB 5A899FA5 AE9F2411 7C4B1FE6 49286651 ECE45B3D
+        C2007CB8 A163BF05 98DA4836 1C55D39A 69163FA8 FD24CF5F
+        83655D23 DCA3AD96 1C62F356 208552BB 9ED52907 7096966D
+        670C354E 4ABC9804 F1746C08 CA18217C 32905E46 2E36CE3B
+        E39E772C 180E8603 9B2783A2 EC07A28F B5C55DF0 6F4C52C9
+        DE2BCBF6 95581718 3995497C EA956AE5 15D22618 98FA0510
+        15728E5A 8AACAA68 FFFFFFFF FFFFFFFF
+      `.replace(/\s/g, '');
+      const DH_P = BigInt(`0x${DH_PRIME_HEX}`);
+      const DH_G = 2n;
+      let dhPrivate = null;
+      let aesKeyOverride = null;
+      let hashTraceData = null;
+      let aesTraceData = null;
+
+      function deriveAes(password, saltHex) {
+        const key = aesKeyOverride || pbkdf2(encoder.encode(password), fromHex(saltHex), 20000, 32);
+        $('aesKeyOut').textContent = hex(key);
+        return key;
+      }
+
+      function renderHashTrace() {
+        if (!hashTraceData || !hashTraceData.length) {
+          $('hashTrace').textContent = '—';
+          $('hashRoundLabel').textContent = `${$('hashRound').value} / 63`;
+          return;
+        }
+        const index = Math.min(Number($('hashRound').value), hashTraceData.length - 1);
+        const step = hashTraceData[index];
+        $('hashRoundLabel').textContent = `${step.round} / 63`;
+        $('hashTrace').textContent =
+          `w[i]    ${step.w}\nK[i]    ${step.k}\nT1      ${step.t1}\nT2      ${step.t2}\nprzed   ${step.before}\npo      ${step.after}`;
+      }
+
+      function renderAesTrace() {
+        if (!aesTraceData || !aesTraceData.length) {
+          $('aesTrace').textContent = '—';
+          $('aesRoundLabel').textContent = '0 / 0';
+          return;
+        }
+        const index = Math.min(Number($('aesRound').value), aesTraceData.length - 1);
+        const step = aesTraceData[index];
+        $('aesRound').max = String(aesTraceData.length - 1);
+        $('aesRoundLabel').textContent = `${index + 1} / ${aesTraceData.length} · runda ${step.round}`;
+        $('aesTrace').textContent = step.text;
+      }
+
+      function aesInputValid() {
+        const saltOk = /^(?:0x)?[0-9a-f]+$/i.test($('aesSalt').value.replace(/\s/g, ''));
+        const ivOk = /^(?:0x)?[0-9a-f]{32}$/i.test($('aesIv').value.replace(/\s/g, ''));
+        $('aesSalt').classList.toggle('invalid', !saltOk);
+        $('aesSalt').setAttribute('aria-invalid', String(!saltOk));
+        $('aesIv').classList.toggle('invalid', !ivOk);
+        $('aesIv').setAttribute('aria-invalid', String(!ivOk));
+        return saltOk && ivOk;
+      }
+
+      function scorePassword(value) {
+        const text = String(value);
+        let score = 0;
+        if (text.length >= 8) score += 1;
+        if (text.length >= 16) score += 1;
+        if (/[a-z]/.test(text) && /[A-Z]/.test(text)) score += 1;
+        if (/\d/.test(text)) score += 1;
+        if (/[^A-Za-z0-9]/.test(text)) score += 1;
+        return Math.min(5, score + (text.length >= 24 ? 1 : 0));
+      }
+
+      function renderStrength() {
+        const score = scorePassword($('aesPass').value);
+        const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#059669'];
+        const labels = ['bardzo słabe', 'słabe', 'przeciętne', 'dobre', 'mocne', 'bardzo mocne'];
+        $('aesStrengthBar').style.width = `${Math.max(6, score * 20)}%`;
+        $('aesStrengthBar').style.background = colors[score];
+        $('aesStrengthText').textContent = `Ocena: ${labels[score]} · ${$('aesPass').value.length} znaków`;
+      }
+
+      $('tabs').addEventListener('click', (event) => {
+        const tab = event.target.closest('.tab');
+        if (!tab) return;
+        document.querySelectorAll('.tab').forEach((item) => item.classList.toggle('active', item === tab));
+        document.querySelectorAll('.panel').forEach((panel) => panel.classList.toggle('active', panel.dataset.panel === tab.dataset.tab));
+      });
+
+      $('hashBtn').addEventListener('click', () => {
+        hashTraceData = [];
+        const result = hex(sha256($('hashInput').value, hashTraceData));
+        $('hashOut').textContent = result;
+        $('hashOut').classList.toggle('good', result === 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad' && $('hashInput').value === 'abc');
+        const bytes = encoder.encode($('hashInput').value).length;
+        const blocks = Math.floor((bytes + 9 + 63) / 64);
+        $('hashTraceHint').textContent = `Dane: ${bytes} B · padding: ${blocks} blok(i) 64 B · ${hashTraceData.length} rund kompresji. Suwak pokazuje stan przed i po rundzie.`;
+        renderHashTrace();
+        logOp('SHA-256', result.slice(0, 24));
+        status('SHA-256 obliczony.');
+      });
+      $('hashCopy').addEventListener('click', () => copy($('hashOut').textContent === '—' ? '' : $('hashOut').textContent));
+      $('hashRound').addEventListener('input', renderHashTrace);
+      $('aesRound').addEventListener('input', renderAesTrace);
+      document.querySelectorAll('[data-copy-target]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const value = $(button.dataset.copyTarget)?.textContent || '';
+          copy(value === '—' ? '' : value);
+        });
+      });
+      $('hashBtn').click();
+      renderStrength();
+
+      $('aesPass').addEventListener('input', () => {
+        const hadOverride = Boolean(aesKeyOverride);
+        aesKeyOverride = null;
+        renderStrength();
+        if (hadOverride) status('Klucz ponownie wyprowadzany z hasła.');
+      });
+      $('aesSalt').addEventListener('input', () => { aesKeyOverride = null; aesInputValid(); });
+      $('aesIv').addEventListener('input', () => aesInputValid());
+      $('aesIvBtn').addEventListener('click', () => {
+        $('aesIv').value = hex(randomBytes(16));
+        aesInputValid();
+        logOp('AES', `nowy IV ${$('aesIv').value.slice(0, 16)}…`);
+        status('Wygenerowano nowy IV.');
+      });
+      $('aesEncBtn').addEventListener('click', () => {
+        if (!aesInputValid()) { status('Sprawdź format soli i IV (hex, IV = 16 bajtów).'); return; }
+        try {
+          const key = deriveAes($('aesPass').value, $('aesSalt').value);
+          const iv = fromHex($('aesIv').value);
+          const cipher = aesCbcEncrypt(encoder.encode($('aesPlain').value), key, iv);
+          $('aesCipher').textContent = hex(cipher);
+          $('aesCipher').classList.remove('bad');
+          $('aesDecOut').textContent = '—';
+          const padded = pkcs7(encoder.encode($('aesPlain').value));
+          const firstBlock = Uint8Array.from(padded.slice(0, 16), (value, index) => value ^ iv[index]);
+          aesTraceData = [];
+          aesEncryptBlock(firstBlock, key, aesTraceData);
+          $('aesRound').max = String(Math.max(0, aesTraceData.length - 1));
+          $('aesRound').value = '0';
+          renderAesTrace();
+          logOp('AES szyfrowanie', `${cipher.length} B · ${aesKeyOverride ? 'klucz ze schowka' : 'PBKDF2'}`);
+          status(`Zaszyfrowano ${$('aesPlain').value.length} znaków → ${cipher.length} bajtów.`);
+        } catch (error) { logOp('AES błąd', error.message); status(`Błąd szyfrowania: ${error.message}`); }
+      });
+      $('aesDecBtn').addEventListener('click', () => {
+        if (!aesInputValid()) { status('Sprawdź format soli i IV (hex, IV = 16 bajtów).'); return; }
+        try {
+          const key = deriveAes($('aesPass').value, $('aesSalt').value);
+          const plain = aesCbcDecrypt(fromHex($('aesCipher').textContent), key);
+          $('aesDecOut').textContent = decoder.decode(plain);
+          $('aesDecOut').classList.remove('bad');
+          $('aesDecOut').classList.add('good');
+          logOp('AES odszyfrowanie', `${plain.length} B`);
+          status('Odszyfrowanie zakończone pomyślnie.');
+        } catch (error) {
+          $('aesDecOut').textContent = error.message;
+          $('aesDecOut').classList.add('bad');
+          logOp('AES błąd', error.message);
+          status(`Błąd odszyfrowania: ${error.message}`);
+        }
+      });
+
+      $('vaultSaveBtn').addEventListener('click', () => {
+        const name = $('vaultName').value.trim();
+        if (!/^[\w -]{1,40}$/.test(name)) { status('Podaj nazwę wpisu (1–40 znaków).'); return; }
+        if ($('aesKeyOut').textContent === '—') { status('Najpierw wyprowadź lub wczytaj klucz AES.'); return; }
+        const vault = readVault();
+        vault[name] = { key: $('aesKeyOut').textContent, iv: $('aesIv').value, saved: new Date().toISOString() };
+        writeVault(vault);
+        renderVault(name);
+        logOp('Schowek', `zapisano „${name}”`);
+        status(`Zapisano „${name}” w lokalnym schowku.`);
+      });
+      $('vaultLoadBtn').addEventListener('click', () => {
+        const name = $('vaultSelect').value;
+        const entry = readVault()[name];
+        if (!entry || !/^[0-9a-f]{64}$/i.test(entry.key || '') || !/^[0-9a-f]{32}$/i.test(String(entry.iv || '').replace(/\s/g, ''))) {
+          status('Wybierz poprawny wpis ze schowka.'); return;
+        }
+        aesKeyOverride = fromHex(entry.key);
+        $('aesIv').value = entry.iv;
+        $('aesKeyOut').textContent = entry.key;
+        aesInputValid();
+        logOp('Schowek', `wczytano „${name}”`);
+        status(`Wczytano „${name}” — klucz ze schowka jest teraz używany.`);
+      });
+      $('vaultDeleteBtn').addEventListener('click', () => {
+        const name = $('vaultSelect').value;
+        const vault = readVault();
+        if (!name || !vault[name]) { status('Wybierz wpis do usunięcia.'); return; }
+        delete vault[name];
+        writeVault(vault);
+        renderVault();
+        logOp('Schowek', `usunięto „${name}”`);
+        status(`Usunięto „${name}” ze schowka.`);
+      });
+      renderVault();
+      aesInputValid();
+
+      let rsaKey = null;
+      $('rsaGenBtn').addEventListener('click', () => {
+        $('rsaGenStatus').textContent = 'Generowanie liczb pierwszych…';
+        status('Trwa generowanie kluczy RSA…');
+        setTimeout(() => {
+          const started = performance.now();
+          rsaKey = generateRsa(parseInt($('rsaBits').value, 10));
+          const short = (value) => `${value.toString(16).slice(0, 26)}…`;
+          $('rsaN').textContent = short(rsaKey.n);
+          $('rsaN').title = rsaKey.n.toString(16);
+          $('rsaE').textContent = rsaKey.e.toString();
+          $('rsaD').textContent = short(rsaKey.d);
+          $('rsaGenStatus').textContent = `Gotowe w ${(performance.now() - started).toFixed(0)} ms`;
+          logOp('RSA', `klucz ${$('rsaBits').value} bit · ${(performance.now() - started).toFixed(0)} ms`);
+          status('Klucze RSA wygenerowane.');
+        }, 40);
+      });
+      $('rsaEncBtn').addEventListener('click', () => {
+        if (!rsaKey) { status('Najpierw wygeneruj klucze.'); return; }
+        try {
+          $('rsaCipher').textContent = hex(rsaEncrypt($('rsaPlain').value, rsaKey));
+          $('rsaOut').textContent = '—';
+          logOp('RSA szyfrowanie', `${$('rsaPlain').value.length} znaków`);
+          status('Wiadomość zaszyfrowana kluczem publicznym.');
+        } catch (error) { status(error.message); }
+      });
+      $('rsaDecBtn').addEventListener('click', () => {
+        if (!rsaKey) { status('Najpierw wygeneruj klucze.'); return; }
+        try {
+          const text = rsaDecrypt(fromHex($('rsaCipher').textContent), rsaKey);
+          $('rsaOut').textContent = text;
+          $('rsaOut').classList.add('good');
+          logOp('RSA odszyfrowanie', `${text.length} znaków`);
+          status('Wiadomość odszyfrowana.');
+        } catch (error) { $('rsaOut').textContent = error.message; status(error.message); }
+      });
+      $('rsaSignBtn').addEventListener('click', () => {
+        if (!rsaKey) { status('Najpierw wygeneruj klucze.'); return; }
+        const digest = sha256($('rsaPlain').value);
+        const signature = modPow(bytesToBigInt(digest), rsaKey.d, rsaKey.n);
+        const recovered = bigIntToBytes(modPow(signature, rsaKey.e, rsaKey.n));
+        const valid = hex(recovered.slice(-32)) === hex(digest);
+        $('rsaSign').textContent = `${hex(bigIntToBytes(signature)).slice(0, 44)}… · ${valid ? 'PODPIS WAŻNY' : 'PODPIS NIEWAŻNY'}`;
+        logOp('RSA podpis', valid ? 'PODPIS WAŻNY' : 'PODPIS NIEWAŻNY');
+        status(valid ? 'Podpis zweryfikowany kluczem publicznym.' : 'Weryfikacja podpisu nie powiodła się.');
+      });
+
+      $('dhGenBtn').addEventListener('click', () => {
+        dhPrivate = bytesToBigInt(randomBytes(32));
+        const publicValue = modPow(DH_G, dhPrivate, DH_P);
+        $('dhMine').textContent = hex(bigIntToBytes(publicValue));
+        logOp('DH', 'nowa para kluczy');
+        status('Wygenerowano parę Diffie–Hellmana.');
+      });
+      $('dhPeerBtn').addEventListener('click', () => {
+        const peerPrivate = bytesToBigInt(randomBytes(32));
+        $('dhPeer').value = hex(bigIntToBytes(modPow(DH_G, peerPrivate, DH_P)));
+        status('Wygenerowano klucz publiczny rozmówcy.');
+      });
+      $('dhSharedBtn').addEventListener('click', () => {
+        if (!dhPrivate) { status('Najpierw wygeneruj własną parę kluczy.'); return; }
+        try {
+          const peer = bytesToBigInt(fromHex($('dhPeer').value));
+          const secret = modPow(peer, dhPrivate, DH_P);
+          const digest = hex(sha256(bigIntToBytes(secret)));
+          $('dhShared').textContent = digest;
+          $('dhShared').classList.add('good');
+          logOp('DH sekret', digest.slice(0, 24));
+          status('Sekret wspólny ustalony i zahaszowany.');
+        } catch (error) { status(`Błąd: ${error.message}`); }
+      });
+      $('dhCopyBtn').addEventListener('click', () => copy($('dhShared').textContent === '—' ? '' : $('dhShared').textContent));
+
+      function readVault() {
+        try {
+          const data = JSON.parse(store.get('cryptoForgeVault') || '{}');
+          return data && typeof data === 'object' && !Array.isArray(data) ? data : {};
+        } catch (_) { return {}; }
+      }
+      function writeVault(vault) {
+        if (!store.set('cryptoForgeVault', JSON.stringify(vault))) status('localStorage niedostępny — schowek nie został zapisany.');
+      }
+      function renderVault(selectName) {
+        const vault = readVault();
+        const select = $('vaultSelect');
+        select.replaceChildren();
+        const empty = document.createElement('option');
+        empty.value = ''; empty.textContent = Object.keys(vault).length ? '— wybierz wpis —' : '— brak wpisów —';
+        select.appendChild(empty);
+        Object.keys(vault).sort().forEach((name) => {
+          const option = document.createElement('option');
+          option.value = name; option.textContent = name;
+          select.appendChild(option);
+        });
+        if (selectName && vault[selectName]) select.value = selectName;
+      }
+
+      $('historyClearBtn').addEventListener('click', () => {
+        operations.length = 0;
+        renderHistory();
+        status('Historia operacji wyczyszczona.');
+      });
+      $('reportBtn').addEventListener('click', () => {
+        const lines = [
+          'CRYPTO FORGE — RAPORT OPERACJI',
+          `Wygenerowano: ${new Date().toLocaleString('pl-PL')}`,
+          '',
+          'WYNIKI AKTUALNE',
+          `SHA-256: ${$('hashOut').textContent}`,
+          `AES key: ${$('aesKeyOut').textContent}`,
+          `AES cipher: ${$('aesCipher').textContent}`,
+          `AES decrypted: ${$('aesDecOut').textContent}`,
+          `RSA cipher: ${$('rsaCipher').textContent}`,
+          `RSA result: ${$('rsaOut').textContent}`,
+          `RSA signature: ${$('rsaSign').textContent}`,
+          `DH public: ${$('dhMine').textContent}`,
+          `DH secret hash: ${$('dhShared').textContent}`,
+          '',
+          'HISTORIA'
+        ];
+        operations.forEach((entry) => lines.push(`${entry.time} · ${entry.name} · ${entry.detail}`));
+        download('crypto_forge_report.txt', lines.join('\n'));
+        status(`Raport wyeksportowany (${operations.length} operacji).`);
+      });
+
+      function selfTest() {
+        const tests = [];
+        const check = (name, fn) => {
+          try { tests.push({ name, ok: Boolean(fn()) }); }
+          catch (error) { tests.push({ name, ok: false, error: error.message }); }
+        };
+        check('SHA-256("abc")', () => hex(sha256('abc')) === 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+        check('SHA-256("")', () => hex(sha256('')).startsWith('e3b0c44298fc1c14'));
+        check('HMAC-SHA256', () => hex(hmacSha256(encoder.encode('key'), encoder.encode('The quick brown fox jumps over the lazy dog'))).startsWith('f7bc83f430538424'));
+        const aesKey = fromHex('000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
+        const aesPlain = fromHex('00112233445566778899aabbccddeeff');
+        check('AES-256 blok (FIPS-197)', () => hex(aesEncryptBlock(aesPlain, aesKey)) === '8ea2b7ca516745bfeafc49904b496089');
+        check('AES-256 odwrotność', () => hex(aesDecryptBlock(aesEncryptBlock(aesPlain, aesKey), aesKey)) === '00112233445566778899aabbccddeeff');
+        const key = pbkdf2(encoder.encode('pass'), encoder.encode('salt'), 20, 32);
+        const iv = fromHex('00112233445566778899aabbccddeeff');
+        const text = encoder.encode('Test wiadomości · ABC 123');
+        const cipher = aesCbcEncrypt(text, key, iv);
+        check('AES-CBC + PKCS#7', () => decoder.decode(aesCbcDecrypt(cipher, key)) === 'Test wiadomości · ABC 123');
+        const small = { n: 3233n, e: 17n, d: 413n };
+        check('RSA round-trip (n=3233)', () => rsaDecrypt(rsaEncrypt('A', small), small) === 'A');
+        check('MODP prime (M-R)', () => isPrime(DH_P));
+        const host = $('testResults');
+        host.replaceChildren();
+        tests.forEach((test) => {
+          const row = document.createElement('div');
+          row.className = 'test-row';
+          const label = document.createElement('span'); label.textContent = test.name;
+          const value = document.createElement('b');
+          value.textContent = test.ok ? 'PASS' : 'FAIL';
+          value.className = test.ok ? 'ok' : 'fail';
+          if (test.error) row.title = test.error;
+          row.append(label, value);
+          host.appendChild(row);
+        });
+        const passed = tests.filter((test) => test.ok).length;
+        logOp('Self-testy', `${passed}/${tests.length}`);
+        status(`Self-testy: ${passed}/${tests.length} zaliczonych.`);
+      }
+      $('selfTestBtn').addEventListener('click', selfTest);
+      selfTest();
+    })();
+  </script>
+</body>
+</html>

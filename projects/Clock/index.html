@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab Nixie Clock - Steins;Gate</title>
+  <style>
+    :root {
+      --main-color: #ff3355;
+      --glow-color: rgba(255, 50, 50, 0.8);
+      --bg-color: rgba(0, 0, 0, 0.9);
+      --panel-bg: rgba(0, 0, 0, 0.55);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      background-color: #000;
+      font-family: ui-monospace, 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--main-color);
+      position: relative;
+      padding: 20px 12px;
+      gap: 10px;
+    }
+
+    button, select, input { font: inherit; }
+    button:focus-visible, select:focus-visible, input:focus-visible {
+      outline: 2px solid var(--main-color);
+      outline-offset: 2px;
+    }
+
+    .lab-background {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -3;
+      background:
+        radial-gradient(circle at 20% 30%, var(--glow-color) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, var(--glow-color) 0%, transparent 40%),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.7));
+      opacity: 0.45;
+    }
+
+    .circuit-pattern {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -2;
+      background-image:
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><path d="M0,0 L200,200 M200,0 L0,200" stroke="%23ff3355" stroke-width="0.5" opacity="0.3"/><circle cx="100" cy="100" r="80" stroke="%23ff3355" stroke-width="0.5" fill="none" opacity="0.3"/></svg>'),
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300"><path d="M50,50 L250,250 M250,50 L50,250" stroke="%23ff3355" stroke-width="0.5" opacity="0.3"/></svg>');
+      opacity: 0.8;
+    }
+
+    .lab-text {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -2;
+      background-image:
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500"><text x="50%" y="50%" font-family="Courier New" font-size="24" fill="%23ff3355" opacity="0.15" text-anchor="middle" dominant-baseline="middle" transform="rotate(45 250 250)">WORLD LINE 1.048596α</text></svg>'),
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 500 500"><text x="50%" y="50%" font-family="Courier New" font-size="20" fill="%23ff3355" opacity="0.12" text-anchor="middle" dominant-baseline="middle" transform="rotate(-30 250 250)">EL PSY CONGROO</text></svg>');
+      background-repeat: repeat;
+      opacity: 0.8;
+    }
+
+    .world-line {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      max-width: 80vw;
+      max-height: 80vw;
+      border-radius: 50%;
+      border: 2px dashed var(--main-color);
+      opacity: 0.15;
+      animation: rotate 80s linear infinite;
+      z-index: -2;
+    }
+
+    .world-line:nth-of-type(1) { top: -150px; left: -150px; animation-direction: normal; }
+    .world-line:nth-of-type(2) { bottom: -150px; right: -150px; animation-direction: reverse; }
+
+    .scanlines {
+      pointer-events: none;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.03) 0,
+        rgba(255, 255, 255, 0.03) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      z-index: -1;
+    }
+
+    .nixie-tube {
+      display: inline-block;
+      width: 40px;
+      height: 80px;
+      margin: 5px 3px;
+      font-size: 60px;
+      color: var(--main-color);
+      text-align: center;
+      line-height: 80px;
+      background-color: rgba(0, 0, 0, 0.6);
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9), 0 0 10px var(--glow-color);
+      border-radius: 8px;
+    }
+
+    .colon {
+      font-size: 60px;
+      margin: 0 2px;
+      color: var(--main-color);
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .lab-label {
+      margin-top: 10px;
+      font-size: 16px;
+      opacity: 0.75;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+
+    #leds { display: flex; position: absolute; top: 20px; right: 20px; }
+
+    .led {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--main-color);
+      box-shadow: 0 0 8px var(--glow-color);
+      margin: 0 5px;
+      animation: blink 2s infinite alternate;
+    }
+
+    .led:nth-child(1) { animation-delay: 0s; }
+    .led:nth-child(2) { animation-delay: 0.5s; }
+    .led:nth-child(3) { animation-delay: 1s; }
+    .led:nth-child(4) { animation-delay: 1.5s; }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      text-align: center;
+      text-shadow: 0 0 10px var(--glow-color);
+    }
+
+    select, input[type="number"] {
+      background-color: var(--panel-bg);
+      color: var(--main-color);
+      border: 1px solid var(--main-color);
+      padding: 5px 8px;
+      border-radius: 4px;
+      max-width: 100%;
+    }
+
+    .lab-btn {
+      background-color: var(--panel-bg);
+      color: var(--main-color);
+      border: 1px solid var(--main-color);
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .lab-btn:hover { box-shadow: 0 0 10px var(--glow-color); }
+
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      max-width: 100%;
+    }
+
+    #clock-container { text-align: center; }
+    #clock { display: inline-block; max-width: 100%; }
+
+    .panel {
+      width: 100%;
+      max-width: 560px;
+      background: var(--panel-bg);
+      border: 1px solid var(--main-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+    }
+
+    .panel h2 { font-size: 0.9rem; margin: 0 0 8px; letter-spacing: 1px; }
+
+    .world-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .world-chip {
+      border: 1px solid var(--main-color);
+      border-radius: 5px;
+      padding: 5px 3px;
+      text-align: center;
+      min-width: 0;
+    }
+
+    .world-chip .city { font-size: 0.65rem; opacity: 0.75; display: block; overflow: hidden; text-overflow: ellipsis; }
+    .world-chip .city-time { font-size: 0.95rem; display: block; }
+
+    .timer-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
+    #timer-display { font-size: 1.6rem; letter-spacing: 2px; min-width: 9ch; text-align: center; }
+    #timer-input { width: 70px; }
+
+    .status-line {
+      font-size: 0.78rem;
+      min-height: 1.2em;
+      text-align: center;
+      max-width: 560px;
+      overflow-wrap: anywhere;
+    }
+
+    .spark {
+      position: fixed;
+      width: 2px;
+      height: 2px;
+      background: white;
+      animation: spark-move 0.5s ease-out forwards;
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    @keyframes spark-move {
+      to { transform: translate(var(--tx), var(--ty)); opacity: 0; }
+    }
+
+    @keyframes blink { from { opacity: 0.3; } to { opacity: 1; } }
+    @keyframes rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+
+    @media (max-width: 600px) {
+      .nixie-tube { width: 30px; height: 60px; font-size: 40px; line-height: 60px; margin: 4px 2px; }
+      .colon { font-size: 40px; margin: 0 1px; }
+      h1 { font-size: 20px; }
+      .lab-label { font-size: 14px; }
+      .world-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      #leds { top: 8px; right: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="lab-background"></div>
+  <div class="circuit-pattern"></div>
+  <div class="lab-text"></div>
+  <div class="world-line"></div>
+  <div class="world-line"></div>
+  <div class="scanlines"></div>
+
+  <div id="leds" aria-hidden="true">
+    <div class="led"></div>
+    <div class="led"></div>
+    <div class="led"></div>
+    <div class="led"></div>
+  </div>
+
+  <h1>LAB NIXIE CLOCK</h1>
+
+  <div class="control-row">
+    <select id="timezone" aria-label="Strefa czasowa zegara">
+      <option value="Europe/Warsaw">AKIHABARA LAB</option>
+      <option value="Asia/Tokyo">TOKYO</option>
+      <option value="America/New_York">AMERICA</option>
+      <option value="UTC">WORLD LINE</option>
+    </select>
+    <button class="lab-btn" id="format-toggle" aria-label="Przełącz format 24/12 godzin">24H / 12H</button>
+    <select id="accent-picker" aria-label="Kolor podświetlenia">
+      <option value="red">Czerwień</option>
+      <option value="amber">Bursztyn</option>
+      <option value="cyan">Cyjan</option>
+      <option value="green">Zieleń</option>
+    </select>
+  </div>
+
+  <div id="clock-container">
+    <div id="clock" role="timer" aria-label="Aktualny czas"></div>
+    <div class="lab-label" id="date-display"></div>
+    <div class="lab-label">EL PSY CONGROO</div>
+  </div>
+
+  <div class="panel">
+    <h2>WORLD LINE — INNE STREFY</h2>
+    <div class="world-strip" id="world-strip" aria-label="Zegary w innych strefach czasowych"></div>
+  </div>
+
+  <div class="panel">
+    <h2>TIMER — ODLICZANIE</h2>
+    <div class="timer-row">
+      <input type="number" id="timer-input" min="1" max="180" value="5" aria-label="Liczba minut timera">
+      <span>min</span>
+      <button class="lab-btn" data-preset="1">1</button>
+      <button class="lab-btn" data-preset="5">5</button>
+      <button class="lab-btn" data-preset="10">10</button>
+      <button class="lab-btn" id="timer-start">Start</button>
+      <button class="lab-btn" id="timer-pause">Pauza</button>
+      <button class="lab-btn" id="timer-reset">Reset</button>
+    </div>
+    <div id="timer-display" role="timer" aria-label="Pozostały czas timera">05:00</div>
+  </div>
+
+  <div class="control-row">
+    <button class="lab-btn" id="share-btn">Udostępnij chwilę</button>
+    <button class="lab-btn" id="motion-toggle" aria-pressed="false">Ogranicz ruch</button>
+    <button class="lab-btn" id="fullscreen-btn">Pełny ekran</button>
+  </div>
+
+  <div class="status-line" id="status-line" role="status" aria-live="polite"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const clockContainer = document.getElementById("clock");
+      const timezoneSelect = document.getElementById("timezone");
+      const formatToggle = document.getElementById("format-toggle");
+      const accentPicker = document.getElementById("accent-picker");
+      const dateDisplay = document.getElementById("date-display");
+      const worldStrip = document.getElementById("world-strip");
+      const timerInput = document.getElementById("timer-input");
+      const timerDisplay = document.getElementById("timer-display");
+      const timerStart = document.getElementById("timer-start");
+      const timerPause = document.getElementById("timer-pause");
+      const timerReset = document.getElementById("timer-reset");
+      const shareBtn = document.getElementById("share-btn");
+      const motionToggle = document.getElementById("motion-toggle");
+      const fullscreenBtn = document.getElementById("fullscreen-btn");
+      const statusLine = document.getElementById("status-line");
+
+      const zones = [
+        { key: 'Tokio', tz: 'Asia/Tokyo' },
+        { key: 'Warszawa', tz: 'Europe/Warsaw' },
+        { key: 'Nowy Jork', tz: 'America/New_York' },
+        { key: 'UTC', tz: 'UTC' }
+      ];
+      const accents = {
+        red: ['#ff3355', 'rgba(255, 50, 50, 0.8)'],
+        amber: ['#ffb000', 'rgba(255, 176, 0, 0.8)'],
+        cyan: ['#00e5ff', 'rgba(0, 229, 255, 0.8)'],
+        green: ['#39ff88', 'rgba(57, 255, 136, 0.8)']
+      };
+
+      let use24Hour = true;
+      let reducedMotion = false;
+      let timerRemaining = 0;
+      let timerEndsAt = 0;
+      let timerInterval = null;
+      let timerRunning = false;
+      let audioContext = null;
+
+      function setStatus(message) {
+        statusLine.textContent = message;
+      }
+
+      function safeGet(key) {
+        try { return localStorage.getItem(key); } catch (e) { return null; }
+      }
+
+      function safeSet(key, value) {
+        try { localStorage.setItem(key, value); } catch (e) { /* brak uprawnień */ }
+      }
+
+      function timeParts(date, tz) {
+        const opts = {
+          timeZone: tz,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: !use24Hour
+        };
+        const parts = new Intl.DateTimeFormat('pl-PL', opts).formatToParts(date);
+        const get = type => (parts.find(p => p.type === type) || {}).value || '';
+        return {
+          hour: get('hour'),
+          minute: get('minute'),
+          second: get('second'),
+          dayPeriod: get('dayPeriod') || ''
+        };
+      }
+
+      function digitText(date, tz) {
+        const p = timeParts(date, tz);
+        return p.hour + p.minute + p.second;
+      }
+
+      function createDigits() {
+        clockContainer.innerHTML = "";
+        for (let i = 0; i < 8; i++) {
+          if (i === 2 || i === 5) {
+            const colon = document.createElement("span");
+            colon.className = "colon";
+            colon.textContent = ":";
+            clockContainer.appendChild(colon);
+          } else {
+            const tube = document.createElement("div");
+            tube.className = "nixie-tube";
+            tube.textContent = "8";
+            clockContainer.appendChild(tube);
+          }
+        }
+      }
+
+      function createWorldStrip() {
+        worldStrip.innerHTML = '';
+        zones.forEach(zone => {
+          const chip = document.createElement('div');
+          chip.className = 'world-chip';
+          chip.dataset.tz = zone.tz;
+          const city = document.createElement('span');
+          city.className = 'city';
+          city.textContent = zone.key;
+          const time = document.createElement('span');
+          time.className = 'city-time';
+          time.textContent = '--:--:--';
+          chip.append(city, time);
+          worldStrip.appendChild(chip);
+        });
+      }
+
+      function updateClock() {
+        const now = new Date();
+        const tz = timezoneSelect.value;
+
+        try {
+          const digits = digitText(now, tz).replace(/:/g, "").replace(/[^\d]/g, "").slice(0, 6).padEnd(6, "0").split("");
+          const digitElements = document.querySelectorAll(".nixie-tube");
+
+          digitElements.forEach((el, i) => {
+            if (el.textContent !== digits[i]) {
+              el.textContent = digits[i];
+              if (!reducedMotion) createSpark(el);
+            }
+          });
+
+          clockContainer.setAttribute('aria-label', 'Aktualny czas: ' + timeParts(now, tz).hour + ':' + timeParts(now, tz).minute + ':' + timeParts(now, tz).second);
+
+          dateDisplay.textContent = new Intl.DateTimeFormat('pl-PL', {
+            timeZone: tz, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+          }).format(now);
+
+          worldStrip.querySelectorAll('.world-chip').forEach(chip => {
+            const p = timeParts(now, chip.dataset.tz);
+            chip.querySelector('.city-time').textContent = p.hour + ':' + p.minute + (use24Hour ? '' : ' ' + p.dayPeriod);
+          });
+        } catch (e) {
+          setStatus('Nie udało się odczytać czasu dla wybranej strefy.');
+        }
+      }
+
+      function createSpark(element) {
+        const rect = element.getBoundingClientRect();
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+
+        for (let i = 0; i < 4; i++) {
+          const spark = document.createElement("div");
+          spark.className = "spark";
+          spark.style.left = x + "px";
+          spark.style.top = y + "px";
+
+          const angle = Math.random() * Math.PI * 2;
+          const distance = 10 + Math.random() * 20;
+          spark.style.setProperty('--tx', Math.cos(angle) * distance + "px");
+          spark.style.setProperty('--ty', Math.sin(angle) * distance + "px");
+
+          document.body.appendChild(spark);
+          setTimeout(() => spark.remove(), 500);
+        }
+      }
+
+      function randomEffects() {
+        if (reducedMotion) return;
+        const tubes = document.querySelectorAll('.nixie-tube');
+        if (tubes.length === 0) return;
+
+        const randomTube = tubes[Math.floor(Math.random() * tubes.length)];
+        randomTube.style.opacity = 0.5;
+        setTimeout(() => { randomTube.style.opacity = 1; }, 100 + Math.random() * 200);
+
+        if (Math.random() > 0.8) {
+          const container = document.getElementById('clock-container');
+          if (container) createSpark(container);
+        }
+      }
+
+      function beep() {
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (!AudioCtx) return;
+          if (!audioContext) audioContext = new AudioCtx();
+          if (audioContext.state === 'suspended') {
+            const resumed = audioContext.resume();
+            if (resumed && resumed.catch) resumed.catch(() => {});
+          }
+          const oscillator = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          oscillator.type = 'square';
+          oscillator.frequency.value = 880;
+          gain.gain.value = 0.05;
+          oscillator.connect(gain).connect(audioContext.destination);
+          oscillator.start();
+          gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.5);
+          oscillator.stop(audioContext.currentTime + 0.5);
+        } catch (e) {
+          setStatus('Dźwięk niedostępny w tej przeglądarce.');
+        }
+      }
+
+      function formatTimer(seconds) {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+        return m + ':' + s;
+      }
+
+      function updateTimerDisplay() {
+        timerDisplay.textContent = formatTimer(timerRemaining);
+      }
+
+      function startTimer() {
+        if (timerRunning) return;
+        const minutes = Math.max(1, Math.min(180, parseInt(timerInput.value, 10) || 5));
+        timerInput.value = minutes;
+        if (timerRemaining <= 0) timerRemaining = minutes * 60;
+        timerEndsAt = Date.now() + timerRemaining * 1000;
+        timerRunning = true;
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+          timerRemaining = Math.max(0, Math.ceil((timerEndsAt - Date.now()) / 1000));
+          updateTimerDisplay();
+          if (timerRemaining === 0) finishTimer();
+        }, 250);
+        updateTimerDisplay();
+        setStatus('Timer rozpoczęty: ' + formatTimer(timerRemaining));
+      }
+
+      function pauseTimer() {
+        if (!timerRunning) return;
+        timerRunning = false;
+        clearInterval(timerInterval);
+        setStatus('Timer wstrzymany: ' + formatTimer(timerRemaining));
+      }
+
+      function resetTimer() {
+        timerRunning = false;
+        clearInterval(timerInterval);
+        timerRemaining = 0;
+        updateTimerDisplay();
+        setStatus('Timer zresetowany.');
+      }
+
+      function finishTimer() {
+        timerRunning = false;
+        clearInterval(timerInterval);
+        timerRemaining = 0;
+        updateTimerDisplay();
+        beep();
+        setStatus('Timer zakończony! EL PSY CONGROO.');
+      }
+
+      function copyText(text, okMessage) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text)
+            .then(() => setStatus(okMessage))
+            .catch(() => setStatus('Schowek niedostępny — skopiuj adres z paska przeglądarki.'));
+        } else {
+          setStatus('Schowek niedostępny — skopiuj adres z paska przeglądarki.');
+        }
+      }
+
+      function shareMoment() {
+        const now = new Date();
+        const url = location.href.split('#')[0] + '#t=' + encodeURIComponent(now.toISOString()) + '&tz=' + encodeURIComponent(timezoneSelect.value);
+        try { history.replaceState(null, '', url); } catch (e) { setStatus('Nie udało się zmienić adresu — link poniżej.'); }
+        copyText(url, 'Link do tej chwili skopiowany. Możesz go udostępnić.');
+        setStatus('Udostępniona chwila: ' + now.toLocaleTimeString('pl-PL', { timeZone: timezoneSelect.value }) + ' — link w pasku adresu.');
+      }
+
+      function applySharedMoment() {
+        const hash = location.hash.slice(1);
+        if (!hash) return;
+        const params = new URLSearchParams(hash);
+        const raw = params.get('t');
+        if (!raw) return;
+        const moment = new Date(raw);
+        if (isNaN(moment.getTime())) return;
+        const tz = params.get('tz') || timezoneSelect.value;
+        try {
+          timezoneSelect.value = tz;
+        } catch (e) { /* nieznana strefa */ }
+        const p = timeParts(moment, tz);
+        setStatus('Udostępniona chwila: ' + p.hour + ':' + p.minute + ':' + p.second + ' (' + tz + '). Kliknij „Udostępnij chwilę", aby wrócić do teraz.');
+      }
+
+      function applyAccent(name) {
+        const colors = accents[name] || accents.red;
+        document.documentElement.style.setProperty('--main-color', colors[0]);
+        document.documentElement.style.setProperty('--glow-color', colors[1]);
+        safeSet('nixie_accent', name);
+      }
+
+      function toggleMotion() {
+        reducedMotion = !reducedMotion;
+        document.body.classList.toggle('reduced-motion', reducedMotion);
+        motionToggle.setAttribute('aria-pressed', String(reducedMotion));
+        safeSet('nixie_motion', reducedMotion ? 'reduced' : 'full');
+        setStatus(reducedMotion ? 'Tryb ograniczonego ruchu włączony.' : 'Efekty wizualne włączone.');
+      }
+
+      function toggleFullscreen() {
+        try {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => setStatus('Pełny ekran niedostępny.'));
+          } else {
+            setStatus('Pełny ekran niedostępny w tej przeglądarce.');
+          }
+        } catch (e) {
+          setStatus('Pełny ekran niedostępny.');
+        }
+      }
+
+      // Inicjalizacja ustawień zapisanych w localStorage
+      try {
+        const savedAccent = safeGet('nixie_accent');
+        if (savedAccent && accents[savedAccent]) {
+          accentPicker.value = savedAccent;
+          applyAccent(savedAccent);
+        }
+        if (safeGet('nixie_motion') === 'reduced') toggleMotion();
+      } catch (e) { /* brak uprawnień */ }
+
+      timezoneSelect.addEventListener("change", () => {
+        updateClock();
+        setStatus('Strefa: ' + timezoneSelect.options[timezoneSelect.selectedIndex].text);
+      });
+      formatToggle.addEventListener('click', () => {
+        use24Hour = !use24Hour;
+        safeSet('nixie_format', use24Hour ? '24' : '12');
+        updateClock();
+        setStatus(use24Hour ? 'Format 24-godzinny.' : 'Format 12-godzinny.');
+      });
+      if (safeGet('nixie_format') === '12') use24Hour = false;
+      accentPicker.addEventListener('change', () => applyAccent(accentPicker.value));
+      timerStart.addEventListener('click', startTimer);
+      timerPause.addEventListener('click', pauseTimer);
+      timerReset.addEventListener('click', resetTimer);
+      document.querySelectorAll('[data-preset]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          timerInput.value = btn.dataset.preset;
+          resetTimer();
+          updateTimerDisplay();
+        });
+      });
+      shareBtn.addEventListener('click', shareMoment);
+      motionToggle.addEventListener('click', toggleMotion);
+      fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+      createDigits();
+      createWorldStrip();
+      if (use24Hour === false) formatToggle.textContent = '12H / 24H';
+      updateClock();
+      updateTimerDisplay();
+      applySharedMoment();
+      setInterval(updateClock, 1000);
+      setInterval(randomEffects, 3000);
+    });
+  </script>
+</body>
+</html>
