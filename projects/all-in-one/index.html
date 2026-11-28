@@ -1,90 +1,269 @@
 <!DOCTYPE html>
-<html lang="pl" class="dark no-tailwind">
+<html lang="pl" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>darin0v0@github:~$</title>
+    <link rel="icon" href="data:,">
     <style>
-        /* Klasyczny, prosty układ w stylu OnlineGDB */
-        * {
-            font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+        :root {
+            color-scheme: light;
+            --bg: #f5f5f5;
+            --panel: #ffffff;
+            --panel-alt: #ebebeb;
+            --console: #f8f8f8;
+            --text: #1e1e1e;
+            --muted: #666666;
+            --border: #d4d4d4;
+            --soft-border: #e5e5e5;
+            --accent: #2e7d32;
+            --accent-hover: #388e3c;
+            --accent-text: #ffffff;
+            --line-num: #999999;
+            --danger: #b3261e;
+            --selection: rgba(38, 79, 120, 0.24);
         }
-        .editor-box {
+        html.dark {
+            color-scheme: dark;
+            --bg: #1e1e1e;
+            --panel: #252526;
+            --panel-alt: #252526;
+            --console: #181818;
+            --text: #d4d4d4;
+            --muted: #999999;
+            --border: #333333;
+            --soft-border: #2d2d2d;
+            --accent: #2e7d32;
+            --accent-hover: #3c8c40;
+            --line-num: #555555;
+            --danger: #ff8a80;
+            --selection: rgba(111, 191, 115, 0.24);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            height: 100vh;
+            height: 100dvh;
             display: flex;
-            flex: 1;
+            flex-direction: column;
             overflow: hidden;
-            position: relative;
+            background: var(--bg);
+            color: var(--text);
+            font: 12px/1.45 "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
         }
+        ::selection { background: var(--selection); }
+        button, input, select, textarea {
+            font: inherit;
+            color: var(--text);
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 4px 8px;
+        }
+        button { cursor: pointer; }
+        button:hover:not(:disabled) { border-color: var(--muted); }
+        button:disabled, input:disabled { opacity: 0.6; cursor: wait; }
+        button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 1px;
+        }
+        #btn-run {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--accent-text);
+            font-weight: 600;
+        }
+        #btn-run:hover:not(:disabled) { background: var(--accent-hover); }
+        #toast {
+            position: fixed;
+            right: 12px;
+            bottom: 12px;
+            z-index: 50;
+            padding: 7px 10px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            font-size: 11px;
+        }
+        .hidden { display: none !important; }
+
+        header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px 16px;
+            padding: 6px 12px;
+            background: var(--panel-alt);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        header > div { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+        header > div:last-child { margin-left: auto; }
+        header > div:first-child > span:first-child { font-weight: 600; }
+        #io-panel:not(.hidden) {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--panel-alt);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        #io-text { flex: 1; min-width: 180px; }
+
+        main { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+        main > div { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+        #editor-section { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+        #file-bar, .panel-bar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 5px 12px;
+            background: var(--panel-alt);
+            border-bottom: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+        .panel-bar button { padding: 2px 4px; border: 0; background: transparent; color: inherit; }
+        #web-tabs:not(.hidden), #find-bar:not([hidden]) {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+        .web-tab, .wiki-tab { padding: 3px 8px; border-color: transparent; background: transparent; }
+        .web-tab.active, .wiki-tab.active { background: var(--panel); border-color: var(--border); color: var(--text); }
+        #find-bar {
+            padding: 6px 12px;
+            background: var(--panel-alt);
+            border-bottom: 1px solid var(--border);
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+        #find-bar input { width: 150px; }
+        #find-count { min-width: 78px; color: var(--muted); }
+        .editor-box { display: flex; flex: 1; min-height: 0; overflow: hidden; background: var(--panel); }
         .line-nums {
             width: 3rem;
-            padding: 0.75rem 0.5rem;
+            flex-shrink: 0;
+            padding: 12px 8px;
             text-align: right;
-            font-size: 0.82rem;
-            line-height: 1.45rem;
-            user-select: none;
+            color: var(--line-num);
+            background: var(--bg);
+            border-right: 1px solid var(--soft-border);
             overflow: hidden;
+            font-size: 12px;
+            line-height: 1.45rem;
+            white-space: pre;
+            user-select: none;
         }
         .code-area {
             flex: 1;
-            padding: 0.75rem;
-            font-size: 0.82rem;
-            line-height: 1.45rem;
-            border: none;
-            outline: none;
+            min-width: 0;
+            padding: 12px;
+            border: 0;
+            border-radius: 0;
+            outline: 0;
             resize: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 12px;
+            line-height: 1.45rem;
             white-space: pre;
             overflow: auto;
             tab-size: 4;
-            background: transparent;
-        }
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(130, 130, 130, 0.25);
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(130, 130, 130, 0.45);
         }
 
-        button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-            outline: 2px solid #2e7d32;
-            outline-offset: 1px;
+        #output-section {
+            height: 38%;
+            min-height: 160px;
+            max-height: 60%;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid var(--border);
+            background: var(--bg);
         }
+        #web-output:not(.hidden), #console-output-wrap:not(.hidden) {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+        }
+        .output-body { display: flex; flex: 1; min-height: 0; flex-direction: column; }
+        #preview-frame { flex: 1; min-height: 0; width: 100%; border: 0; background: #ffffff; }
+        #js-console {
+            width: 100%;
+            height: 96px;
+            flex-shrink: 0;
+            overflow: auto;
+            padding: 8px;
+            background: var(--console);
+            border-top: 1px solid var(--border);
+        }
+        #js-console .err { color: var(--danger); }
+        #terminal-box { flex: 1; min-height: 0; margin: 0; padding: 12px; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+        #stdin-wrap {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            flex-shrink: 0;
+            background: var(--panel-alt);
+            border-top: 1px solid var(--border);
+        }
+        #stdin-wrap label { padding: 5px 10px; border-bottom: 1px solid var(--soft-border); color: var(--muted); font-size: 11px; }
+        #stdin-box { flex: 1; min-height: 70px; width: 100%; border: 0; border-radius: 0; background: transparent; resize: none; }
 
-        /* Awaryjny układ, gdy CDN Tailwinda jest niedostępny (praca offline) */
-        .no-tailwind body { display: flex; flex-direction: column; height: 100vh; margin: 0; background: #1e1e1e; color: #d4d4d4; }
-        .no-tailwind header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 6px 12px; background: #252526; border-bottom: 1px solid #333; }
-        .no-tailwind main { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-        .no-tailwind aside { width: 100%; height: 220px; border-top: 1px solid #333; background: #202020; overflow: hidden; display: flex; flex-direction: column; }
-        .no-tailwind section { display: flex; flex-direction: column; min-height: 0; }
-        .no-tailwind button, .no-tailwind select, .no-tailwind input, .no-tailwind textarea { font-size: 12px; padding: 4px 8px; background: #2d2d2d; color: #ddd; border: 1px solid #3c3c3c; }
-        .no-tailwind pre { padding: 8px; }
-        .no-tailwind .hidden { display: none !important; }
-        .no-tailwind .flex { display: flex; }
-        .no-tailwind .flex-col { flex-direction: column; }
-        .no-tailwind .flex-wrap { flex-wrap: wrap; }
-        .no-tailwind .items-center { align-items: center; }
-        .no-tailwind .justify-between { justify-content: space-between; }
-        .no-tailwind .flex-1 { flex: 1; min-width: 0; }
-        .no-tailwind .shrink-0 { flex-shrink: 0; }
-        .no-tailwind .overflow-hidden { overflow: hidden; }
-        .no-tailwind .w-full { width: 100%; }
-        .no-tailwind .h-full { height: 100%; }
-        .no-tailwind .gap-1 { gap: 4px; }
-        .no-tailwind .gap-2 { gap: 8px; }
-        .no-tailwind .gap-3 { gap: 12px; }
-        .no-tailwind #editor-scroll-hint { font-size: 11px; color: #888; }
+        #guide-section:not(.hidden) {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 220px;
+            flex-shrink: 0;
+            background: var(--panel-alt);
+            border-top: 1px solid var(--border);
+        }
+        #guide-search { width: 100%; }
+        #guide-list { display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; overflow-y: auto; padding: 10px; }
+        .wiki-card {
+            padding: 10px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+        }
+        .wiki-card h3 { margin: 0; font-size: 12px; font-weight: 600; }
+        .wiki-card p { margin: 6px 0; color: var(--muted); font-size: 11px; }
+        .wiki-card table { width: 100%; border-collapse: collapse; }
+        .wiki-card td { padding: 4px 6px; border-top: 1px solid var(--soft-border); vertical-align: top; font-size: 11px; }
+        .wiki-card td:first-child { color: var(--accent); white-space: nowrap; }
+        .wiki-card pre { margin: 8px 0 0; padding: 8px; overflow: auto; background: var(--bg); border: 1px solid var(--soft-border); font-size: 11px; }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(130, 130, 130, 0.25); }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(130, 130, 130, 0.45); }
+
+        @media (min-width: 640px) {
+            .output-body { flex-direction: row; }
+            #preview-frame { width: 66%; }
+            #js-console { width: 34%; height: auto; border-top: 0; border-left: 1px solid var(--border); }
+            #stdin-wrap { width: 240px; border-top: 0; border-left: 1px solid var(--border); }
+        }
         @media (min-width: 1024px) {
-            .no-tailwind main { flex-direction: row; }
-            .no-tailwind aside { width: 370px; height: auto; border-top: 0; border-left: 1px solid #333; }
+            main { flex-direction: row; }
+            #guide-section:not(.hidden) { width: 370px; height: auto; border-top: 0; border-left: 1px solid var(--border); }
+        }
+        @media (min-width: 1280px) {
+            #guide-section:not(.hidden) { width: 410px; }
         }
         @media (max-width: 640px) {
-            .no-tailwind header { justify-content: flex-start; }
+            header { justify-content: flex-start; }
+            header > div:last-child { margin-left: 0; }
+            #find-bar input { width: 110px; }
+            #find-bar label { display: none; }
         }
     </style>
 </head>
@@ -115,11 +294,18 @@
                 Kopiuj
             </button>
 
+            <button onclick="toggleFindBar()" id="btn-find" class="px-2 py-1 border border-[#cccccc] dark:border-[#3c3c3c] bg-[#f5f5f5] dark:bg-[#2d2d2d] hover:border-[#888888] text-xs text-[#444444] dark:text-[#cccccc]" title="Szukaj w kodzie (Ctrl+F)" aria-controls="find-bar">
+                Szukaj
+            </button>
+
             <select id="examples-select" onchange="loadExample(this.value)" aria-label="Przykładowe programy" class="px-2 py-1 text-xs bg-[#ffffff] dark:bg-[#2d2d2d] border border-[#cccccc] dark:border-[#3c3c3c] text-[#1e1e1e] dark:text-[#e0e0e0]">
                 <option value="">Przykłady…</option>
                 <option value="cpp:hello">C++ — hello world</option>
                 <option value="cpp:sum">C++ — suma 1..10</option>
+                <option value="cpp:if">C++ — if / else</option>
+                <option value="cpp:while">C++ — pętla while</option>
                 <option value="c:hello">C — hello world</option>
+                <option value="c:input">C — scanf i printf</option>
                 <option value="web:counter">Web — licznik</option>
                 <option value="basic:fib">BASIC — ciąg Fibonacciego</option>
             </select>
@@ -166,9 +352,9 @@
         <div class="flex-1 flex flex-col overflow-hidden min-w-0">
             
             <!-- EDYTOR KODU -->
-            <section class="flex-1 flex flex-col overflow-hidden min-h-0">
+            <section id="editor-section" class="flex-1 flex flex-col overflow-hidden min-h-0">
                 <!-- Pasek zakładki pliku -->
-                <div class="px-3 py-1 border-b border-[#d4d4d4] dark:border-[#333333] flex items-center justify-between bg-[#f0f0f0] dark:bg-[#252526] shrink-0">
+                <div id="file-bar" class="px-3 py-1 border-b border-[#d4d4d4] dark:border-[#333333] flex items-center justify-between bg-[#f0f0f0] dark:bg-[#252526] shrink-0">
                     <div id="web-tabs" class="hidden items-center gap-1">
                         <button onclick="setWebTab('html')" id="tab-html" class="web-tab px-2 py-0.5 text-xs bg-[#ffffff] dark:bg-[#1e1e1e] text-[#1e1e1e] dark:text-[#ffffff] border border-[#cccccc] dark:border-[#3c3c3c]">index.html</button>
                         <button onclick="setWebTab('css')" id="tab-css" class="web-tab px-2 py-0.5 text-xs text-[#666666] dark:text-[#888888] hover:text-[#1e1e1e] dark:hover:text-[#e0e0e0]">style.css</button>
@@ -180,6 +366,20 @@
                     <span id="cursor-info" class="text-[11px] text-[#777777]">Ln 1, Col 1</span>
                 </div>
 
+                <!-- Pasek szukania / zamiany -->
+                <div id="find-bar" hidden>
+                    <label for="find-input">Szukaj</label>
+                    <input id="find-input" type="search" placeholder="fraza..." aria-label="Szukana fraza">
+                    <button type="button" id="find-prev" title="Poprzednie (Shift+F3)">↑</button>
+                    <button type="button" id="find-next" title="Następne (F3)">↓</button>
+                    <span id="find-count" role="status" aria-live="polite"></span>
+                    <label for="replace-input">Zamień</label>
+                    <input id="replace-input" type="text" placeholder="nowa fraza..." aria-label="Fraza zamiany">
+                    <button type="button" id="replace-one">Zamień</button>
+                    <button type="button" id="replace-all">Wszystkie</button>
+                    <button type="button" id="find-close" title="Zamknij (Esc)" aria-label="Zamknij wyszukiwanie">×</button>
+                </div>
+
                 <!-- Pole tekstowe -->
                 <div class="editor-box bg-[#ffffff] dark:bg-[#1e1e1e]">
                     <div id="line-nums" class="line-nums bg-[#f5f5f5] dark:bg-[#1e1e1e] text-[#999999] dark:text-[#555555] border-r border-[#e5e5e5] dark:border-[#2d2d2d]">1</div>
@@ -188,15 +388,15 @@
             </section>
 
             <!-- DOLNY PANEL: KONSOLA (stdout + stdin) LUB PODGLĄD STRONY -->
-            <section class="h-[38%] min-h-[160px] border-t border-[#d4d4d4] dark:border-[#333333] flex flex-col bg-[#f5f5f5] dark:bg-[#181818] shrink-0">
+            <section id="output-section" class="h-[38%] min-h-[160px] border-t border-[#d4d4d4] dark:border-[#333333] flex flex-col bg-[#f5f5f5] dark:bg-[#181818] shrink-0">
                 
                 <!-- Podgląd dla HTML/CSS/JS -->
                 <div id="web-output" class="hidden flex-1 flex-col overflow-hidden">
-                    <div class="px-3 py-1 border-b border-[#d4d4d4] dark:border-[#333333] flex justify-between items-center text-[11px] text-[#555555] dark:text-[#999999] bg-[#ebebeb] dark:bg-[#252526] shrink-0">
+                    <div id="web-output-bar" class="panel-bar px-3 py-1 border-b border-[#d4d4d4] dark:border-[#333333] flex justify-between items-center text-[11px] text-[#555555] dark:text-[#999999] bg-[#ebebeb] dark:bg-[#252526] shrink-0">
                         <span>Podgląd strony + konsola JS</span>
                         <button onclick="clearJsConsole()" class="hover:text-[#1e1e1e] dark:hover:text-[#ffffff]">Wyczyść logi</button>
                     </div>
-                    <div class="flex-1 flex flex-col sm:flex-row overflow-hidden">
+                    <div id="web-output-body" class="output-body flex-1 flex flex-col sm:flex-row overflow-hidden">
                         <iframe id="preview-frame" sandbox="allow-scripts allow-modals" class="w-full sm:w-2/3 h-full bg-white border-0"></iframe>
                         <div id="js-console" class="w-full sm:w-1/3 h-24 sm:h-full border-t sm:border-t-0 sm:border-l border-[#d4d4d4] dark:border-[#333333] p-2 text-xs overflow-y-auto space-y-0.5 text-[#333333] dark:text-[#cccccc] bg-[#f8f8f8] dark:bg-[#181818]"></div>
                     </div>
@@ -204,16 +404,16 @@
 
                 <!-- Konsola i stdin dla C++, C, BASIC -->
                 <div id="console-output-wrap" class="flex-1 flex flex-col overflow-hidden">
-                    <div class="px-3 py-1 border-b border-[#d4d4d4] dark:border-[#333333] flex justify-between items-center text-[11px] text-[#555555] dark:text-[#999999] bg-[#ebebeb] dark:bg-[#252526] shrink-0">
+                    <div id="console-output-bar" class="panel-bar px-3 py-1 border-b border-[#d4d4d4] dark:border-[#333333] flex justify-between items-center text-[11px] text-[#555555] dark:text-[#999999] bg-[#ebebeb] dark:bg-[#252526] shrink-0">
                         <span id="status-text">Konsola (stdout)</span>
                         <button onclick="clearTerminal()" class="hover:text-[#1e1e1e] dark:hover:text-[#ffffff]">Wyczyść</button>
                     </div>
-                    <div class="flex-1 flex flex-col sm:flex-row overflow-hidden">
+                    <div id="console-output-body" class="output-body flex-1 flex flex-col sm:flex-row overflow-hidden">
                         <!-- Wyjście programu -->
                         <pre id="terminal-box" class="flex-1 p-3 text-xs overflow-y-auto whitespace-pre-wrap leading-relaxed text-[#1e1e1e] dark:text-[#d4d4d4]">Kliknij "Run" (lub Ctrl+Enter), aby uruchomić program.</pre>
                         
                         <!-- Pole stdin po prawej stronie dolnego terminala (jak w OnlineGDB) -->
-                        <div class="w-full sm:w-64 border-t sm:border-t-0 sm:border-l border-[#d4d4d4] dark:border-[#333333] flex flex-col bg-[#f0f0f0] dark:bg-[#202020] shrink-0">
+                        <div id="stdin-wrap" class="w-full sm:w-64 border-t sm:border-t-0 sm:border-l border-[#d4d4d4] dark:border-[#333333] flex flex-col bg-[#f0f0f0] dark:bg-[#202020] shrink-0">
                             <label for="stdin-box" class="px-2.5 py-1 border-b border-[#e0e0e0] dark:border-[#2d2d2d] text-[11px] text-[#666666] dark:text-[#999999]">
                                 Standard Input (stdin):
                             </label>
@@ -239,7 +439,7 @@
             </div>
             
             <div class="px-2.5 py-1.5 border-b border-[#e0e0e0] dark:border-[#2d2d2d] shrink-0">
-                <input id="wiki-search" oninput="renderWiki()" type="text" placeholder="Szukaj komendy (np. int, string, for, printf)..." class="w-full px-2 py-1 border border-[#cccccc] dark:border-[#3c3c3c] bg-[#ffffff] dark:bg-[#1e1e1e] text-xs text-[#1e1e1e] dark:text-[#d4d4d4] placeholder-[#999999] dark:placeholder-[#555555] focus:outline-none">
+                <input id="guide-search" class="w-full" oninput="renderWiki()" type="text" placeholder="Szukaj komendy (np. int, string, for, printf)...">
             </div>
 
             <div id="guide-list" class="flex-1 overflow-y-auto p-2.5 space-y-2.5">
@@ -276,6 +476,9 @@
                 css: 'body { font-family: monospace; padding: 16px; }\nbutton { padding: 6px 12px; cursor: pointer; }',
                 js: 'let n = 0;\ndocument.getElementById("plus").addEventListener("click", () => {\n  n++;\n  document.getElementById("value").textContent = n;\n  console.log("Licznik:", n);\n});'
             } },
+            'cpp:if': { lang: 'cpp', code: '#include <iostream>\nusing namespace std;\n\nint main() {\n    int x = 7;\n    if (x % 2 == 0) {\n        cout << "Parzysta" << endl;\n    } else {\n        cout << "Nieparzysta: " << x << endl;\n    }\n    return 0;\n}' },
+            'cpp:while': { lang: 'cpp', code: '#include <iostream>\nusing namespace std;\n\nint main() {\n    int i = 3;\n    while (i > 0) {\n        cout << "T minus " << i << endl;\n        i--;\n    }\n    cout << "Start!" << endl;\n    return 0;\n}' },
+            'c:input': { lang: 'c', code: '#include <stdio.h>\n\nint main(void) {\n    int a, b;\n    printf("Podaj dwie liczby: ");\n    scanf("%d %d", &a, &b);\n    printf("Suma: %d, iloczyn: %d\\n", a + b, a * b);\n    return 0;\n}' },
             'basic:fib': { lang: 'basic', code: '10 REM ciag Fibonacciego\n20 LET A = 0\n30 LET B = 1\n40 FOR I = 1 TO 10\n50   PRINT A;\n60   LET C = A + B\n70   LET A = B\n80   LET B = C\n90 NEXT I\n99 END' }
         };
 
@@ -532,9 +735,6 @@ int main() {
         const cursorInfo = document.getElementById('cursor-info');
 
         window.onload = function () {
-            // Jeśli CDN Tailwinda nie załadował się, użyj wbudowanego awaryjnego układu
-            if (!window.tailwind) document.documentElement.classList.add('no-tailwind');
-
             let savedTheme = null;
             try { savedTheme = localStorage.getItem('darin_theme'); } catch (e) { /* brak uprawnień */ }
             if (savedTheme === 'light') {
@@ -735,6 +935,154 @@ int main() {
             }
         });
 
+        // 4A. WYSZUKIWANIE I ZAMIANA W EDYTORZE
+        const findBar = document.getElementById('find-bar');
+        const findInput = document.getElementById('find-input');
+        const replaceInput = document.getElementById('replace-input');
+        const findCount = document.getElementById('find-count');
+        let findMatches = [];
+        let findIndex = -1;
+
+        function findAll(phrase) {
+            findMatches = [];
+            if (!phrase) return findMatches;
+            const text = codeArea.value;
+            let from = 0;
+            while (true) {
+                const at = text.indexOf(phrase, from);
+                if (at === -1) break;
+                findMatches.push(at);
+                from = at + phrase.length;
+            }
+            return findMatches;
+        }
+
+        function selectFindMatch(focusInput) {
+            if (!findMatches.length) return;
+            findIndex = (findIndex + findMatches.length) % findMatches.length;
+            const pos = findMatches[findIndex];
+            const len = findInput.value.length;
+            codeArea.setSelectionRange(pos, pos + len);
+            const line = codeArea.value.slice(0, pos).split('\n').length;
+            codeArea.scrollTop = Math.max(0, (line - 3) * 23);
+            findCount.textContent = `${findIndex + 1}/${findMatches.length}`;
+            if (focusInput) {
+                findInput.focus();
+                findInput.setSelectionRange(0, findInput.value.length);
+            }
+        }
+
+        function refreshFind() {
+            const phrase = findInput.value;
+            findAll(phrase);
+            if (!phrase) {
+                findCount.textContent = '—';
+                findIndex = -1;
+                return;
+            }
+            if (!findMatches.length) {
+                findCount.textContent = '0/0';
+                findIndex = -1;
+                return;
+            }
+            const current = codeArea.selectionStart;
+            let nearest = findMatches.findIndex(pos => pos >= current);
+            if (nearest === -1) nearest = 0;
+            findIndex = nearest;
+            selectFindMatch(false);
+        }
+
+        function toggleFindBar(force) {
+            const show = typeof force === 'boolean' ? force : findBar.hasAttribute('hidden');
+            if (show) {
+                findBar.removeAttribute('hidden');
+                const selected = codeArea.value.substring(codeArea.selectionStart, codeArea.selectionEnd);
+                if (selected && !selected.includes('\n')) findInput.value = selected;
+                findInput.focus();
+                findInput.select();
+            } else {
+                findBar.setAttribute('hidden', '');
+                codeArea.focus();
+            }
+            refreshFind();
+        }
+
+        function moveFind(delta) {
+            if (findBar.hasAttribute('hidden')) toggleFindBar(true);
+            findAll(findInput.value);
+            if (!findMatches.length) {
+                findCount.textContent = findInput.value ? '0/0' : '—';
+                return;
+            }
+            findIndex += delta;
+            selectFindMatch(true);
+        }
+
+        function replaceCurrent() {
+            const phrase = findInput.value;
+            if (!phrase || !findMatches.length) return;
+            if (findIndex < 0) findIndex = 0;
+            const pos = findMatches[findIndex];
+            codeArea.setSelectionRange(pos, pos + phrase.length);
+            codeArea.value = codeArea.value.slice(0, pos) + replaceInput.value + codeArea.value.slice(pos + phrase.length);
+            codeArea.dispatchEvent(new Event('input'));
+            refreshFind();
+            selectFindMatch(true);
+            showToast('Zamieniono 1 wystąpienie.');
+        }
+
+        function replaceAllMatches() {
+            const phrase = findInput.value;
+            if (!phrase || !findMatches.length) return;
+            const count = findMatches.length;
+            const replacement = replaceInput.value.split('$&').join(phrase);
+            codeArea.value = codeArea.value.split(phrase).join(replacement);
+            codeArea.dispatchEvent(new Event('input'));
+            refreshFind();
+            showToast(`Zamieniono ${count} wystąpień.`);
+        }
+
+        findInput.addEventListener('input', refreshFind);
+        findInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                moveFind(e.shiftKey ? -1 : 1);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                toggleFindBar(false);
+            }
+        });
+        replaceInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                replaceCurrent();
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                toggleFindBar(false);
+            }
+        });
+        document.getElementById('find-prev').addEventListener('click', () => moveFind(-1));
+        document.getElementById('find-next').addEventListener('click', () => moveFind(1));
+        document.getElementById('replace-one').addEventListener('click', replaceCurrent);
+        document.getElementById('replace-all').addEventListener('click', replaceAllMatches);
+        document.getElementById('find-close').addEventListener('click', () => toggleFindBar(false));
+
+        document.addEventListener('keydown', (e) => {
+            if (e.defaultPrevented) return;
+            const mod = e.ctrlKey || e.metaKey;
+            if (mod && e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                if (findBar.hasAttribute('hidden')) toggleFindBar(true);
+                else { findInput.focus(); findInput.select(); }
+            } else if (e.key === 'F3') {
+                e.preventDefault();
+                moveFind(e.shiftKey ? -1 : 1);
+            } else if (e.key === 'Escape' && !findBar.hasAttribute('hidden')) {
+                e.preventDefault();
+                toggleFindBar(false);
+            }
+        });
+
         function syncEditor() {
             codeArea.value = state.lang === 'web'
                 ? state.code.web[state.webTab]
@@ -791,9 +1139,10 @@ int main() {
         function setWebTab(tab) {
             state.webTab = tab;
             document.querySelectorAll('.web-tab').forEach(btn => {
-                btn.className = 'web-tab px-2 py-0.5 text-xs text-[#666666] dark:text-[#888888] hover:text-[#1e1e1e] dark:hover:text-[#e0e0e0]';
+                const active = btn.id === 'tab-' + tab;
+                btn.classList.toggle('active', active);
+                btn.setAttribute('aria-pressed', String(active));
             });
-            document.getElementById('tab-' + tab).className = 'web-tab px-2 py-0.5 text-xs bg-[#ffffff] dark:bg-[#1e1e1e] text-[#1e1e1e] dark:text-[#ffffff] border border-[#cccccc] dark:border-[#3c3c3c]';
             syncEditor();
         }
 
@@ -848,7 +1197,7 @@ int main() {
             if (e.data && e.data.type === 'js-log') {
                 const box = document.getElementById('js-console');
                 const row = document.createElement('div');
-                row.className = e.data.level === 'err' ? 'text-red-600 dark:text-red-400' : '';
+                row.className = e.data.level === 'err' ? 'err' : '';
                 row.textContent = '$ ' + e.data.msg;
                 box.appendChild(row);
                 box.scrollTop = box.scrollHeight;
@@ -863,41 +1212,393 @@ int main() {
             document.getElementById('terminal-box').textContent = '';
         }
 
-        // 6B. Kompilacja C++ i C przez Wandbox (publiczne API Piston jest wyłączone)
+        // 6B. Wbudowany interpreter podzbioru C/C++ — działa całkowicie offline
         function runCompiler(lang) {
             const btn = document.getElementById('btn-run');
             const statusText = document.getElementById('status-text');
             const term = document.getElementById('terminal-box');
-            const code = state.code[lang];
 
             btn.disabled = true;
-            btn.textContent = 'Analizuję...';
-            statusText.textContent = 'Analiza offline...';
-            term.textContent = 'Sprawdzam strukturę kodu ' + lang.toUpperCase() + '...';
+            btn.textContent = 'Uruchamiam...';
+            statusText.textContent = 'Interpret offline...';
+            term.textContent = '';
 
-            const issues = [];
-            const braces = [(code.match(/\{/g) || []).length, (code.match(/\}/g) || []).length];
-            const parens = [(code.match(/\(/g) || []).length, (code.match(/\)/g) || []).length];
-            if (braces[0] !== braces[1]) issues.push(`Niezrównoważone nawiasy klamrowe: ${braces[0]} otwarcia, ${braces[1]} zamknięcia.`);
-            if (parens[0] !== parens[1]) issues.push(`Niezrównoważone nawiasy okrągłe: ${parens[0]} otwarcia, ${parens[1]} zamknięcia.`);
-            if (!/\bmain\s*\(/.test(code)) issues.push('Nie znaleziono funkcji main().');
-
-            const literals = [...code.matchAll(/"((?:\\.|[^"\\])*)"/g)]
-                .map((m) => m[1].replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\"/g, '"'))
-                .filter((s) => s.trim() && !/^%[-+0-9.#]*[a-zA-Z]$/.test(s));
-            const preview = literals.slice(0, 8);
-
-            if (issues.length) {
-                statusText.textContent = 'Błędy statyczne';
-                term.textContent = issues.map((x, i) => `${i + 1}. ${x}`).join('\n');
-            } else {
-                statusText.textContent = 'Analiza offline: OK';
-                term.textContent = (preview.length
-                    ? preview.join('\n') + '\n\n'
-                    : '') + 'Tryb offline: podgląd napisów i kontrola struktury kodu.';
+            try {
+                const result = runMiniC(state.code[lang], document.getElementById('stdin-box').value);
+                statusText.textContent = `> ${lang}: ok · ${result.steps} kroków`;
+                term.textContent = result.output || '(program zakończył bez wyjścia)';
+            } catch (e) {
+                statusText.textContent = `> ${lang}: błąd`;
+                term.textContent = 'błąd interpretera: ' + e.message +
+                    '\n\nWspierane: zmienne, cout/printf, cin/scanf/getline, if/else, for, while, ' +
+                    'break/continue, ++/-- i podstawowe wyrażenia.';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '&#9654; Run';
             }
-            btn.disabled = false;
-            btn.innerHTML = '&#9654; Run';
+        }
+
+        function runMiniC(source, stdinText) {
+            const clean = source
+                .replace(/\/\*[\s\S]*?\*\//g, ' ')
+                .replace(/\/\/[^\n]*/g, ' ')
+                .replace(/^\s*#.*$/gm, ' ')
+                .replace(/\busing namespace std\s*;/g, ' ')
+                .replace(/std::/g, '');
+
+            const inputText = String(stdinText || '');
+            const env = {
+                vars: Object.create(null),
+                out: [],
+                stdin: inputText.trim().split(/\s+/).filter(Boolean),
+                stdinIdx: 0,
+                stdinLines: inputText.split(/\r?\n/),
+                stdinLineIdx: 0,
+                steps: 0,
+                breakFlag: false,
+                continueFlag: false,
+                returned: false
+            };
+
+            function splitTop(text, sep) {
+                const parts = [];
+                let cur = '', quote = null, depth = 0, esc = false;
+                for (let i = 0; i < text.length; i++) {
+                    const ch = text[i];
+                    if (esc) { cur += ch; esc = false; continue; }
+                    if (ch === '\\' && quote) { cur += ch; esc = true; continue; }
+                    if (quote) {
+                        cur += ch;
+                        if (ch === quote) quote = null;
+                        continue;
+                    }
+                    if (ch === '"' || ch === "'") { quote = ch; cur += ch; continue; }
+                    if (ch === '(' || ch === '[') { depth++; cur += ch; continue; }
+                    if (ch === ')' || ch === ']') { depth--; cur += ch; continue; }
+                    if (depth === 0 && text.startsWith(sep, i)) {
+                        parts.push(cur.trim());
+                        cur = '';
+                        i += sep.length - 1;
+                        continue;
+                    }
+                    cur += ch;
+                }
+                if (cur.trim()) parts.push(cur.trim());
+                return parts;
+            }
+
+            function unquote(text) {
+                const s = String(text || '').trim();
+                if (s.length >= 2 && s[0] === '"' && s[s.length - 1] === '"') {
+                    return s.slice(1, -1)
+                        .replace(/\\n/g, '\n').replace(/\\t/g, '\t')
+                        .replace(/\\r/g, '').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                }
+                if (s.length >= 3 && s[0] === "'" && s[s.length - 1] === "'") return s.slice(1, -1);
+                return s;
+            }
+
+            function stringify(v) {
+                if (v === true) return '1';
+                if (v === false) return '0';
+                if (v === null || v === undefined) return '';
+                return String(v);
+            }
+
+            const helpers = {
+                Math,
+                abs: Math.abs, sqrt: Math.sqrt, pow: Math.pow, floor: Math.floor,
+                ceil: Math.ceil, round: Math.round, min: Math.min, max: Math.max,
+                strlen: (s) => String(s).length
+            };
+            const helperNames = Object.keys(helpers);
+            const helperValues = helperNames.map((k) => helpers[k]);
+
+            function evalExpr(expr) {
+                let s = String(expr == null ? '' : expr).trim();
+                if (!s) return '';
+                s = s.replace(/^\(([\s\S]*)\)$/, (whole, inner) => {
+                    let depth = 0, quote = null;
+                    for (let i = 0; i < inner.length; i++) {
+                        if (quote) { if (inner[i] === quote) quote = null; continue; }
+                        if (inner[i] === '"' || inner[i] === "'") { quote = inner[i]; continue; }
+                        if (inner[i] === '(') depth++;
+                        if (inner[i] === ')') depth--;
+                        if (depth < 0) return whole;
+                    }
+                    return depth === 0 ? inner : whole;
+                });
+
+                let js = '', i = 0;
+                while (i < s.length) {
+                    const ch = s[i];
+                    if (ch === '"' || ch === "'") {
+                        const q = ch;
+                        let j = i + 1;
+                        while (j < s.length) {
+                            if (s[j] === '\\') { j += 2; continue; }
+                            if (s[j] === q) { j++; break; }
+                            j++;
+                        }
+                        const lit = s.slice(i, j);
+                        js += q === '"' ? lit : JSON.stringify(unquote(lit));
+                        i = j;
+                        continue;
+                    }
+                    const id = s.slice(i).match(/^[A-Za-z_]\w*/);
+                    if (id) {
+                        const name = id[0];
+                        if (name === 'endl') js += JSON.stringify('\n');
+                        else if (name === 'true' || name === 'false' || helperNames.indexOf(name) !== -1) js += name;
+                        else if (Object.prototype.hasOwnProperty.call(env.vars, name)) {
+                            const v = env.vars[name];
+                            js += typeof v === 'string' ? JSON.stringify(v) : String(v);
+                        } else js += '0';
+                        i += name.length;
+                        continue;
+                    }
+                    if (s.startsWith('&&', i) || s.startsWith('||', i) || s.startsWith('==', i) ||
+                        s.startsWith('!=', i) || s.startsWith('<=', i) || s.startsWith('>=', i)) {
+                        js += s.slice(i, i + 2); i += 2; continue;
+                    }
+                    js += ch; i++;
+                }
+                try {
+                    return Function.apply(null, helperNames.concat('"use strict"; return (' + js + ')')).apply(null, helperValues);
+                } catch (err) {
+                    throw new Error('nie da się obliczyć wyrażenia: ' + s.trim());
+                }
+            }
+
+            function readToken() {
+                return env.stdinIdx < env.stdin.length ? env.stdin[env.stdinIdx++] : '';
+            }
+
+            function formatPrintf(fmt, args) {
+                let ai = 0;
+                return String(fmt).replace(/%([-+0-9.#]*)([diufgcs%])/g, (m, flags, spec) => {
+                    if (spec === '%') return '%';
+                    const a = args[ai++];
+                    if (spec === 's') return stringify(a);
+                    if (spec === 'c') return typeof a === 'number' ? String.fromCharCode(a) : stringify(a);
+                    if (spec === 'd' || spec === 'i' || spec === 'u') return String(Math.trunc(Number(a) || 0));
+                    if (spec === 'f') {
+                        const prec = flags.indexOf('.') !== -1 ? parseInt(flags.split('.')[1], 10) : 6;
+                        return Number(a || 0).toFixed(Number.isFinite(prec) ? Math.min(prec, 12) : 6);
+                    }
+                    return String(Number(a) || 0);
+                });
+            }
+
+            function execSimple(raw) {
+                const s = String(raw || '').trim().replace(/;$/, '').trim();
+                if (!s) return;
+                if (/^return\b/i.test(s)) { env.returned = true; return; }
+                if (/^(break|continue)\b/i.test(s)) {
+                    if (/^break/i.test(s)) env.breakFlag = true;
+                    else env.continueFlag = true;
+                    return;
+                }
+
+                const decl = s.match(/^(?:const\s+)?(?:int|long|short|double|float|char|string|bool|auto)\s+([\s\S]+)$/i);
+                if (decl) {
+                    splitTop(decl[1], ',').forEach((part) => {
+                        const one = part.trim().match(/^([A-Za-z_]\w*)\s*(?:\[\s*\]\s*)?(?:=\s*([\s\S]+))?$/);
+                        if (one) env.vars[one[1]] = one[2] ? evalExpr(one[2]) : 0;
+                    });
+                    return;
+                }
+
+                if (/^cout\s*<</i.test(s)) {
+                    splitTop(s.replace(/^cout\s*<</i, ''), '<<').forEach((p) => env.out.push(stringify(evalExpr(p))));
+                    return;
+                }
+                if (/^printf\s*\(/i.test(s)) {
+                    const inside = s.replace(/^printf\s*\(/i, '').replace(/\)$/, '');
+                    const args = splitTop(inside, ',');
+                    if (args.length) env.out.push(formatPrintf(unquote(args[0]), args.slice(1).map(evalExpr)));
+                    return;
+                }
+                if (/^puts\s*\(/i.test(s)) {
+                    const inside = s.replace(/^puts\s*\(/i, '').replace(/\)$/, '');
+                    env.out.push(stringify(evalExpr(inside)) + '\n');
+                    return;
+                }
+                const getlineM = s.match(/^getline\s*\(\s*cin\s*,\s*([A-Za-z_]\w*)\s*\)$/i);
+                if (getlineM) {
+                    env.vars[getlineM[1]] = env.stdinLines[env.stdinLineIdx++] || '';
+                    return;
+                }
+                if (/^cin\s*>>/i.test(s)) {
+                    splitTop(s.replace(/^cin\s*>>/i, ''), '>>').forEach((p) => {
+                        const name = p.trim();
+                        if (/^[A-Za-z_]\w*$/.test(name)) {
+                            const val = readToken();
+                            env.vars[name] = typeof env.vars[name] === 'number' ? (parseFloat(val) || 0) : val;
+                        }
+                    });
+                    return;
+                }
+                const scanfM = s.match(/^scanf\s*\(([\s\S]*)\)$/i);
+                if (scanfM) {
+                    const args = splitTop(scanfM[1], ',');
+                    const fmt = unquote(args[0] || '""');
+                    args.slice(1).forEach((a) => {
+                        const name = a.replace(/^&\s*/, '').trim();
+                        if (!/^[A-Za-z_]\w*$/.test(name)) return;
+                        const val = readToken();
+                        env.vars[name] = /[difug]/i.test(fmt) ? (parseFloat(val) || 0) : val;
+                    });
+                    return;
+                }
+
+                const post = s.match(/^([A-Za-z_]\w*)\s*(\+\+|--)$/);
+                if (post) {
+                    env.vars[post[1]] = Number(evalExpr(post[1])) + (post[2] === '++' ? 1 : -1);
+                    return;
+                }
+                const pre = s.match(/^(\+\+|--)\s*([A-Za-z_]\w*)$/);
+                if (pre) {
+                    env.vars[pre[2]] = Number(evalExpr(pre[2])) + (pre[1] === '++' ? 1 : -1);
+                    return;
+                }
+                const assign = s.match(/^([A-Za-z_]\w*)\s*(\+=|-=|\*=|\/=|%=|=)\s*([\s\S]+)$/);
+                if (assign) {
+                    const name = assign[1], op = assign[2], rhs = evalExpr(assign[3]);
+                    const cur = env.vars[name];
+                    if (op === '=') env.vars[name] = rhs;
+                    else if (op === '+=') env.vars[name] = evalExpr(stringify(cur) + ' + (' + assign[3] + ')');
+                    else if (op === '-=') env.vars[name] = Number(cur) - Number(rhs);
+                    else if (op === '*=') env.vars[name] = Number(cur) * Number(rhs);
+                    else if (op === '/=') env.vars[name] = Number(cur) / Number(rhs);
+                    else env.vars[name] = Number(cur) % Number(rhs);
+                    return;
+                }
+                throw new Error('nieznana instrukcja: ' + s);
+            }
+
+            function parseBlock(text) {
+                const nodes = [];
+                let buf = '', quote = null, depth = 0, esc = false;
+                const flush = () => {
+                    const raw = buf.trim();
+                    buf = '';
+                    if (!raw) return;
+                    const control = raw.match(/^(for|while|if)\s*\(([\s\S]*)\)\s*([\s\S]+)$/i);
+                    if (control) {
+                        nodes.push({ header: control[1].toLowerCase() + '(' + control[2] + ')', body: [{ raw: control[3] }] });
+                    } else {
+                        nodes.push({ raw });
+                    }
+                };
+
+                for (let i = 0; i < text.length; i++) {
+                    const ch = text[i];
+                    if (esc) { buf += ch; esc = false; continue; }
+                    if (ch === '\\' && quote) { buf += ch; esc = true; continue; }
+                    if (quote) {
+                        buf += ch;
+                        if (ch === quote) quote = null;
+                        continue;
+                    }
+                    if (ch === '"' || ch === "'") { quote = ch; buf += ch; continue; }
+                    if (ch === '(') { depth++; buf += ch; continue; }
+                    if (ch === ')') { depth = Math.max(0, depth - 1); buf += ch; continue; }
+                    if (ch === '{' && depth === 0) {
+                        const header = buf.trim();
+                        buf = '';
+                        let j = i + 1, inner = '', innerDepth = 1, q2 = null, esc2 = false;
+                        for (; j < text.length; j++) {
+                            const c = text[j];
+                            if (esc2) { inner += c; esc2 = false; continue; }
+                            if (c === '\\' && q2) { inner += c; esc2 = true; continue; }
+                            if (q2) { inner += c; if (c === q2) q2 = null; continue; }
+                            if (c === '"' || c === "'") { q2 = c; inner += c; continue; }
+                            if (c === '{') innerDepth++;
+                            if (c === '}') { innerDepth--; if (!innerDepth) break; }
+                            inner += c;
+                        }
+                        i = j;
+                        const body = parseBlock(inner);
+                        if (/^else\b/i.test(header)) {
+                            const prev = nodes[nodes.length - 1];
+                            if (prev && prev.header && /^if/i.test(prev.header)) {
+                                prev.elseNode = { header: header.replace(/^else\s*/i, ''), body };
+                            } else {
+                                nodes.push({ header: header.replace(/^else\s*/i, ''), body });
+                            }
+                        } else {
+                            nodes.push({ header, body });
+                        }
+                        continue;
+                    }
+                    if (ch === '}' && depth === 0) break;
+                    if (ch === ';' && depth === 0) { flush(); continue; }
+                    buf += ch;
+                }
+                flush();
+                return nodes;
+            }
+
+            function execNodes(nodes) {
+                for (const node of nodes) {
+                    if (env.returned || env.breakFlag || env.continueFlag) break;
+                    if (++env.steps > 20000) throw new Error('przekroczono limit 20000 kroków');
+                    if (node.raw !== undefined) { execSimple(node.raw); continue; }
+
+                    const header = String(node.header || '').trim();
+                    const forM = header.match(/^for\s*\(([\s\S]*)\)$/i);
+                    if (forM) {
+                        const parts = splitTop(forM[1], ';');
+                        if (parts[0]) execSimple(parts[0]);
+                        let guard = 0;
+                        while (!parts[1] || evalExpr(parts[1])) {
+                            if (++guard > 10000) throw new Error('zbyt wiele iteracji pętli for');
+                            env.breakFlag = false; env.continueFlag = false;
+                            execNodes(node.body);
+                            if (env.breakFlag) { env.breakFlag = false; break; }
+                            if (env.returned) break;
+                            if (parts[2]) execSimple(parts[2]);
+                        }
+                        env.continueFlag = false;
+                        continue;
+                    }
+                    const whileM = header.match(/^while\s*\(([\s\S]*)\)$/i);
+                    if (whileM) {
+                        let guard = 0;
+                        while (evalExpr(whileM[1])) {
+                            if (++guard > 10000) throw new Error('zbyt wiele iteracji pętli while');
+                            env.breakFlag = false; env.continueFlag = false;
+                            execNodes(node.body);
+                            if (env.breakFlag) { env.breakFlag = false; break; }
+                            if (env.returned) break;
+                        }
+                        env.continueFlag = false;
+                        continue;
+                    }
+                    const ifM = header.match(/^if\s*\(([\s\S]*)\)$/i);
+                    if (ifM) {
+                        if (evalExpr(ifM[1])) execNodes(node.body);
+                        else if (node.elseNode) {
+                            const elseIf = node.elseNode.header.match(/^if\s*\(([\s\S]*)\)$/i);
+                            if (elseIf) {
+                                if (evalExpr(elseIf[1])) execNodes(node.elseNode.body);
+                            } else execNodes(node.elseNode.body);
+                        }
+                        continue;
+                    }
+                    if (/\bmain\s*\(/i.test(header)) {
+                        execNodes(node.body);
+                        continue;
+                    }
+                    // Nieznana definicja funkcji — pomijamy ciało, by nie blokować interpretacji main().
+                    if (/\([^)]*\)\s*$/.test(header)) continue;
+                    throw new Error('nieobsłużona konstrukcja: ' + header);
+                }
+            }
+
+            execNodes(parseBlock(clean));
+            return { output: env.out.join(''), steps: env.steps };
         }
 
         // 6C. Wbudowany interpreter języka BASIC
@@ -1161,19 +1862,16 @@ int main() {
         function setWikiTab(tab) {
             state.wikiTab = tab;
             document.querySelectorAll('.wiki-tab').forEach(btn => {
-                btn.className = 'wiki-tab px-1.5 py-0.5 text-[11px] text-[#666666] dark:text-[#888888] hover:text-[#1e1e1e] dark:hover:text-[#ffffff]';
+                const active = btn.id === 'wiki-tab-' + tab;
+                btn.classList.toggle('active', active);
+                btn.setAttribute('aria-pressed', String(active));
             });
-
-            const activeBtn = document.getElementById('wiki-tab-' + tab);
-            if (activeBtn) {
-                activeBtn.className = 'wiki-tab px-1.5 py-0.5 text-[11px] bg-[#1e1e1e] text-white dark:bg-[#333333] dark:text-[#ffffff]';
-            }
             renderWiki();
         }
 
         function renderWiki() {
             const list = document.getElementById('guide-list');
-            const query = (document.getElementById('wiki-search')?.value || '').trim().toLowerCase();
+            const query = (document.getElementById('guide-search')?.value || '').trim().toLowerCase();
 
             // Zakładka „★” przeszukuje wiki wszystkich języków naraz
             const entries = state.wikiTab === 'all'
@@ -1207,7 +1905,7 @@ int main() {
                 `).join('');
 
                 return `
-                <div class="bg-[#ffffff] dark:bg-[#252526] border border-[#d4d4d4] dark:border-[#333333] p-2.5">
+                <div class="wiki-card">
                     <div class="flex items-center justify-between gap-2 mb-1">
                         <h3 class="text-xs font-medium text-[#1e1e1e] dark:text-[#e5e5e5]"><span class="text-[#777777]">[${langLabel}]</span> ${item.title}</h3>
                         <button onclick="insertExample(${idx}, '${lang}')" class="px-2 py-0.5 border border-[#cccccc] dark:border-[#444444] hover:border-[#888888] text-[11px] text-[#333333] dark:text-[#cccccc] shrink-0">
@@ -1242,8 +1940,8 @@ int main() {
             }
             syncEditor();
             saveState();
-            showToast('wstawiono przykład do bufora');
-            runCode();
+            if (targetLang === 'web') runWeb();
+            showToast('Wstawiono przykład — naciśnij Run, aby go uruchomić.');
         }
     </script>
 </body>
